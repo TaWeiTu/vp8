@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <fstream>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -24,7 +25,7 @@ class Decoder {
   uint8_t bit_count_;
   std::ifstream fs_;
 
-  uint8_t ReadByte_();
+  uint8_t ReadByte();
 };
 
 #endif  // BOOL_DECODER_H_
