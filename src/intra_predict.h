@@ -2,16 +2,18 @@
 #define INTRA_PREDICT_H_
 
 #include "frame.h"
+#include "utils.h"
+// #include "frame_header.h"
+
+#include <algorithm>
+#include <array>
+#include <vector>
 
 namespace {
 
 using LumaBlock = std::vector<std::vector<MacroBlock<LUMA>>>;
 using ChromaBlock = std::vector<std::vector<MacroBlock<CHROMA>>>;
-
-void VPred(size_t, size_t, Frame &);
-void HPred(size_t, size_t, Frame &);
-void DCPred(size_t, size_t, Frame &);
-void TMPred(size_t, size_t, Frame &);
+using PredictionMode = int32_t;
 
 void VPredChroma(size_t, size_t, ChromaBlock &);
 void HPredChroma(size_t, size_t, ChromaBlock &);
@@ -23,8 +25,13 @@ void HPredLuma(size_t, size_t, LumaBlock &);
 void DCPredLuma(size_t, size_t, LumaBlock &);
 void TMPredLuma(size_t, size_t, LumaBlock &);
 
+void BPredLuma(size_t, size_t, const std::array<std::array<PredictionMode, 4>, 4> &,
+               LumaBlock &);
+void BPredSubBlock(const std::array<int16_t, 8> &,
+                   const std::array<int16_t, 4> &, int16_t, PredictionMode,
+                   SubBlock &);
 }  // namespace
 
-void IntraPredict(const FrameHeader &, Frame &);
+// void IntraPredict(const FrameHeader &, Frame &);
 
 #endif  // INTRA_PREDICT_H_

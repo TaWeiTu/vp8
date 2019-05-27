@@ -2,6 +2,7 @@
 #define FRAME_H_
 
 #include <array>
+#include <algorithm>
 #include <cstdint>
 #include <vector>
 
@@ -9,6 +10,7 @@ enum Component { LUMA = 4, CHROMA = 2 };
 
 class SubBlock {
  public:
+  SubBlock() = default;
   std::array<int16_t, 4>& operator[](size_t);
   std::array<int16_t, 4> operator[](size_t) const;
   void FillWith(int16_t);
@@ -25,8 +27,10 @@ class SubBlock {
 template <size_t C>
 class MacroBlock {
  public:
-  std::vector<SubBlock>& operator[](size_t);
-  std::vector<SubBlock> operator[](size_t) const;
+  MacroBlock() = default;
+  std::array<SubBlock, C>& operator[](size_t);
+  std::array<SubBlock, C> operator[](size_t) const;
+
   void FillWith(int16_t);
   void FillRow(const std::array<int16_t, C * 4>&);
   void FillCol(const std::array<int16_t, C * 4>&);
@@ -83,12 +87,12 @@ void MacroBlock<C>::FillWith(int16_t p) {
 }
 
 template <size_t C>
-std::vector<SubBlock>& MacroBlock<C>::operator[](size_t i) {
+std::array<SubBlock, C>& MacroBlock<C>::operator[](size_t i) {
   return subs_[i];
 }
 
 template <size_t C>
-std::vector<SubBlock> MacroBlock<C>::operator[](size_t i) const {
+std::array<SubBlock, C> MacroBlock<C>::operator[](size_t i) const {
   return subs_[i];
 }
 
