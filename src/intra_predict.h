@@ -2,8 +2,8 @@
 #define INTRA_PREDICT_H_
 
 #include "frame.h"
+#include "frame_header.h"
 #include "utils.h"
-// #include "frame_header.h"
 
 #include <algorithm>
 #include <array>
@@ -32,6 +32,6 @@ void BPredSubBlock(const std::array<int16_t, 8> &,
                    SubBlock &);
 }  // namespace
 
-// void IntraPredict(const FrameHeader &, Frame &);
+void IntraPredict(const FrameHeader &, Frame &);
 
 #endif  // INTRA_PREDICT_H_

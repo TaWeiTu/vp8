@@ -8,7 +8,6 @@ void VPredChroma(size_t r, size_t c, ChromaBlock &mb) {
   else
     mb[r][c].FillRow(mb[r - 1][c].GetRow(7));
 }
-
 void HPredChroma(size_t r, size_t c, ChromaBlock &mb) {
   if (c == 0)
     mb[r][c].FillWith(127);
@@ -152,6 +151,10 @@ void BPredLuma(size_t r, size_t c,
 void BPredSubBlock(const std::array<int16_t, 8> &above,
                    const std::array<int16_t, 4> &left, int16_t p,
                    PredictionMode mode, SubBlock &sub) {
+  std::array<int16_t, 9> edge = {
+      left[3],  left[2],  left[1],  left[0],  p,
+      above[3], above[2], above[1], above[0],
+  };
   switch (mode) {
     case B_VE_PRED: {
       for (size_t i = 0; i < 4; ++i) {
@@ -190,6 +193,89 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
       }
       break;
     }
+
+    case B_LD_PRED: {
+      for (int d = 0; d < 7; ++d) {
+        int16_t x = above[d];
+        int16_t y = above[d + 1];
+        int16_t z = d + 2 < 8 ? above[d + 2] : above[7];
+        int16_t avg = (x + y + y + z + 2) >> 2;
+        for (size_t i = 0; d - i >= 0; ++i) {
+          if (d - i < 4) sub[i][d - i] = avg;
+        }
+      }
+      break;
+    }
+
+    case B_RD_PRED: {
+      for (int d = 0; d < 7; ++d) {
+        int16_t x = edge[d];
+        int16_t y = edge[d + 1];
+        int16_t z = edge[d + 2];
+        int16_t avg = (x + y + y + z + 2) >> 2;
+        for (size_t i = 0; i + d < 4; ++i) sub[i][d - i] = avg;
+      }
+      break;
+    }
+
+    case B_VR_PRED: {
+      sub[3][0] = (edge[1] + edge[2] + edge[2] + edge[3] + 2) >> 2;
+      sub[2][0] = (edge[2] + edge[3] + edge[3] + edge[4] + 2) >> 2;
+      sub[3][1] = sub[1][0] = (edge[3] + edge[4] + edge[4] + edge[5] + 2) >> 2;
+      sub[2][1] = sub[0][0] = (edge[4] + edge[5] + 1) >> 1;
+      sub[3][2] = sub[1][1] = (edge[4] + edge[5] + edge[5] + edge[6] + 2) >> 2;
+      sub[2][2] = sub[0][1] = (edge[5] + edge[6] + 1) >> 1;
+      sub[3][3] = sub[1][2] = (edge[5] + edge[6] + edge[6] + edge[7] + 2) >> 2;
+      sub[2][3] = sub[0][2] = (edge[6] + edge[7] + 1) >> 1;
+      sub[1][3] = (edge[6] + edge[7] + edge[7] + edge[8] + 2) >> 2;
+      sub[0][3] = (edge[7] + edge[8] + 1) >> 1;
+      break;
+    }
+
+    case B_VL_PRED: {
+      sub[0][0] = (above[0] + above[1] + 1) >> 1;
+      sub[1][0] = (above[0] + above[1] + above[1] + above[2] + 2) >> 2;
+      sub[2][0] = sub[0][1] = (above[1] + above[2] + 1) >> 1;
+      sub[1][1] = sub[3][0] =
+          (above[1] + above[2] + above[2] + above[3] + 2) >> 2;
+      sub[2][1] = sub[0][2] = (above[2] + above[3] + 1) >> 1;
+      sub[3][1] = sub[1][2] =
+          (above[2] + above[3] + above[3] + above[4] + 2) >> 2;
+      sub[2][2] = sub[0][3] = (above[3] + above[4] + 1) >> 1;
+      sub[3][2] = sub[1][3] =
+          (above[3] + above[4] + above[4] + above[5] + 2) >> 2;
+      sub[2][3] = (above[4] + above[5] + above[5] + above[6] + 2) >> 2;
+      sub[3][3] = (above[5] + above[6] + above[6] + above[7] + 2) >> 2;
+      break;
+    }
+
+    case B_HD_PRED: {
+      sub[3][0] = (edge[0] + edge[1] + 1) >> 1;
+      sub[3][1] = (edge[0] + edge[1] + edge[1] + edge[2] + 2) >> 2;
+      sub[2][0] = sub[3][2] = (edge[1] + edge[2] + 1) >> 1;
+      sub[2][1] = sub[3][3] = (edge[1] + edge[2] + edge[2] + edge[3] + 2) >> 2;
+      sub[2][2] = sub[1][0] = (edge[2] + edge[3] + 1) >> 1;
+      sub[2][3] = sub[1][1] = (edge[2] + edge[3] + edge[3] + edge[4] + 2) >> 2;
+      sub[1][2] = sub[0][0] = (edge[3] + edge[4] + 1) >> 1;
+      sub[1][3] = sub[0][1] = (edge[3] + edge[4] + edge[4] + edge[5] + 2) >> 2;
+      sub[0][2] = (edge[4] + edge[5] + edge[5] + edge[6] + 2) >> 2;
+      sub[0][3] = (edge[5] + edge[6] + edge[6] + edge[7] + 2) >> 2;
+      break;
+    }
+
+    case B_HU_PRED: {
+      sub[0][0] = (left[0] + left[1] + 1) >> 1;
+      sub[0][1] = (left[0] + left[1] + left[1] + left[2] + 2) >> 2;
+      sub[0][2] = sub[1][0] = (left[1] + left[2] + 1) >> 1;
+      sub[0][3] = sub[1][1] = (left[1] + left[2] + left[2] + left[3] + 2) >> 2;
+      sub[1][2] = sub[2][0] = (left[2] + left[3] + 1) >> 1;
+      sub[1][3] = sub[2][1] = (left[2] + left[3] + left[3] + left[3] + 2) >> 2;
+      sub[2][2] = sub[2][3] = sub[3][0] = sub[3][1] = sub[3][2] = sub[3][3] =
+          left[3];
+      break;
+    }
+
+    default:
   }
 }
 

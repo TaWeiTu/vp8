@@ -1,8 +1,8 @@
 #ifndef FRAME_H_
 #define FRAME_H_
 
-#include <array>
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <vector>
 
