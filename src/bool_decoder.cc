@@ -1,19 +1,26 @@
 #include "bool_decoder.h"
 
-Decoder::Decoder(const std::string &filename) {
-  fs_.open(filename, std::ios::binary);
+BoolDecoder::BoolDecoder(const std::string &filename) {
+  fs_ = std::make_unique<std::ifstream>();
+  fs_->open(filename, std::ios::binary);
   value_ = uint32_t(ReadByte()) << 8 | ReadByte();
   range_ = 255;
   bit_count_ = 0;
 }
 
-uint8_t Decoder::ReadByte() {
+BoolDecoder::BoolDecoder(std::unique_ptr<std::ifstream> fs) : fs_(std::move(fs)) {
+  value_ = uint32_t(ReadByte()) << 8 | ReadByte();
+  range_ = 255;
+  bit_count_ = 0;
+}
+
+uint8_t BoolDecoder::ReadByte() {
   uint8_t res;
-  fs_ >> res;
+  (*fs_) >> res;
   return res;
 }
 
-uint8_t Decoder::Bool(uint8_t prob) {
+uint8_t BoolDecoder::Bool(uint8_t prob) {
   uint32_t split = 1 + (((range_ - 1) * prob) >> 8);
   uint8_t res = 0;
   if (value_ >= (split << 8)) {
@@ -36,13 +43,13 @@ uint8_t Decoder::Bool(uint8_t prob) {
   return res;
 }
 
-uint16_t Decoder::Lit(size_t n) {
+uint16_t BoolDecoder::Lit(size_t n) {
   uint16_t res = 0;
   for (size_t i = 0; i < n; ++i) res = uint16_t(res << 1) | Bool(128);
   return res;
 }
 
-int16_t Decoder::SignedLit(size_t n) {
+int16_t BoolDecoder::SignedLit(size_t n) {
   if (!n) return 0;
 
   int16_t res = 0;
@@ -53,14 +60,14 @@ int16_t Decoder::SignedLit(size_t n) {
   return res;
 }
 
-uint8_t Decoder::Prob8() { return uint8_t(Lit(8)); }
+uint8_t BoolDecoder::Prob8() { return uint8_t(Lit(8)); }
 
-uint8_t Decoder::Prob7() {
+uint8_t BoolDecoder::Prob7() {
   uint8_t res = uint8_t(Lit(7));
   return res ? uint8_t(res << 1) : 1;
 }
 
-int16_t Decoder::Tree(const std::vector<uint8_t> &prob,
+int16_t BoolDecoder::Tree(const std::vector<uint8_t> &prob,
                       const std::vector<int16_t> &tree) {
   int16_t res = 0;
   while (true) {

@@ -7,10 +7,11 @@
 #include <string>
 #include <vector>
 
-class Decoder {
+class BoolDecoder {
  public:
-  Decoder() = default;
-  Decoder(const std::string&);
+  BoolDecoder() = default;
+  explicit BoolDecoder(const std::string&);
+  explicit BoolDecoder(std::unique_ptr<std::ifstream>);
 
   uint8_t Bool(uint8_t);
   uint16_t Lit(size_t n);
@@ -23,7 +24,7 @@ class Decoder {
   uint32_t value_;
   uint32_t range_;
   uint8_t bit_count_;
-  std::ifstream fs_;
+  std::unique_ptr<std::ifstream> fs_;
 
   uint8_t ReadByte();
 };
