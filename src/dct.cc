@@ -2,7 +2,7 @@
 
 namespace vp8 {
 
-void DCT(std::array<std::array<int16_t, 4>, 4> &subblock) {
+void DCT(std::array<std::array<int, 4>, 4> &subblock) {
   for (int i = 0; i < 4; i++) {
     int a = (subblock[i][0] + subblock[i][3]) << 3;
     int b = (subblock[i][1] + subblock[i][2]) << 3;
@@ -27,7 +27,7 @@ void DCT(std::array<std::array<int16_t, 4>, 4> &subblock) {
     subblock[3][i] = (d * 2217 - c * 5352 + 51000) >> 16;
   }
 }
-void WHT(std::array<std::array<int16_t, 4>, 4> &subblock) {
+void WHT(std::array<std::array<int, 4>, 4> &subblock) {
   for (int i = 0; i < 4; i++) {
     int a = (subblock[i][0] + subblock[i][2]) << 2;
     int d = (subblock[i][1] + subblock[i][3]) << 2;
@@ -58,14 +58,14 @@ void WHT(std::array<std::array<int16_t, 4>, 4> &subblock) {
     subblock[0][i] = (a2 + 3) >> 3;
     subblock[1][i] = (b2 + 3) >> 3;
     subblock[2][i] = (c2 + 3) >> 3;
-    subblock[2][i] = (d2 + 3) >> 3;
+    subblock[3][i] = (d2 + 3) >> 3;
   }
 }
 
 static const int cospi8_sqrt2_minus1 = 20091;
 static const int sinpi8_sqrt2 = 35468;
 
-void IDCT(std::array<std::array<int16_t, 4>, 4> &subblock) {
+void IDCT(std::array<std::array<int, 4>, 4> &subblock) {
   for (int i = 0; i < 4; i++) {
     int a = subblock[0][i] + subblock[2][i];
     int b = subblock[0][i] - subblock[2][i];
@@ -101,7 +101,7 @@ void IDCT(std::array<std::array<int16_t, 4>, 4> &subblock) {
   }
 }
 
-void IWHT(std::array<std::array<int16_t, 4>, 4> &subblock) {
+void IWHT(std::array<std::array<int, 4>, 4> &subblock) {
   for (int i = 0; i < 4; i++) {
     int a = subblock[0][i] + subblock[3][i];
     int b = subblock[1][i] + subblock[2][i];

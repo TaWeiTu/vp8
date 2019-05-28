@@ -5,10 +5,10 @@
 
 namespace vp8 {
 
-void DCT(std::array<std::array<int16_t, 4>, 4> &);
-void IDCT(std::array<std::array<int16_t, 4>, 4> &);
-void WHT(std::array<std::array<int16_t, 4>, 4> &);
-void IWHT(std::array<std::array<int16_t, 4>, 4> &);
+void DCT(std::array<std::array<int, 4>, 4> &);
+void IDCT(std::array<std::array<int, 4>, 4> &);
+void WHT(std::array<std::array<int, 4>, 4> &);
+void IWHT(std::array<std::array<int, 4>, 4> &);
 
 }  // namespace vp8
 
