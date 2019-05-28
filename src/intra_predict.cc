@@ -1,5 +1,6 @@
 #include "intra_predict.h"
 
+namespace vp8 {
 namespace {
 
 void VPredChroma(size_t r, size_t c, ChromaBlock &mb) {
@@ -337,3 +338,5 @@ void IntraPredict(const FrameHeader &header, Frame &frame) {
     }
   }
 }
+
+}  // namespace vp8

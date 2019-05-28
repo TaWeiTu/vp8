@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+namespace vp8 {
+
 class BoolDecoder {
  public:
   BoolDecoder() = default;
@@ -27,5 +29,7 @@ class BoolDecoder {
 
   uint8_t ReadByte();
 };
+
+}  // namespace vp8
 
 #endif  // BOOL_DECODER_H_

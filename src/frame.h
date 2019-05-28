@@ -6,7 +6,17 @@
 #include <cstdint>
 #include <vector>
 
+namespace vp8 {
+
 enum Component { LUMA = 4, CHROMA = 2 };
+
+struct MotionVector {
+  MotionVector() : dr(0), dc(0) {}
+  explicit MotionVector(int16_t dr, int16_t dc) : dr(dr), dc(dc) {}
+
+  int16_t dr;
+  int16_t dc;
+};
 
 class SubBlock {
  public:
@@ -41,7 +51,12 @@ class MacroBlock {
   int16_t GetPixel(size_t, size_t) const;
   void SetPixel(size_t, size_t, int16_t);
 
+  MotionVector GetMotionVector() const;
+  void SetMotionVector(size_t, size_t);
+  void SetMotionVector(const MotionVector&);
+
  private:
+  MotionVector mv_;
   std::array<std::array<SubBlock, C>, C> subs_;
 };
 
@@ -143,5 +158,22 @@ template <size_t C>
 void MacroBlock<C>::SetPixel(size_t r, size_t c, int16_t v) {
   subs_[r >> 2][c >> 2][r & 3][c & 3] = v;
 }
+
+template <size_t C>
+MotionVector MacroBlock<C>::GetMotionVector() const {
+  return mv_;
+}
+
+template <size_t C>
+void MacroBlock<C>::SetMotionVector(size_t dr, size_t dc) {
+  mv_ = MotionVector(dr, dc);
+}
+
+template <size_t C>
+void MacroBlock<C>::SetMotionVector(const MotionVector& v) {
+  mv_ = v;
+}
+
+}  // namespace vp8
 
 #endif  // FRAME_H_

@@ -1,5 +1,7 @@
 #include "bool_decoder.h"
 
+namespace vp8 {
+
 BoolDecoder::BoolDecoder(const std::string &filename) {
   fs_ = std::make_unique<std::ifstream>();
   fs_->open(filename, std::ios::binary);
@@ -8,7 +10,8 @@ BoolDecoder::BoolDecoder(const std::string &filename) {
   bit_count_ = 0;
 }
 
-BoolDecoder::BoolDecoder(std::unique_ptr<std::ifstream> fs) : fs_(std::move(fs)) {
+BoolDecoder::BoolDecoder(std::unique_ptr<std::ifstream> fs)
+    : fs_(std::move(fs)) {
   value_ = uint32_t(ReadByte()) << 8 | ReadByte();
   range_ = 255;
   bit_count_ = 0;
@@ -68,7 +71,7 @@ uint8_t BoolDecoder::Prob7() {
 }
 
 int16_t BoolDecoder::Tree(const std::vector<uint8_t> &prob,
-                      const std::vector<int16_t> &tree) {
+                          const std::vector<int16_t> &tree) {
   int16_t res = 0;
   while (true) {
     res = tree[size_t(res + Bool(prob[size_t(res)]))];
@@ -76,3 +79,5 @@ int16_t BoolDecoder::Tree(const std::vector<uint8_t> &prob,
   }
   return res;
 }
+
+}  // namespace vp8

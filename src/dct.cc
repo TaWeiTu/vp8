@@ -1,6 +1,7 @@
 #include "dct.h"
 
-namespace Quantize {
+namespace vp8 {
+
 void DCT(std::array<std::array<int16_t, 4>, 4> &subblock) {
   for (int i = 0; i < 4; i++) {
     int a = (subblock[i][0] + subblock[i][3]) << 3;
@@ -125,4 +126,5 @@ void IWHT(std::array<std::array<int16_t, 4>, 4> &subblock) {
     subblock[i][3] = (d - c + 3) >> 3;
   }
 }
-}  // namespace Quantize
+
+}  // namespace vp8
