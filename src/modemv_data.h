@@ -1,5 +1,5 @@
-#ifndef DCT_TOKEN_H_
-#define DCT_TOKEN_H_
+#ifndef MODEMV_DATA_H_
+#define MODEMV_DATA_H_
 
 namespace vp8 {
 enum {
@@ -31,7 +31,7 @@ enum {
 };
 typedef enum { U, V, Y1, Y2 } TYPE;
 
-const int coefficient_tree[] = {-dct_eob,
+const int kCoefficientTree[] = {-dct_eob,
                                 2,
                                 -DCT_0,
                                 4,
@@ -54,29 +54,29 @@ const int coefficient_tree[] = {-dct_eob,
                                 -dct_cat_35_66,
                                 -dct_cat_67_2048};
 
-const int subblock_mod_tree[] = {
+const int kSubblockModTree[] = {
     -B_DC_PRED, 2,  -B_TM_PRED, 4,  -B_VE_PRED, 6,
     8,          12, -B_HE_PRED, 10, -B_RD_PRED, -B_VR_PRED,
     -B_LD_PRED, 14, -B_VL_PRED, 16, -B_HD_PRED, -B_HU_PRED};
 
-const int key_frame_y_mod_tree[] = {-B_PRED,  2,       4,       6,
+const int kKeyFrameYModTree[] = {-B_PRED,  2,       4,       6,
                                     -DC_PRED, -V_PRED, -H_PRED, -TM_PRED};
-const int y_mod_tree[] = {-DC_PRED, 2,       4,        6,
+const int kYModTree[] = {-DC_PRED, 2,       4,        6,
                           -V_PRED,  -H_PRED, -TM_PRED, -B_PRED};
-const int uv_mode_tree[] = {-DC_PRED, 2, -V_PRED, 4, -H_PRED, -TM_PRED};
+const int kUVModeTree[] = {-DC_PRED, 2, -V_PRED, 4, -H_PRED, -TM_PRED};
 
-const int Pcat_1[] = {159, 0};
-const int Pcat_2[] = {165, 145, 0};
-const int Pcat_3[] = {173, 148, 140, 0};
-const int Pcat_4[] = {176, 155, 140, 135, 0};
-const int Pcat_5[] = {180, 157, 141, 134, 130, 0};
-const int Pcat_6[] = {254, 254, 243, 230, 196, 177, 153, 140, 133, 130, 129, 0};
+const int kPcat_1[] = {159, 0};
+const int kPcat_2[] = {165, 145, 0};
+const int kPcat_3[] = {173, 148, 140, 0};
+const int kPcat_4[] = {176, 155, 140, 135, 0};
+const int kPcat_5[] = {180, 157, 141, 134, 130, 0};
+const int kPcat_6[] = {254, 254, 243, 230, 196, 177, 153, 140, 133, 130, 129, 0};
 
-const int coefficient_band[] = {0, 1, 2, 3, 6, 4, 5, 6, 6, 6, 6, 6, 6, 6, 6, 7};
+const int kCoefficientBand[] = {0, 1, 2, 3, 6, 4, 5, 6, 6, 6, 6, 6, 6, 6, 6, 7};
 
-const int zigzag[] = {0, 1, 4, 8, 5, 2, 3, 6, 9, 12, 13, 10, 7, 11, 14, 15};
+const int kZigzag[] = {0, 1, 4, 8, 5, 2, 3, 6, 9, 12, 13, 10, 7, 11, 14, 15};
 
-const int coefficient_update_probs[4][8][3][11] = {
+const int kCoefficientUpdateProbs[4][8][3][11] = {
     {{{255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255},
       {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255},
       {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255}},
@@ -179,7 +179,7 @@ const int coefficient_update_probs[4][8][3][11] = {
       {254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255},
       {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255}}}};
 
-const int coefficient_default_probs[4][8][3][11] = {
+const int kCoefficientDefaultProbs[4][8][3][11] = {
     {{{128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128},
       {128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128},
       {128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128}},
@@ -299,4 +299,4 @@ int Type(TYPE type, bool withY2) {
   return -1;
 }
 }  // namespace vp8
-#endif  // DCT_TOKEN_H_
+#endif  // MODEMV_DATA_H_
