@@ -80,4 +80,10 @@ int16_t BoolDecoder::Tree(const std::vector<uint8_t> &prob,
   return res;
 }
 
+uint32_t BoolDecoder::ReadUncoded(size_t n) {
+  uint32_t res = 0;
+  for (size_t i = 0; i < n; ++i) res |= ReadByte() << (i << 3);
+  return res;
+}
+
 }  // namespace vp8

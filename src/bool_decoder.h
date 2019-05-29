@@ -27,6 +27,9 @@ class BoolDecoder {
   // Decode tokens from the tree
   int16_t Tree(const std::vector<uint8_t>&, const std::vector<int16_t>&);
 
+  // Read an unsigned n-bit integer (uncoded) presented in little-endian format.
+  uint32_t ReadUncoded(size_t);
+
  private:
   uint32_t value_;
   uint32_t range_;
