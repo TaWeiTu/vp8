@@ -12,7 +12,7 @@ enum Component { LUMA = 4, CHROMA = 2 };
 
 struct MotionVector {
   MotionVector() : dr(0), dc(0) {}
-  explicit MotionVector(int16_t dr, int16_t dc) : dr(dr), dc(dc) {}
+  explicit MotionVector(int16_t dr_, int16_t dc_) : dr(dr_), dc(dc_) {}
 
   int16_t dr;
   int16_t dc;
@@ -30,8 +30,13 @@ class SubBlock {
   std::array<int16_t, 4> GetRow(size_t) const;
   std::array<int16_t, 4> GetCol(size_t) const;
 
+  MotionVector GetMotionVector() const;
+  void SetMotionVector(int16_t, int16_t);
+  void SetMotionVector(const MotionVector&);
+
  private:
   std::array<std::array<int16_t, 4>, 4> pixels_;
+  MotionVector mv_;
 };
 
 template <size_t C>
@@ -52,8 +57,10 @@ class MacroBlock {
   void SetPixel(size_t, size_t, int16_t);
 
   MotionVector GetMotionVector() const;
-  void SetMotionVector(size_t, size_t);
+  void SetMotionVector(int16_t, int16_t);
   void SetMotionVector(const MotionVector&);
+  // The motion vectors are the same for all subblocks.
+  void SetSubBlockMVs(const MotionVector&);
 
  private:
   MotionVector mv_;
@@ -165,7 +172,7 @@ MotionVector MacroBlock<C>::GetMotionVector() const {
 }
 
 template <size_t C>
-void MacroBlock<C>::SetMotionVector(size_t dr, size_t dc) {
+void MacroBlock<C>::SetMotionVector(int16_t dr, int16_t dc) {
   mv_ = MotionVector(dr, dc);
 }
 
@@ -173,6 +180,21 @@ template <size_t C>
 void MacroBlock<C>::SetMotionVector(const MotionVector& v) {
   mv_ = v;
 }
+
+template <size_t C>
+void MacroBlock<C>::SetSubBlockMVs(const MotionVector& v) {
+  for (size_t i = 0; i < C; ++i) {
+    for (size_t j = 0; j < C; ++j) subs_[i][j].SetMotionVector(v);
+  }
+}
+
+MotionVector SubBlock::GetMotionVector() const { return mv_; }
+
+void SubBlock::SetMotionVector(int16_t dr, int16_t dc) {
+  mv_ = MotionVector(dr, dc);
+}
+
+void SubBlock::SetMotionVector(const MotionVector& v) { mv_ = v; }
 
 }  // namespace vp8
 

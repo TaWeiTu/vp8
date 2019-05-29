@@ -21,21 +21,6 @@ enum DctRange {
   DCT_EOB
 };
 
-enum MacroBlockMode { DC_PRED, V_PRED, H_PRED, TM_PRED, B_PRED };
-
-enum SubBlockMode {
-  B_DC_PRED,
-  B_TM_PRED,
-  B_VE_PRED,
-  B_HE_PRED,
-  B_LD_PRED,
-  B_RD_PRED,
-  B_VR_PRED,
-  B_VL_PRED,
-  B_HD_PRED,
-  B_HU_PRED
-};
-
 enum BlockType { U, V, Y1, Y2 };
 
 const std::vector<DctRange> kCoefficientTree = {-DCT_EOB,
