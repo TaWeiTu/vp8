@@ -23,7 +23,8 @@ void DCT(std::array<std::array<int16_t, 4>, 4> &subblock) {
 
     subblock[0][i] = int16_t((a + b + 7) >> 4);
     subblock[2][i] = int16_t((a - b + 7) >> 4);
-    subblock[1][i] = int16_t(((c * 2217 + d * 5352 + 12000) >> 16) + (d != 0 ? 1 : 0));
+    subblock[1][i] =
+        int16_t(((c * 2217 + d * 5352 + 12000) >> 16) + (d != 0 ? 1 : 0));
     subblock[3][i] = int16_t((d * 2217 - c * 5352 + 51000) >> 16);
   }
 }
@@ -71,9 +72,11 @@ void IDCT(std::array<std::array<int16_t, 4>, 4> &subblock) {
     int b = int(subblock[0][i]) - int(subblock[2][i]);
 
     int tmp1 = (int(subblock[1][i]) * sinpi8_sqrt2) >> 16;
-    int tmp2 = int(subblock[3][i]) + ((int(subblock[3][i]) * cospi8_sqrt2_minus1) >> 16);
+    int tmp2 = int(subblock[3][i]) +
+               ((int(subblock[3][i]) * cospi8_sqrt2_minus1) >> 16);
     int c = tmp1 - tmp2;
-    tmp1 = int(subblock[1][i]) + ((int(subblock[1][i]) * cospi8_sqrt2_minus1) >> 16);
+    tmp1 = int(subblock[1][i]) +
+           ((int(subblock[1][i]) * cospi8_sqrt2_minus1) >> 16);
     tmp2 = (int(subblock[3][i]) * sinpi8_sqrt2) >> 16;
     int d = tmp1 + tmp2;
 
@@ -88,9 +91,11 @@ void IDCT(std::array<std::array<int16_t, 4>, 4> &subblock) {
     int b = int(subblock[i][0]) - int(subblock[i][2]);
 
     int tmp1 = (int(subblock[i][1]) * sinpi8_sqrt2) >> 16;
-    int tmp2 = int(subblock[i][3]) + ((int(subblock[i][3]) * cospi8_sqrt2_minus1) >> 16);
+    int tmp2 = int(subblock[i][3]) +
+               ((int(subblock[i][3]) * cospi8_sqrt2_minus1) >> 16);
     int c = tmp1 - tmp2;
-    tmp1 = int(subblock[i][1]) + ((int(subblock[i][1]) * cospi8_sqrt2_minus1) >> 16);
+    tmp1 = int(subblock[i][1]) +
+           ((int(subblock[i][1]) * cospi8_sqrt2_minus1) >> 16);
     tmp2 = (int(subblock[i][3]) * sinpi8_sqrt2) >> 16;
     int d = tmp1 + tmp2;
 

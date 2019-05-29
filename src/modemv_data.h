@@ -1,23 +1,29 @@
 #ifndef MODEMV_DATA_H_
 #define MODEMV_DATA_H_
 
+#include <array>
+#include <vector>
+
 namespace vp8 {
-enum {
+
+enum DctRange {
   DCT_0,
   DCT_1,
   DCT_2,
   DCT_3,
   DCT_4,
-  dct_cat_5_6,
-  dct_cat_7_10,
-  dct_cat_11_18,
-  dct_cat_19_34,
-  dct_cat_35_66,
-  dct_cat_67_2048,
-  dct_eob
+  DCT_CAT_5_6,
+  DCT_CAT_7_10,
+  DCT_CAT_11_18,
+  DCT_CAT_19_34,
+  DCT_CAT_35_66,
+  DCT_CAT_67_2048,
+  DCT_EOB
 };
-enum { DC_PRED, V_PRED, H_PRED, TM_PRED, B_PRED };
-enum {
+
+enum MacroBlockMode { DC_PRED, V_PRED, H_PRED, TM_PRED, B_PRED };
+
+enum SubBlockMode {
   B_DC_PRED,
   B_TM_PRED,
   B_VE_PRED,
@@ -29,54 +35,61 @@ enum {
   B_HD_PRED,
   B_HU_PRED
 };
-typedef enum { U, V, Y1, Y2 } TYPE;
 
-const int kCoefficientTree[] = {-dct_eob,
-                                2,
-                                -DCT_0,
-                                4,
-                                -DCT_1,
-                                6,
-                                8,
-                                12,
-                                -DCT_2,
-                                10,
-                                -DCT_3,
-                                -DCT_4,
-                                14,
-                                16,
-                                -dct_cat_5_6,
-                                -dct_cat_7_10,
-                                18,
-                                20,
-                                -dct_cat_11_18,
-                                -dct_cat_19_34,
-                                -dct_cat_35_66,
-                                -dct_cat_67_2048};
+enum BlockType { U, V, Y1, Y2 };
 
-const int kSubblockModTree[] = {
+const std::vector<DctRange> kCoefficientTree = {-DCT_EOB,
+                                                2,
+                                                -DCT_0,
+                                                4,
+                                                -DCT_1,
+                                                6,
+                                                8,
+                                                12,
+                                                -DCT_2,
+                                                10,
+                                                -DCT_3,
+                                                -DCT_4,
+                                                14,
+                                                16,
+                                                -DCT_CAT_5_6,
+                                                -DCT_CAT_7_10,
+                                                18,
+                                                20,
+                                                -DCT_CAT_11_18,
+                                                -DCT_CAT_19_34,
+                                                -DCT_CAT_35_66,
+                                                -DCT_CAT_67_2048};
+
+const std::vector<SubBlockMode> kSubBlockModeTree = {
     -B_DC_PRED, 2,  -B_TM_PRED, 4,  -B_VE_PRED, 6,
     8,          12, -B_HE_PRED, 10, -B_RD_PRED, -B_VR_PRED,
     -B_LD_PRED, 14, -B_VL_PRED, 16, -B_HD_PRED, -B_HU_PRED};
 
-const int kKeyFrameYModTree[] = {-B_PRED,  2,       4,       6,
-                                    -DC_PRED, -V_PRED, -H_PRED, -TM_PRED};
-const int kYModTree[] = {-DC_PRED, 2,       4,        6,
-                          -V_PRED,  -H_PRED, -TM_PRED, -B_PRED};
-const int kUVModeTree[] = {-DC_PRED, 2, -V_PRED, 4, -H_PRED, -TM_PRED};
+const std::vector<MacroBlockMode> kKeyFrameYModeTree = {
+    -B_PRED, 2, 4, 6, -DC_PRED, -V_PRED, -H_PRED, -TM_PRED};
 
-const int kPcat_1[] = {159, 0};
-const int kPcat_2[] = {165, 145, 0};
-const int kPcat_3[] = {173, 148, 140, 0};
-const int kPcat_4[] = {176, 155, 140, 135, 0};
-const int kPcat_5[] = {180, 157, 141, 134, 130, 0};
-const int kPcat_6[] = {254, 254, 243, 230, 196, 177, 153, 140, 133, 130, 129, 0};
+const std::vector<MacroBlockMode> kYModeTree = {
+    -DC_PRED, 2, 4, 6, -V_PRED, -H_PRED, -TM_PRED, -B_PRED};
 
-const int kCoefficientBand[] = {0, 1, 2, 3, 6, 4, 5, 6, 6, 6, 6, 6, 6, 6, 6, 7};
+const std::vector<MacroBlockMode> kUVModeTree = {-DC_PRED, 2,       -V_PRED,
+                                                 4,        -H_PRED, -TM_PRED};
 
-const int kZigzag[] = {0, 1, 4, 8, 5, 2, 3, 6, 9, 12, 13, 10, 7, 11, 14, 15};
+const std::vector<uint8_t> kPcat1 = {159, 0};
+const std::vector<uint8_t> kPcat2 = {165, 145, 0};
+const std::vector<uint8_t> kPcat3 = {173, 148, 140, 0};
+const std::vector<uint8_t> kPcat4 = {176, 155, 140, 135, 0};
+const std::vector<uint8_t> kPcat5 = {180, 157, 141, 134, 130, 0};
+const std::vector<uint8_t> kPcat6 = {254, 254, 243, 230, 196, 177,
+                                     153, 140, 133, 130, 129, 0};
 
-const int kCoefficientUpdateProbs[4][8][3][11] = {
+const uint8_t kCoefficientBand[] = {0, 1, 2, 3, 6, 4, 5, 6,
+                                    6, 6, 6, 6, 6, 6, 6, 7};
+
+const uint8_t kZigzag[] = {0, 1,  4,  8,  5, 2,  3,  6,
+                           9, 12, 13, 10, 7, 11, 14, 15};
+
+const std::vector<uint8_t> kCoefficientUpdateProbs[4][8][3] = {
     {{{255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255},
       {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255},
       {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255}},
@@ -129,11 +142,9 @@ const int kCoefficientUpdateProbs[4][8][3][11] = {
     {{{186, 251, 250, 255, 255, 255, 255, 255, 255, 255, 255},
       {234, 251, 244, 254, 255, 255, 255, 255, 255, 255, 255},
       {251, 251, 243, 253, 254, 255, 254, 255, 255, 255, 255}},
-     {
-
-         {255, 253, 254, 255, 255, 255, 255, 255, 255, 255, 255},
-         {236, 253, 254, 255, 255, 255, 255, 255, 255, 255, 255},
-         {251, 253, 253, 254, 254, 255, 255, 255, 255, 255, 255}},
+     {{255, 253, 254, 255, 255, 255, 255, 255, 255, 255, 255},
+      {236, 253, 254, 255, 255, 255, 255, 255, 255, 255, 255},
+      {251, 253, 253, 254, 254, 255, 255, 255, 255, 255, 255}},
      {{255, 254, 254, 255, 255, 255, 255, 255, 255, 255, 255},
       {254, 254, 254, 255, 255, 255, 255, 255, 255, 255, 255},
       {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255}},
@@ -164,11 +175,9 @@ const int kCoefficientUpdateProbs[4][8][3][11] = {
      {{255, 251, 254, 255, 255, 255, 255, 255, 255, 255, 255},
       {245, 251, 254, 255, 255, 255, 255, 255, 255, 255, 255},
       {253, 253, 254, 255, 255, 255, 255, 255, 255, 255, 255}},
-     {
-
-         {255, 251, 253, 255, 255, 255, 255, 255, 255, 255, 255},
-         {252, 253, 254, 255, 255, 255, 255, 255, 255, 255, 255},
-         {255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255}},
+     {{255, 251, 253, 255, 255, 255, 255, 255, 255, 255, 255},
+      {252, 253, 254, 255, 255, 255, 255, 255, 255, 255, 255},
+      {255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255}},
      {{255, 252, 255, 255, 255, 255, 255, 255, 255, 255, 255},
       {249, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255},
       {255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255}},
@@ -179,7 +188,7 @@ const int kCoefficientUpdateProbs[4][8][3][11] = {
       {254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255},
       {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255}}}};
 
-const int kCoefficientDefaultProbs[4][8][3][11] = {
+const std::vector<uint8_t> kCoefficientDefaultProbs[4][8][3] = {
     {{{128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128},
       {128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128},
       {128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128}},
@@ -195,11 +204,9 @@ const int kCoefficientDefaultProbs[4][8][3][11] = {
      {{1, 101, 251, 255, 241, 255, 128, 128, 128, 128, 128},
       {170, 139, 241, 252, 236, 209, 255, 255, 128, 128, 128},
       {37, 116, 196, 243, 228, 255, 255, 255, 128, 128, 128}},
-     {
-
-         {1, 204, 254, 255, 245, 255, 128, 128, 128, 128, 128},
-         {207, 160, 250, 255, 238, 128, 128, 128, 128, 128, 128},
-         {102, 103, 231, 255, 211, 171, 128, 128, 128, 128, 128}},
+     {{1, 204, 254, 255, 245, 255, 128, 128, 128, 128, 128},
+      {207, 160, 250, 255, 238, 128, 128, 128, 128, 128, 128},
+      {102, 103, 231, 255, 211, 171, 128, 128, 128, 128, 128}},
      {{1, 152, 252, 255, 240, 255, 128, 128, 128, 128, 128},
       {177, 135, 243, 255, 234, 225, 128, 128, 128, 128, 128},
       {80, 129, 211, 255, 194, 224, 128, 128, 128, 128, 128}},
@@ -282,7 +289,7 @@ const int kCoefficientDefaultProbs[4][8][3][11] = {
       {244, 1, 255, 128, 128, 128, 128, 128, 128, 128, 128},
       {238, 1, 255, 128, 128, 128, 128, 128, 128, 128, 128}}}};
 
-int Type(TYPE type, bool withY2) {
+uint8_t Type(BlockType type, bool withY2) {
   switch (type) {
     case Y2:
       return 1;
@@ -298,5 +305,7 @@ int Type(TYPE type, bool withY2) {
   }
   return -1;
 }
+
 }  // namespace vp8
+
 #endif  // MODEMV_DATA_H_
