@@ -12,14 +12,14 @@ MacroBlockMV SearchMVs(size_t r, size_t c, const FrameHeader &header,
 
   auto &mh = header.macroblock_header;
 
-  if (r == 0 || mh.[r - 1][c].is_inter_mb) {
+  if (r == 0 || mh[r - 1][c].is_inter_mb) {
     MotionVector v = r ? mb[r - 1][c].GetMotionVector() : kZero;
     if (r > 0) v = Invert(v, mh[r - 1][c]);
     if (v != kZero) mv.push_back(v);
     cnt[mv.size()] += 2;
   }
 
-  if (c == 0 || mh.[r][c - 1].is_inter_mb) {
+  if (c == 0 || mh[r][c - 1].is_inter_mb) {
     MotionVector v = c ? mb[r][c - 1].GetMotionVector() : kZero;
     if (c > 0) v = Invert(v, mh[r][c - 1]);
     if (v != kZero) {
@@ -30,7 +30,7 @@ MacroBlockMV SearchMVs(size_t r, size_t c, const FrameHeader &header,
     }
   }
 
-  if (r == 0 || c == 0 || mh.[r - 1][c - 1].is_inter_mb) {
+  if (r == 0 || c == 0 || mh[r - 1][c - 1].is_inter_mb) {
     MotionVector v = r && c ? mb[r - 1][c - 1].GetMotionVector() : kZero;
     if (r > 0 && c > 0) v = Invert(v, mh[r - 1][c - 1]);
     if (v != kZero) {
@@ -46,7 +46,7 @@ MacroBlockMV SearchMVs(size_t r, size_t c, const FrameHeader &header,
   // found three distinct motion vectors
   if (mv.size() == 3u && mv[2] == mv[0]) ++cnt[1];
   // unfound motion vectors are set to ZERO
-  while (mv.size() < 3u) mv.push_back(ZERO);
+  while (mv.size() < 3u) mv.push_back(kZero);
 
   cnt[3] = (r > 0 && mh[r - 1][c].mode == MV_SPLIT) +
            (c > 0 && mh[r][c - 1].mode == MV_SPLIT) * 2 +
@@ -75,20 +75,21 @@ uint8_t SubBlockProb(const MotionVector &left, const MotionVector &above) {
   return 0;
 }
 
-MotionVector Average(size_t r, size_t c, const LumbBlock &mb) {
-  int16_t sr =
-      int16_t(mb[r << 1][c << 1].dr + mb[r << 1][c << 1 | 1].dr +
-              mb[r << 1 | 1][c << 1].dr + mb[r << 1 | 1][c << 1 | 1].dr);
-  int16_t sc =
-      int16_t(mb[r << 1][c << 1].dc + mb[r << 1][c << 1 | 1].dc +
-              mb[r << 1 | 1][c << 1].dc + mb[r << 1 | 1][c << 1 | 1].dc);
+MotionVector Average(size_t r, size_t c, const LumaBlock &mb) {
+  MotionVector ulv = mb[r << 1][c << 1].GetMotionVector(),
+               urv = mb[r << 1][c << 1 | 1].GetMotionVector(),
+               dlv = mb[r << 1 | 1][c << 1].GetMotionVector(),
+               drv = mb[r << 1 | 1][c << 1 | 1].GetMotionVector();
+
+  int16_t sr = int16_t(ulv.dr + urv.dr + dlv.dr + drv.dr);
+  int16_t sc = int16_t(ulv.dc + urv.dc + dlv.dc + drv.dc);
   int16_t dr = (sr >= 0 ? (sr + 4) >> 3 : -((-sr + 4) >> 3));
   int16_t dc = (sc >= 0 ? (sc + 4) >> 3 : -((-sc + 4) >> 3));
 
   return MotionVector(dr, dc);
 }
 
-void ConfigureSubBlockMVs(MVPartition p, LumaBlock &mb) {
+void ConfigureSubBlockMVs(MVPartition p, MacroBlock<4> &mb) {
   std::vector<std::vector<uint8_t>> part;
   switch (p) {
     case MV_TOP_BOTTOM:
@@ -112,7 +113,6 @@ void ConfigureSubBlockMVs(MVPartition p, LumaBlock &mb) {
       for (uint8_t i = 0; i < 16; ++i) part.push_back({i});
       break;
 
-    default:
   }
 
   for (size_t i = 0; i < part.size(); ++i) {
@@ -136,8 +136,6 @@ void ConfigureSubBlockMVs(MVPartition p, LumaBlock &mb) {
         case NEW_4x4:
           mv = ReadMotionVector();
           break;
-
-        default:
       }
       mb[r][c].SetMotionVector(mv);
     }
@@ -146,26 +144,27 @@ void ConfigureSubBlockMVs(MVPartition p, LumaBlock &mb) {
 
 }  // namespace
 
-void InterPredict(const FrameHeader &header, const Frame &frame) {
-  auto &Y = frame.YBlocks, &U = frame.UBlocks, &V = frame.VBlocks;
+void InterPredict(const FrameHeader &header, Frame &frame) {
+  auto &Y = frame.YBlocks;
+  auto &U = frame.UBlocks, &V = frame.VBlocks;
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
       if (!header.macroblock_header[r][c].is_inter_mb) continue;
       MotionVector best, nearest, near, mv;
       MacroBlockMV mode = SearchMVs(r, c, header, frame, best, nearest, near);
-      Y[r][c].SetMotionVector(mode);
+      Y[r][c].SetMotionVector(best);
 
       switch (mode) {
-        case MV_NEARST:
-          Y.SetSubBlockMVs(nearest);
+        case MV_NEAREST:
+          Y[r][c].SetSubBlockMVs(nearest);
           break;
 
         case MV_NEAR:
-          Y.SetSubBlockMVs(near);
+          Y[r][c].SetSubBlockMVs(near);
           break;
 
         case MV_ZERO:
-          Y.SetSubBlockMVs(kZero);
+          Y[r][c].SetSubBlockMVs(kZero);
           break;
 
         case MV_NEW:

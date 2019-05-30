@@ -14,6 +14,13 @@ struct MotionVector {
   MotionVector() : dr(0), dc(0) {}
   explicit MotionVector(int16_t dr_, int16_t dc_) : dr(dr_), dc(dc_) {}
 
+  bool operator==(const MotionVector& rhs) const {
+    return dr == rhs.dr && dc == rhs.dc;
+  }
+  bool operator!=(const MotionVector& rhs) const {
+    return dr != rhs.dr || dc != rhs.dc;
+  }
+
   int16_t dr;
   int16_t dc;
 };

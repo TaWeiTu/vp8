@@ -93,7 +93,7 @@ void TMPredLuma(size_t r, size_t c, LumaBlock &mb) {
 }
 
 void BPredLuma(size_t r, size_t c,
-               const std::array<std::array<PredictionMode, 4>, 4> &pred,
+               const std::array<std::array<SubBlockMode, 4>, 4> &pred,
                LumaBlock &mb) {
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 4; ++j) {
@@ -151,8 +151,8 @@ void BPredLuma(size_t r, size_t c,
 
 void BPredSubBlock(const std::array<int16_t, 8> &above,
                    const std::array<int16_t, 4> &left, int16_t p,
-                   PredictionMode mode, SubBlock &sub) {
-  std::array<int16_t, 9> edge = {
+                   SubBlockMode mode, SubBlock &sub) {
+  const std::array<int16_t, 9> edge = {
       left[3],  left[2],  left[1],  left[0],  p,
       above[3], above[2], above[1], above[0],
   };
@@ -196,25 +196,25 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
     }
 
     case B_LD_PRED: {
-      for (int d = 0; d < 7; ++d) {
+      for (size_t d = 0; d < 7; ++d) {
         int16_t x = above[d];
         int16_t y = above[d + 1];
         int16_t z = d + 2 < 8 ? above[d + 2] : above[7];
         int16_t avg = (x + y + y + z + 2) >> 2;
-        for (size_t i = 0; d - i >= 0; ++i) {
-          if (d - i < 4) sub[i][d - i] = avg;
+        for (size_t i = 0; int(d) - int(i) >= 0; ++i) {
+          if (int(d) - int(i) < 4) sub[i][d - i] = avg;
         }
       }
       break;
     }
 
     case B_RD_PRED: {
-      for (int d = 0; d < 7; ++d) {
+      for (size_t d = 0; d < 7; ++d) {
         int16_t x = edge[d];
         int16_t y = edge[d + 1];
         int16_t z = edge[d + 2];
         int16_t avg = (x + y + y + z + 2) >> 2;
-        for (size_t i = 0; i + d < 4; ++i) sub[i][d - i] = avg;
+        for (size_t i = 0; i + d < 4; ++i) sub[i][d + i] = avg;
       }
       break;
     }
@@ -275,15 +275,12 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
           left[3];
       break;
     }
-
-    default:
   }
 }
 
 }  // namespace
 
 void IntraPredict(const FrameHeader &header, Frame &frame) {
-  auto &Y = frame.YBlocks, &U = frame.UBlocks, &V = frame.VBlocks;
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
       if (header.macroblock_header[r][c].is_inter_mb) continue;
@@ -291,46 +288,46 @@ void IntraPredict(const FrameHeader &header, Frame &frame) {
       auto &mh = header.macroblock_header[r][c];
       switch (mh.intra_y_mode) {
         case V_PRED:
-          VPredLuma(r, c, Y);
+          VPredLuma(r, c, frame.YBlocks);
           break;
 
         case H_PRED:
-          HPredLuma(r, c, Y);
+          HPredLuma(r, c, frame.YBlocks);
           break;
 
         case DC_PRED:
-          DCPredLuma(r, c, Y);
+          DCPredLuma(r, c, frame.YBlocks);
           break;
 
         case TM_PRED:
-          TMPredLuma(r, c, Y);
+          TMPredLuma(r, c, frame.YBlocks);
           break;
 
         case B_PRED:
-          BPredLuma(r, c, mh.intra_b_mode, Y);
+          BPredLuma(r, c, mh.intra_b_mode, frame.YBlocks);
           break;
 
         default:
       }
       switch (mh.intra_uv_mode) {
         case V_PRED:
-          VPredChroma(r, c, U);
-          VPredChroma(r, c, V);
+          VPredChroma(r, c, frame.UBlocks);
+          VPredChroma(r, c, frame.VBlocks);
           break;
 
         case H_PRED:
-          HPredChroma(r, c, U);
-          HPredChroma(r, c, V);
+          HPredChroma(r, c, frame.UBlocks);
+          HPredChroma(r, c, frame.VBlocks);
           break;
 
         case DC_PRED:
-          DCPredChroma(r, c, U);
-          DCPredChroma(r, c, V);
+          DCPredChroma(r, c, frame.UBlocks);
+          DCPredChroma(r, c, frame.VBlocks);
           break;
 
         case TM_PRED:
-          TMPredChroma(r, c, U);
-          TMPredChroma(r, c, V);
+          TMPredChroma(r, c, frame.UBlocks);
+          TMPredChroma(r, c, frame.VBlocks);
           break;
 
         default:

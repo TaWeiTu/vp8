@@ -1,13 +1,14 @@
 #ifndef INTRA_PREDICT_H_
 #define INTRA_PREDICT_H_
 
-#include "frame.h"
-#include "frame_header.h"
-#include "utils.h"
-
 #include <algorithm>
 #include <array>
 #include <vector>
+
+#include "frame.h"
+// #include "frame_header.h"
+#include "predict_mode.h"
+#include "utils.h"
 
 namespace vp8 {
 namespace {
@@ -26,10 +27,10 @@ void DCPredLuma(size_t, size_t, LumaBlock &);
 void TMPredLuma(size_t, size_t, LumaBlock &);
 
 void BPredLuma(size_t, size_t,
-               const std::array<std::array<PredictionMode, 4>, 4> &,
+               const std::array<std::array<SubBlockMode, 4>, 4> &,
                LumaBlock &);
 void BPredSubBlock(const std::array<int16_t, 8> &,
-                   const std::array<int16_t, 4> &, int16_t, PredictionMode,
+                   const std::array<int16_t, 4> &, int16_t, SubBlockMode,
                    SubBlock &);
 }  // namespace
 

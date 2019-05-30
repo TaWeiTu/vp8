@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "frame.h"
+#include "predict_mode.h"
 
 namespace vp8 {
 namespace {
@@ -19,13 +20,16 @@ static const MotionVector kZero = MotionVector(0, 0);
 MacroBlockMV SearchMVs(size_t, size_t, const LumaBlock &, MotionVector &,
                        MotionVector &, MotionVector &);
 
+// Make sure that the motion vector indeed point to a valid position.
+void ClampMV(MotionVector &);
+
 // Invert the motion vector the sign bias is different in the reference frames
 // of two macroblocks.
 MotionVector Invert(const MotionVector &, bool, bool);
 
 // Decide the probability table of the current subblock based on the motion
 // vectors of the left and above subblocks.
-uint8_t SubBlockProb(const MotionVecor &, const MotionVector &);
+uint8_t SubBlockProb(const MotionVector &, const MotionVector &);
 
 // The motion vectors of chroma subblocks are the average value of the motion
 // vectors occupying the same position in the luma subblocks.

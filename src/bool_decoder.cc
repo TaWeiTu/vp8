@@ -2,8 +2,8 @@
 
 namespace vp8 {
 
-BoolDecoder::BoolDecoder(const std::string &filename) {
-  fs_ = std::make_unique<std::ifstream>();
+BoolDecoder::BoolDecoder(const std::string &filename)
+    : fs_(std::make_unique<std::ifstream>()) {
   fs_->open(filename, std::ios::binary);
   value_ = uint32_t(ReadByte()) << 8 | ReadByte();
   range_ = 255;
