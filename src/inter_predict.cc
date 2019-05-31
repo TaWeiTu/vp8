@@ -41,8 +41,6 @@ MacroBlockMV SearchMVs(size_t r, size_t c, const FrameHeader &header,
     }
   }
 
-  for (size_t i = 0; i < mv.size(); ++i) ClampMV(mv[i]);
-
   // found three distinct motion vectors
   if (mv.size() == 3u && mv[2] == mv[0]) ++cnt[1];
   // unfound motion vectors are set to ZERO
@@ -60,9 +58,6 @@ MacroBlockMV SearchMVs(size_t r, size_t c, const FrameHeader &header,
   best = mv[0];
   nearest = mv[1];
   near = mv[2];
-  ClampMV(best);
-  ClampMV(nearest);
-  ClampMV(near);
   return ReadMode(cnt);
 }
 
@@ -159,8 +154,13 @@ void ConfigureMVs(const FrameHeader &header, Frame &frame) {
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
       if (!header.macroblock_header[r][c].is_inter_mb) continue;
+      int16_t left = int16_t(-(1 << 7)), right = int16_t(frame.hblock);
+      int16_t up = int16_t(-((r + 1) << 7)), down = int16_t((frame.vblock - r) << 7);
       MotionVector best, nearest, near;
       MacroBlockMV mode = SearchMVs(r, c, header, frame, best, nearest, near);
+      ClampMV(best, left, right, up, down);
+      ClampMV(nearest, left, right, up, down);
+      ClampMV(near, left, right, up, down);
 
       switch (mode) {
         case MV_NEAREST:
@@ -261,9 +261,7 @@ void InterpBlock(const Plane<C> &refer,
       assert(int32_t(c << offset | (j << 2)) + (mv.dc >> 3) >= 0);
       size_t tr = size_t(int32_t(r << offset | (i << 2)) + (mv.dr >> 3));
       size_t tc = size_t(int32_t(c << offset | (j << 2)) + (mv.dc >> 3));
-      if (mr | mc) {
-        Sixtap(refer, tr, tc, mr, mc, filter, mb[r][c]);
-      }
+      if (mr | mc) Sixtap(refer, tr, tc, mr, mc, filter, mb[r][c]);
     }
   }
 }
@@ -290,6 +288,17 @@ template void InterpBlock(const Plane<2> &,
 
 void InterPredict(const FrameHeader &header, Frame &frame) {
   ConfigureMVs(header, frame);
+  for (size_t r = 0; r < frame.vblock; ++r) {
+    for (size_t c = 0; c < frame.hblock; ++c) {
+      if (!header.macroblock_header[r][c].is_inter_mb) continue;
+      InterpBlock(header.ref_frame.Y, header.subpixel_filters, r, c,
+                  frame.Y[r][c]);
+      InterpBlock(header.ref_frame.U, header.subpixel_filters, r, c,
+                  frame.U[r][c]);
+      InterpBlock(header.ref_frame.V, header.subpixel_filters, r, c,
+                  frame.V[r][c]);
+    }
+  }
 }
 
 }  // namespace vp8

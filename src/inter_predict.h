@@ -20,7 +20,7 @@ MacroBlockMV SearchMVs(size_t, size_t, const Plane<4> &, MotionVector &,
                        MotionVector &, MotionVector &);
 
 // Make sure that the motion vector indeed point to a valid position.
-void ClampMV(MotionVector &, size_t, size_t, size_t, size_t);
+void ClampMV(MotionVector &, int16_t, int16_t, int16_t, int16_t);
 
 // Invert the motion vector the sign bias is different in the reference frames
 // of two macroblocks.
