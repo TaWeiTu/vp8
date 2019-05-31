@@ -46,20 +46,6 @@ const std::vector<DctRange> kCoefficientTree = {-DCT_EOB,
                                                 -DCT_CAT_35_66,
                                                 -DCT_CAT_67_2048};
 
-const std::vector<SubBlockMode> kSubBlockModeTree = {
-    -B_DC_PRED, 2,  -B_TM_PRED, 4,  -B_VE_PRED, 6,
-    8,          12, -B_HE_PRED, 10, -B_RD_PRED, -B_VR_PRED,
-    -B_LD_PRED, 14, -B_VL_PRED, 16, -B_HD_PRED, -B_HU_PRED};
-
-const std::vector<MacroBlockMode> kKeyFrameYModeTree = {
-    -B_PRED, 2, 4, 6, -DC_PRED, -V_PRED, -H_PRED, -TM_PRED};
-
-const std::vector<MacroBlockMode> kYModeTree = {
-    -DC_PRED, 2, 4, 6, -V_PRED, -H_PRED, -TM_PRED, -B_PRED};
-
-const std::vector<MacroBlockMode> kUVModeTree = {-DC_PRED, 2,       -V_PRED,
-                                                 4,        -H_PRED, -TM_PRED};
-
 const std::vector<uint8_t> kPcat1 = {159, 0};
 const std::vector<uint8_t> kPcat2 = {165, 145, 0};
 const std::vector<uint8_t> kPcat3 = {173, 148, 140, 0};

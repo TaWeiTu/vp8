@@ -5,12 +5,12 @@
 
 namespace vp8 {
 
-int16_t clamp255(int16_t);
+template <typename T>
+T Clamp255(T);
 
-int16_t clamp255(int16_t x) {
-  static const int16_t lo = 0;
-  static const int16_t hi = 255;
-  return std::clamp(x, lo, hi);
+template <typename T>
+T Clamp255(T x) {
+  return std::clamp(x, T(0), T(255));
 }
 
 }  // namespace vp8

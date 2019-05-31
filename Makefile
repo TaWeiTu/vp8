@@ -1,7 +1,7 @@
 CXX = clang++ 
-DBGFLAGS = -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -fsanitize=undefined -fsanitize=address -fsanitize-address-use-after-scope -fstack-protector-all -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -std=c++17 -Og -g3 -Wno-padded -march=native
-CFLAGS = -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -std=c++17 -O3 -march=native 
-CHECK = cppcheck --enable=all --inconclusive --check-config
+DBGFLAGS = -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -fsanitize=undefined -fsanitize=address -fsanitize-address-use-after-scope -fstack-protector-all -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -std=c++17 -Og -g3 -Wno-padded -march=native
+CFLAGS = -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -std=c++17 -O3 -march=native 
+CHECK = cppcheck --enable=all --inconclusive --check-config --suppress=missingIncludeSystem
 
 all: src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o
 

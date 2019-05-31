@@ -13,22 +13,18 @@
 namespace vp8 {
 namespace {
 
-using LumaBlock = std::vector<std::vector<MacroBlock<LUMA>>>;
-using ChromaBlock = std::vector<std::vector<MacroBlock<CHROMA>>>;
+void VPredChroma(size_t, size_t, Plane<2> &);
+void HPredChroma(size_t, size_t, Plane<2> &);
+void DCPredChroma(size_t, size_t, Plane<2> &);
+void TMPredChroma(size_t, size_t, Plane<2> &);
 
-void VPredChroma(size_t, size_t, ChromaBlock &);
-void HPredChroma(size_t, size_t, ChromaBlock &);
-void DCPredChroma(size_t, size_t, ChromaBlock &);
-void TMPredChroma(size_t, size_t, ChromaBlock &);
-
-void VPredLuma(size_t, size_t, LumaBlock &);
-void HPredLuma(size_t, size_t, LumaBlock &);
-void DCPredLuma(size_t, size_t, LumaBlock &);
-void TMPredLuma(size_t, size_t, LumaBlock &);
+void VPredLuma(size_t, size_t, Plane<4> &);
+void HPredLuma(size_t, size_t, Plane<4> &);
+void DCPredLuma(size_t, size_t, Plane<4> &);
+void TMPredLuma(size_t, size_t, Plane<4> &);
 
 void BPredLuma(size_t, size_t,
-               const std::array<std::array<SubBlockMode, 4>, 4> &,
-               LumaBlock &);
+               const std::array<std::array<SubBlockMode, 4>, 4> &, Plane<4> &);
 void BPredSubBlock(const std::array<int16_t, 8> &,
                    const std::array<int16_t, 4> &, int16_t, SubBlockMode,
                    SubBlock &);

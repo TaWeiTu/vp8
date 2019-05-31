@@ -3,20 +3,20 @@
 namespace vp8 {
 namespace {
 
-void VPredChroma(size_t r, size_t c, ChromaBlock &mb) {
+void VPredChroma(size_t r, size_t c, Plane<2> &mb) {
   if (r == 0)
     mb[r][c].FillWith(127);
   else
     mb[r][c].FillRow(mb[r - 1][c].GetRow(7));
 }
-void HPredChroma(size_t r, size_t c, ChromaBlock &mb) {
+void HPredChroma(size_t r, size_t c, Plane<2> &mb) {
   if (c == 0)
     mb[r][c].FillWith(127);
   else
     mb[r][c].FillCol(mb[r][c - 1].GetCol(7));
 }
 
-void DCPredChroma(size_t r, size_t c, ChromaBlock &mb) {
+void DCPredChroma(size_t r, size_t c, Plane<2> &mb) {
   if (r == 0 && c == 0) {
     mb[r][c].FillWith(128);
     return;
@@ -36,32 +36,32 @@ void DCPredChroma(size_t r, size_t c, ChromaBlock &mb) {
   mb[r][c].FillWith(avg);
 }
 
-void TMPredChroma(size_t r, size_t c, ChromaBlock &mb) {
+void TMPredChroma(size_t r, size_t c, Plane<2> &mb) {
   int16_t p = (r == 0 || c == 0 ? 128 : mb[r - 1][c - 1].GetPixel(7, 7));
   for (size_t i = 0; i < 8; ++i) {
     for (size_t j = 0; j < 8; ++j) {
       int16_t x = (c == 0 ? 129 : mb[r][c - 1].GetPixel(i, 7));
       int16_t y = (r == 0 ? 127 : mb[r - 1][c].GetPixel(7, i));
-      mb[r][c].SetPixel(i, j, clamp255(x + y - p));
+      mb[r][c].SetPixel(i, j, Clamp255(int16_t(x + y - p)));
     }
   }
 }
 
-void VPredLuma(size_t r, size_t c, LumaBlock &mb) {
+void VPredLuma(size_t r, size_t c, Plane<4> &mb) {
   if (r == 0)
     mb[r][c].FillWith(127);
   else
     mb[r][c].FillRow(mb[r - 1][c].GetRow(15));
 }
 
-void HPredLuma(size_t r, size_t c, LumaBlock &mb) {
+void HPredLuma(size_t r, size_t c, Plane<4> &mb) {
   if (c == 0)
     mb[r][c].FillWith(127);
   else
     mb[r][c].FillCol(mb[r][c - 1].GetCol(15));
 }
 
-void DCPredLuma(size_t r, size_t c, LumaBlock &mb) {
+void DCPredLuma(size_t r, size_t c, Plane<4> &mb) {
   if (r == 0 && c == 0) {
     mb[r][c].FillWith(128);
     return;
@@ -81,20 +81,20 @@ void DCPredLuma(size_t r, size_t c, LumaBlock &mb) {
   mb[r][c].FillWith(avg);
 }
 
-void TMPredLuma(size_t r, size_t c, LumaBlock &mb) {
+void TMPredLuma(size_t r, size_t c, Plane<4> &mb) {
   int16_t p = (r == 0 || c == 0 ? 128 : mb[r - 1][c - 1].GetPixel(15, 15));
   for (size_t i = 0; i < 16; ++i) {
     for (size_t j = 0; j < 16; ++j) {
       int16_t x = (c == 0 ? 129 : mb[r][c - 1].GetPixel(i, 15));
       int16_t y = (r == 0 ? 127 : mb[r - 1][c].GetPixel(15, i));
-      mb[r][c].SetPixel(i, j, clamp255(x + y - p));
+      mb[r][c].SetPixel(i, j, Clamp255(int16_t(x + y - p)));
     }
   }
 }
 
 void BPredLuma(size_t r, size_t c,
                const std::array<std::array<SubBlockMode, 4>, 4> &pred,
-               LumaBlock &mb) {
+               Plane<4> &mb) {
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 4; ++j) {
       std::array<int16_t, 8> above;
@@ -190,7 +190,7 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
     case B_TM_PRED: {
       for (size_t i = 0; i < 4; ++i) {
         for (size_t j = 0; j < 4; ++j)
-          sub[i][j] = clamp255(left[i] + above[j] - p);
+          sub[i][j] = Clamp255(int16_t(left[i] + above[j] - p));
       }
       break;
     }
@@ -288,46 +288,46 @@ void IntraPredict(const FrameHeader &header, Frame &frame) {
       auto &mh = header.macroblock_header[r][c];
       switch (mh.intra_y_mode) {
         case V_PRED:
-          VPredLuma(r, c, frame.YBlocks);
+          VPredLuma(r, c, frame.Y);
           break;
 
         case H_PRED:
-          HPredLuma(r, c, frame.YBlocks);
+          HPredLuma(r, c, frame.Y);
           break;
 
         case DC_PRED:
-          DCPredLuma(r, c, frame.YBlocks);
+          DCPredLuma(r, c, frame.Y);
           break;
 
         case TM_PRED:
-          TMPredLuma(r, c, frame.YBlocks);
+          TMPredLuma(r, c, frame.Y);
           break;
 
         case B_PRED:
-          BPredLuma(r, c, mh.intra_b_mode, frame.YBlocks);
+          BPredLuma(r, c, mh.intra_b_mode, frame.Y);
           break;
 
         default:
       }
       switch (mh.intra_uv_mode) {
         case V_PRED:
-          VPredChroma(r, c, frame.UBlocks);
-          VPredChroma(r, c, frame.VBlocks);
+          VPredChroma(r, c, frame.U);
+          VPredChroma(r, c, frame.V);
           break;
 
         case H_PRED:
-          HPredChroma(r, c, frame.UBlocks);
-          HPredChroma(r, c, frame.VBlocks);
+          HPredChroma(r, c, frame.U);
+          HPredChroma(r, c, frame.V);
           break;
 
         case DC_PRED:
-          DCPredChroma(r, c, frame.UBlocks);
-          DCPredChroma(r, c, frame.VBlocks);
+          DCPredChroma(r, c, frame.U);
+          DCPredChroma(r, c, frame.V);
           break;
 
         case TM_PRED:
-          TMPredChroma(r, c, frame.UBlocks);
-          TMPredChroma(r, c, frame.VBlocks);
+          TMPredChroma(r, c, frame.U);
+          TMPredChroma(r, c, frame.V);
           break;
 
         default:

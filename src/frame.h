@@ -21,6 +21,10 @@ struct MotionVector {
     return dr != rhs.dr || dc != rhs.dc;
   }
 
+  MotionVector operator+(const MotionVector& rhs) const {
+    return MotionVector(int16_t(dr + rhs.dr), int16_t(dc + rhs.dc));
+  }
+
   int16_t dr;
   int16_t dc;
 };
@@ -66,20 +70,39 @@ class MacroBlock {
   MotionVector GetMotionVector() const;
   void SetMotionVector(int16_t, int16_t);
   void SetMotionVector(const MotionVector&);
+
   // The motion vectors are the same for all subblocks.
   void SetSubBlockMVs(const MotionVector&);
+  MotionVector GetSubBlockMV(size_t) const;
+  MotionVector GetSubBlockMV(size_t, size_t) const;
 
  private:
   MotionVector mv_;
   std::array<std::array<SubBlock, C>, C> subs_;
 };
 
+template <size_t C>
+class Plane {
+ public:
+  Plane() : offset_(C == 4 ? 4 : 3), mask_((1 << offset_) - 1) {}
+  int16_t GetPixel(size_t r, size_t c) const {
+    return blocks_[r >> offset_][c >> offset_].GetPixel(r & mask_, c & mask_);
+  }
+  std::vector<MacroBlock<C>>& operator[](size_t i) { return blocks_[i]; }
+  const std::vector<MacroBlock<C>>& operator[](size_t i) const {
+    return blocks_[i];
+  }
+
+ private:
+  size_t offset_, mask_;
+  std::vector<std::vector<MacroBlock<C>>> blocks_;
+};
+
 struct Frame {
   Frame() = default;
   size_t hsize, vsize, hblock, vblock;
-  std::vector<std::vector<MacroBlock<LUMA>>> YBlocks;
-  std::vector<std::vector<MacroBlock<CHROMA>>> UBlocks;
-  std::vector<std::vector<MacroBlock<CHROMA>>> VBlocks;
+  Plane<LUMA> Y;
+  Plane<CHROMA> U, V;
 };
 
 void SubBlock::FillWith(int16_t p) {
@@ -193,6 +216,16 @@ void MacroBlock<C>::SetSubBlockMVs(const MotionVector& v) {
   for (size_t i = 0; i < C; ++i) {
     for (size_t j = 0; j < C; ++j) subs_[i][j].SetMotionVector(v);
   }
+}
+
+template <size_t C>
+MotionVector MacroBlock<C>::GetSubBlockMV(size_t id) const {
+  return subs_[id >> 2][id & 3].GetMotionVector();
+}
+
+template <size_t C>
+MotionVector MacroBlock<C>::GetSubBlockMV(size_t r, size_t c) const {
+  return subs_[r][c].GetMotionVector();
 }
 
 MotionVector SubBlock::GetMotionVector() const { return mv_; }
