@@ -4,9 +4,14 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <string>
 #include <vector>
 
+#include "utils.h"
+
 namespace vp8 {
+
+using namespace std::string_literals;
 
 enum Component { LUMA = 4, CHROMA = 2 };
 
@@ -53,7 +58,7 @@ class SubBlock {
 template <size_t C>
 class MacroBlock {
  public:
-  MacroBlock() = default;
+  MacroBlock() : offset_(C == 4 ? 2 : 1), mask_((1 << offset_) - 1) {}
   std::array<SubBlock, C>& operator[](size_t);
   std::array<SubBlock, C> operator[](size_t) const;
 
@@ -78,6 +83,7 @@ class MacroBlock {
 
  private:
   MotionVector mv_;
+  size_t offset_, mask_;
   std::array<std::array<SubBlock, C>, C> subs_;
 };
 
@@ -86,10 +92,18 @@ class Plane {
  public:
   Plane() : offset_(C == 4 ? 4 : 3), mask_((1 << offset_) - 1) {}
   int16_t GetPixel(size_t r, size_t c) const {
+    ensure(r < blocks_.size() * 4 * C && c < blocks_[0].size() * 4 * C,
+           "[Error] Plane<C>::GetPixel: Index out of range."s);
     return blocks_[r >> offset_][c >> offset_].GetPixel(r & mask_, c & mask_);
   }
-  std::vector<MacroBlock<C>>& operator[](size_t i) { return blocks_[i]; }
+  std::vector<MacroBlock<C>>& operator[](size_t i) {
+    ensure(i < blocks_.size(),
+           "[Error] Plane<C>::operator[]: Index out of range."s);
+    return blocks_[i];
+  }
   const std::vector<MacroBlock<C>>& operator[](size_t i) const {
+    ensure(i < blocks_.size(),
+           "[Error] Plane<C>::operator[]: Index out of range."s);
     return blocks_[i];
   }
 
@@ -109,8 +123,13 @@ void SubBlock::FillWith(int16_t p) {
   std::fill(pixels_.begin(), pixels_.end(), std::array<int16_t, 4>{p, p, p, p});
 }
 
-std::array<int16_t, 4>& SubBlock::operator[](size_t i) { return pixels_[i]; }
+std::array<int16_t, 4>& SubBlock::operator[](size_t i) {
+  ensure(i < 4, "[Error] SubBlock::operator[]: Index out of range."s);
+  return pixels_[i];
+}
+
 std::array<int16_t, 4> SubBlock::operator[](size_t i) const {
+  ensure(i < 4, "[Error] SubBlock::operator[]: Index out of range."s);
   return pixels_[i];
 }
 
@@ -124,9 +143,13 @@ void SubBlock::FillCol(const std::array<int16_t, 4>& col) {
     std::fill(pixels_[i].begin(), pixels_[i].end(), col[i]);
 }
 
-std::array<int16_t, 4> SubBlock::GetRow(size_t i) const { return pixels_[i]; }
+std::array<int16_t, 4> SubBlock::GetRow(size_t i) const {
+  ensure(i < 4, "[Error] SubBlock::GetRow: Index out of range."s);
+  return pixels_[i];
+}
 
 std::array<int16_t, 4> SubBlock::GetCol(size_t i) const {
+  ensure(i < 4, "[Error] SubBlock::GetCol: Index out of range."s);
   return std::array<int16_t, 4>{pixels_[0][i], pixels_[1][i], pixels_[2][i],
                                 pixels_[3][i]};
 }
@@ -140,11 +163,13 @@ void MacroBlock<C>::FillWith(int16_t p) {
 
 template <size_t C>
 std::array<SubBlock, C>& MacroBlock<C>::operator[](size_t i) {
+  ensure(i < C, "[Error] MacroBlock<C>::operator[]: Index out of range."s);
   return subs_[i];
 }
 
 template <size_t C>
 std::array<SubBlock, C> MacroBlock<C>::operator[](size_t i) const {
+  ensure(i < C, "[Error] MacroBlock<C>::operator[]: Index out of range."s);
   return subs_[i];
 }
 
@@ -188,11 +213,15 @@ std::array<int16_t, C * 4> MacroBlock<C>::GetCol(size_t i) const {
 
 template <size_t C>
 int16_t MacroBlock<C>::GetPixel(size_t r, size_t c) const {
+  ensure(r < (C << 2) && c < (C << 2),
+         "[Error] MacroBlock<C>::GetPixel: Index out of range."s);
   return subs_[r >> 2][c >> 2][r & 3][c & 3];
 }
 
 template <size_t C>
 void MacroBlock<C>::SetPixel(size_t r, size_t c, int16_t v) {
+  ensure(r < (C << 2) && c < (C << 2),
+         "[Error] MacroBlock<C>::SetPixel: Index out of range."s);
   subs_[r >> 2][c >> 2][r & 3][c & 3] = v;
 }
 
@@ -220,11 +249,15 @@ void MacroBlock<C>::SetSubBlockMVs(const MotionVector& v) {
 
 template <size_t C>
 MotionVector MacroBlock<C>::GetSubBlockMV(size_t id) const {
-  return subs_[id >> 2][id & 3].GetMotionVector();
+  ensure(id < C * C,
+         "[Error] MacroBlock<C>::GetSubBlockMV: Index out of range."s);
+  return subs_[id >> offset_][id & mask_].GetMotionVector();
 }
 
 template <size_t C>
 MotionVector MacroBlock<C>::GetSubBlockMV(size_t r, size_t c) const {
+  ensure(r < C && c < C,
+         "[Error] MacroBlock<C>::GetSubBlockMV: Index out of range."s);
   return subs_[r][c].GetMotionVector();
 }
 

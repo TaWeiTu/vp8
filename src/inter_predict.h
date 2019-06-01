@@ -32,7 +32,7 @@ uint8_t SubBlockProb(const MotionVector &, const MotionVector &);
 
 // The motion vectors of chroma subblocks are the average value of the motion
 // vectors occupying the same position in the luma subblocks.
-void ConfigureChromaMVs(const MacroBlock<4> &, MacroBlock<2> &);
+void ConfigureChromaMVs(const MacroBlock<4> &, bool, MacroBlock<2> &);
 
 // In case of mode MV_SPLIT, set the motion vectors of each subblock
 // independently.
@@ -40,7 +40,7 @@ void ConfigureSubBlockMVs(MVPartition, size_t, size_t, Plane<4> &);
 
 // For each (luma or chroma) macroblocks, configure their motion vectors (if
 // needed).
-void ConfigureMVs(const FrameHeader &, Frame &);
+void ConfigureMVs(const FrameHeader &, bool, Frame &);
 
 // Horizontal pixel interpolation, this should return a 9x4 temporary matrix for
 // the vertical pixel interpolation later.
@@ -67,7 +67,7 @@ void InterpBlock(const Plane<C> &,
 
 }  // namespace
 
-void InterPredict(const FrameHeader &, Frame &);
+void InterPredict(const FrameHeader &, const FrameTag &, Frame &);
 
 }  // namespace vp8
 

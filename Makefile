@@ -3,7 +3,7 @@ DBGFLAGS = -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -fsanitize=undefined -fsan
 CFLAGS = -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -std=c++17 -O3 -march=native 
 CHECK = cppcheck --enable=all --inconclusive --check-config --suppress=missingIncludeSystem
 
-all: src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o
+all: src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o
 
 src/bool_decoder.o: src/bool_decoder.cc src/bool_decoder.h
 	$(CHECK) src/bool_decoder.cc
@@ -20,6 +20,10 @@ src/inter_predict.o: src/inter_predict.cc src/inter_predict.h src/frame.h
 src/dct.o: src/dct.cc src/dct.h
 	$(CHECK) src/dct.cc
 	$(CXX) $(CFLAGS) -c -o src/dct.o src/dct.cc 
+
+src/quantizer.o: src/quantizer.cc src/quantizer.h src/utils.h
+	$(CHECK) src/quantizer.cc
+	$(CXX) $(CFLAGS) -c -o src/quantizer.o src/quantizer.cc 
 
 .PHONY: clean
 clean: 

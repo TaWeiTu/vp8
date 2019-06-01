@@ -79,7 +79,7 @@ uint8_t SubBlockProb(const MotionVector &left, const MotionVector &above) {
   return 0;
 }
 
-void ConfigureChromaMVs(const MacroBlock<4> &luma, MacroBlock<2> &chroma) {
+void ConfigureChromaMVs(const MacroBlock<4> &luma, bool trim, MacroBlock<2> &chroma) {
   for (size_t r = 0; r < 2; ++r) {
     for (size_t c = 0; c < 2; ++c) {
       MotionVector ulv = luma[r << 1][c << 1].GetMotionVector(),
@@ -91,6 +91,10 @@ void ConfigureChromaMVs(const MacroBlock<4> &luma, MacroBlock<2> &chroma) {
       int16_t sc = int16_t(ulv.dc + urv.dc + dlv.dc + drv.dc);
       int16_t dr = (sr >= 0 ? (sr + 4) >> 3 : -((-sr + 4) >> 3));
       int16_t dc = (sc >= 0 ? (sc + 4) >> 3 : -((-sc + 4) >> 3));
+      if (trim) {
+          dr = dr & (-7);
+          dc = dc & (-7);
+      }
       chroma[r][c].SetMotionVector(dr, dc);
     }
   }
@@ -150,7 +154,7 @@ void ConfigureSubBlockMVs(MVPartition p, size_t r, size_t c, Plane<4> &mb) {
   }
 }
 
-void ConfigureMVs(const FrameHeader &header, Frame &frame) {
+void ConfigureMVs(const FrameHeader &header, Frame &frame, bool trim) {
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
       if (!header.macroblock_header[r][c].is_inter_mb) continue;
@@ -191,8 +195,8 @@ void ConfigureMVs(const FrameHeader &header, Frame &frame) {
           ConfigureSubBlockMVs(part, r, c, frame.Y);
           frame.Y[r][c].SetMotionVector(frame.Y[r][c].GetSubBlockMV(15));
       }
-      ConfigureChromaMVs(frame.Y[r][c], frame.U[r][c]);
-      ConfigureChromaMVs(frame.Y[r][c], frame.V[r][c]);
+      ConfigureChromaMVs(frame.Y[r][c], trim, frame.U[r][c]);
+      ConfigureChromaMVs(frame.Y[r][c], trim, frame.V[r][c]);
     }
   }
 }
@@ -286,17 +290,17 @@ template void InterpBlock(const Plane<2> &,
 
 }  // namespace
 
-void InterPredict(const FrameHeader &header, Frame &frame) {
-  ConfigureMVs(header, frame);
+void InterPredict(const FrameHeader &header, const FrameTag &tag, Frame &frame) {
+  ConfigureMVs(header, tag.version == 3, frame);
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
       if (!header.macroblock_header[r][c].is_inter_mb) continue;
       InterpBlock(header.ref_frame.Y, header.subpixel_filters, r, c,
-                  frame.Y[r][c]);
+                  frame.Y[r].at(c));
       InterpBlock(header.ref_frame.U, header.subpixel_filters, r, c,
-                  frame.U[r][c]);
+                  frame.U[r].at(c));
       InterpBlock(header.ref_frame.V, header.subpixel_filters, r, c,
-                  frame.V[r][c]);
+                  frame.V[r].at(c));
     }
   }
 }
