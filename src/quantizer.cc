@@ -9,7 +9,7 @@
 namespace vp8 {
 
 void QuantizeY(std::vector<int16_t>& coefficients, uint8_t qp, const QuantizerHeader &quantizer_header) {
-  int16_t DCfact = std::clamp(kDClookup[+quantizer_header.y_dc_delta_q],
+  int16_t DCfact = std::clamp(kDClookup[q + quantizer_header.y_dc_delta_q],
                               int16_t(8), int16_t(132));
   int16_t ACfact = std::clamp(kAClookup[qp], int16_t(8), int16_t(132));
   Quantize(coefficients, DCfact, ACfact);
