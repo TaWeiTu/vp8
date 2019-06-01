@@ -9,13 +9,13 @@ template <typename T>
 T Clamp255(T);
 
 template <typename T>
-T Clamp255(T x) {
-  return std::clamp(x, T(0), T(255));
+T Clamp(T val, T from, T to) {
+	return val < from ? from : (val > to ? to : val);
 }
 
 template <typename T>
-T Clamp(T val, T from, T to) {
-	return val < from ? from : (val > to ? to : val);
+T Clamp255(T x) {
+  return Clamp(x, T(0), T(255));
 }
 }  // namespace vp8
 
