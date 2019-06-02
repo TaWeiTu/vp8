@@ -4,7 +4,7 @@
 
 namespace vp8 {
 
-bool LoopFilter::IsFilter(int16_t interior, int16_t edge) {
+bool LoopFilter::IsFilter(const int16_t interior, const int16_t edge) {
   return ((abs(p0 - q0) << 2) + (abs(p1 - q1) >> 2)) <= edge &&
          abs(p3 - p2) <= interior && abs(p2 - p1) <= interior &&
          abs(p1 - p0) <= interior && abs(p0 - q0) <= interior &&
@@ -12,11 +12,11 @@ bool LoopFilter::IsFilter(int16_t interior, int16_t edge) {
          abs(q2 - q3) <= interior;
 }
 
-bool LoopFilter::IsHighVariance(int16_t threshold) {
+bool LoopFilter::IsHighVariance(const int16_t threshold) {
   return abs(p1 - p0) > threshold || abs(q1 - q0) > threshold;
 }
 
-int16_t LoopFilter::Adjust(bool use_outer_taps) {
+int16_t LoopFilter::Adjust(const bool use_outer_taps) {
   int16_t P1 = minus128(p1);
   int16_t P0 = minus128(p0);
   int16_t Q0 = minus128(q0);
@@ -33,8 +33,8 @@ int16_t LoopFilter::Adjust(bool use_outer_taps) {
   return a;
 }
 
-void LoopFilter::SubBlockFilter(int16_t hev_threshold, int16_t interior_limit,
-                                int16_t edge_limit) {
+void LoopFilter::SubBlockFilter(const int16_t hev_threshold, const int16_t interior_limit,
+                              const int16_t edge_limit) {
   if (!IsFilter(interior_limit, edge_limit)) return;
   int16_t P1 = minus128(p1);
   int16_t Q1 = minus128(q1);
@@ -46,8 +46,8 @@ void LoopFilter::SubBlockFilter(int16_t hev_threshold, int16_t interior_limit,
   }
 }
 
-void LoopFilter::MacroBlockFilter(int16_t hev_threshold, int16_t interior_limit,
-                                  int16_t edge_limit) {
+void LoopFilter::MacroBlockFilter(const int16_t hev_threshold, const int16_t interior_limit,
+                                const int16_t edge_limit) {
   if (!IsFilter(interior_limit, edge_limit)) return;
   int16_t P2 = minus128(p2);
   int16_t P1 = minus128(p1);
@@ -118,12 +118,12 @@ void LoopFilter::FillVertical(SubBlock &usb, SubBlock &dsb, size_t idx) {
   dsb[3][idx] = this->q3;
 }
 template <size_t C>
-void FrameFilter(FrameHeader &header, uint8_t sharpness_level,
-                 std::vector<std::vector<MacroBlock<C>>> frame, size_t hblock,
-                 size_t vblock, bool is_key_frame, LoopFilter &filter) {
+void FrameFilter(FrameHeader &header, const uint8_t sharpness_level,
+                 std::vector<std::vector<MacroBlock<C>>> &frame, const size_t hblock,
+                const size_t vblock, const bool is_key_frame, LoopFilter &filter) {
   for (size_t r = 0; r < vblock; r++) {
     for (size_t c = 0; c < hblock; c++) {
-      MacroBlock<4> &mb = frame[r][c];
+      MacroBlock<C> &mb = frame[r][c];
       uint8_t loop_filter_level = header.loop_filter_level;
       bool filter_type = header.filter_type;
 
@@ -157,10 +157,10 @@ void FrameFilter(FrameHeader &header, uint8_t sharpness_level,
           (int16_t(loop_filter_level) * 2) + int16_t(interior_limit);
 
       if (c > 0) {
-        MacroBlock<4> &lmb = frame[r][c - 1];
+        MacroBlock<C> &lmb = frame[r][c - 1];
         for (size_t i = 0; i < C; i++) {
           SubBlock &rsb = mb[i][0];
-          SubBlock &lsb = lmb[i][3];
+          SubBlock &lsb = lmb[i][C - 1];
 
           for (size_t j = 0; j < 4; j++) {
             filter.Horizontal(lsb, rsb, j);
@@ -188,10 +188,10 @@ void FrameFilter(FrameHeader &header, uint8_t sharpness_level,
       }
 
       if (r > 0) {
-        MacroBlock<4> &umb = frame[r - 1][c];
+        MacroBlock<C> &umb = frame[r - 1][c];
         for (size_t i = 0; i < C; i++) {
           SubBlock &dsb = mb[0][i];
-          SubBlock &usb = umb[3][i];
+          SubBlock &usb = umb[C - 1][i];
 
           for (size_t j = 0; j < 4; j++) {
             filter.Vertical(usb, dsb, j);
