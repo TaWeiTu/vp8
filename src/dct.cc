@@ -28,6 +28,7 @@ void DCT(std::array<std::array<int16_t, 4>, 4> &subblock) {
     subblock[3][i] = int16_t((d * 2217 - c * 5352 + 51000) >> 16);
   }
 }
+
 void WHT(std::array<std::array<int16_t, 4>, 4> &subblock) {
   for (size_t i = 0; i < 4; i++) {
     int a = (int(subblock[i][0]) + int(subblock[i][2])) << 2;
@@ -63,10 +64,10 @@ void WHT(std::array<std::array<int16_t, 4>, 4> &subblock) {
   }
 }
 
-static const int cospi8_sqrt2_minus1 = 20091;
-static const int sinpi8_sqrt2 = 35468;
 
 void IDCT(std::array<std::array<int16_t, 4>, 4> &subblock) {
+  static const int cospi8_sqrt2_minus1 = 20091;
+  static const int sinpi8_sqrt2 = 35468;
   for (size_t i = 0; i < 4; i++) {
     int a = int(subblock[0][i]) + int(subblock[2][i]);
     int b = int(subblock[0][i]) - int(subblock[2][i]);

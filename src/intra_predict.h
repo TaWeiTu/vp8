@@ -5,8 +5,8 @@
 #include <array>
 #include <vector>
 
+#include "bitstream_parser.h"
 #include "frame.h"
-// #include "frame_header.h"
 #include "predict_mode.h"
 #include "utils.h"
 
@@ -30,7 +30,7 @@ void BPredSubBlock(const std::array<int16_t, 8> &,
                    SubBlock &);
 }  // namespace
 
-void IntraPredict(const FrameHeader &, Frame &);
+void IntraPredict(const FrameHeader &, size_t, size_t, Frame &);
 
 }  // namespace vp8
 

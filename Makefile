@@ -9,36 +9,44 @@ decode: src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src
 	$(CHECK) src/decode.cc
 	$(CXX) $(CFLAGS) -o decode src/bool_decoder.o src/intra_predicto.o src/inter_predict.o src/dct.o src/quantizer.o src/decode.cc
 
-src/bool_decoder.o: src/bool_decoder.cc src/bool_decoder.h
+src/bool_decoder.o: src/bool_decoder.cc src/bool_decoder.h src/utils.h src/utils.cc src/utils.o
 	$(CHECK) src/bool_decoder.cc
-	$(CXX) $(CFLAGS) -c -o src/bool_decoder.o src/bool_decoder.cc 
+	$(CXX) $(CFLAGS) -c -o src/bool_decoder.o src/utils.o src/bool_decoder.cc 
 
-src/intra_predict.o: src/intra_predict.cc src/intra_predict.h src/frame.h
+src/utils.o: src/utils.cc src/utils.h
+	$(CHECK) src/utils.cc
+	$(CXX) $(CFLAGS) -c -o src/utils.o src/utils.cc 
+
+src/intra_predict.o: src/intra_predict.cc src/intra_predict.h src/utils.h src/utils.cc src/utils.o src/frame.h 
 	$(CHECK) src/intra_predict.cc
-	$(CXX) $(CFLAGS) -c -o src/intra_predict.o src/intra_predict.cc 
+	$(CXX) $(CFLAGS) -c -o src/intra_predict.o src/utils.o src/intra_predict.cc 
 
-src/inter_predict.o: src/inter_predict.cc src/inter_predict.h src/frame.h
+src/inter_predict.o: src/inter_predict.cc src/inter_predict.h src/utils.h src/utils.cc src/utils.o src/frame.h
 	$(CHECK) src/inter_predict.cc
-	$(CXX) $(CFLAGS) -c -o src/inter_predict.o src/inter_predict.cc 
+	$(CXX) $(CFLAGS) -c -o src/inter_predict.o src/utils.o src/inter_predict.cc 
 
 src/dct.o: src/dct.cc src/dct.h
 	$(CHECK) src/dct.cc
 	$(CXX) $(CFLAGS) -c -o src/dct.o src/dct.cc 
 
-src/quantizer.o: src/quantizer.cc src/quantizer.h src/utils.h
+src/quantizer.o: src/quantizer.cc src/quantizer.h src/utils.h src/utils.cc src/utils.o
 	$(CHECK) src/quantizer.cc
-	$(CXX) $(CFLAGS) -c -o src/quantizer.o src/quantizer.cc 
+	$(CXX) $(CFLAGS) -c -o src/quantizer.o src/utils.o src/quantizer.cc 
 
-src/yuv.o: src/yuv.cc src/yuv.h src/utils.h src/frame.h
+src/yuv.o: src/yuv.cc src/yuv.h src/utils.h src/utils.cc src/utils.o src/frame.h
 	$(CHECK) src/yuv.cc
-	$(CXX) $(CFLAGS) -c -o src/yuv.o src/yuv.cc 
+	$(CXX) $(CFLAGS) -c -o src/yuv.o src/utils.o src/yuv.cc 
+
+src/filter.o: src/filter.cc src/filter.h src/utils.h src/utils.cc src/utils.o src/frame.h
+	$(CHECK) src/filter.cc
+	$(CXX) $(CFLAGS) -c -o src/filter.o src/utils.o src/filter.cc 
 
 .PHONY: clean
 clean: 
 	rm src/*.o
 
 .PHONY: test
-test: test/main.cc test/dct_test.h src/dct.o
-	$(CXX) $(CFLAGS) src/dct.o test/main.cc
+test: test/main.cc test/dct_test.h src/dct.o test/yuv_test.h src/yuv.o src/utils.h src/utils.cc src/utils.o 
+	$(CXX) $(CFLAGS) src/dct.o src/yuv.o src/utils.o test/main.cc
 	./a.out
 	rm ./a.out

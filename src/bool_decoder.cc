@@ -19,7 +19,7 @@ BoolDecoder::BoolDecoder(std::unique_ptr<std::ifstream> fs)
 
 uint8_t BoolDecoder::ReadByte() {
   uint8_t res;
-  (*fs_) >> res;
+  fs_->read(reinterpret_cast<char *>(&res), sizeof(res));
   return res;
 }
 

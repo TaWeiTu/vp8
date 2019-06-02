@@ -3,3 +3,4 @@
 *.pdf
 *.out
 example/
+.DS_Store
