@@ -70,16 +70,6 @@ uint8_t BoolDecoder::Prob7() {
   return res ? uint8_t(res << 1) : 1;
 }
 
-int16_t BoolDecoder::Tree(const std::vector<uint8_t> &prob,
-                          const std::vector<int16_t> &tree) {
-  int16_t res = 0;
-  while (true) {
-    res = tree[size_t(res + Bool(prob[size_t(res)]))];
-    if (res < 0) break;
-  }
-  return res;
-}
-
 uint32_t BoolDecoder::ReadUncoded(size_t n) {
   uint32_t res = 0;
   for (size_t i = 0; i < n; ++i) res |= uint32_t(ReadByte()) << (i << 3);
