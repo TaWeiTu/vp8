@@ -13,7 +13,7 @@ void TestYuv() {
   std::cout << "[Test] YUV test started." << std::endl;
   static std::mt19937 kRng(7122);
   static std::uniform_int_distribution<int16_t> kDis(0, 255);
-  const size_t kH = 176, kW = 144, kF = 10000;
+  const size_t kH = 176, kW = 144, kF = 100;
 
   vp8::YUV yuv = vp8::YUV("test.yuv");
   for (size_t k = 0; k < kF; ++k) {
