@@ -19,7 +19,7 @@ BoolDecoder::BoolDecoder(std::unique_ptr<std::ifstream> fs)
 
 uint8_t BoolDecoder::ReadByte() {
   uint8_t res;
-  (*fs_) >> res;
+  fs_->read(reinterpret_cast<char *>(&res), sizeof(res));
   return res;
 }
 
@@ -68,16 +68,6 @@ uint8_t BoolDecoder::Prob8() { return uint8_t(Lit(8)); }
 uint8_t BoolDecoder::Prob7() {
   uint8_t res = uint8_t(Lit(7));
   return res ? uint8_t(res << 1) : 1;
-}
-
-int16_t BoolDecoder::Tree(const std::vector<uint8_t> &prob,
-                          const std::vector<int16_t> &tree) {
-  int16_t res = 0;
-  while (true) {
-    res = tree[size_t(res + Bool(prob[size_t(res)]))];
-    if (res < 0) break;
-  }
-  return res;
 }
 
 uint32_t BoolDecoder::ReadUncoded(size_t n) {

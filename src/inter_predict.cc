@@ -79,7 +79,8 @@ uint8_t SubBlockProb(const MotionVector &left, const MotionVector &above) {
   return 0;
 }
 
-void ConfigureChromaMVs(const MacroBlock<4> &luma, bool trim, MacroBlock<2> &chroma) {
+void ConfigureChromaMVs(const MacroBlock<4> &luma, bool trim,
+                        MacroBlock<2> &chroma) {
   for (size_t r = 0; r < 2; ++r) {
     for (size_t c = 0; c < 2; ++c) {
       MotionVector ulv = luma[r << 1][c << 1].GetMotionVector(),
@@ -92,8 +93,8 @@ void ConfigureChromaMVs(const MacroBlock<4> &luma, bool trim, MacroBlock<2> &chr
       int16_t dr = (sr >= 0 ? (sr + 4) >> 3 : -((-sr + 4) >> 3));
       int16_t dc = (sc >= 0 ? (sc + 4) >> 3 : -((-sc + 4) >> 3));
       if (trim) {
-          dr = dr & (-7);
-          dc = dc & (-7);
+        dr = dr & (-7);
+        dc = dc & (-7);
       }
       chroma[r][c].SetMotionVector(dr, dc);
     }
@@ -154,51 +155,48 @@ void ConfigureSubBlockMVs(MVPartition p, size_t r, size_t c, Plane<4> &mb) {
   }
 }
 
-void ConfigureMVs(const FrameHeader &header, Frame &frame, bool trim) {
-  for (size_t r = 0; r < frame.vblock; ++r) {
-    for (size_t c = 0; c < frame.hblock; ++c) {
-      if (!header.macroblock_header[r][c].is_inter_mb) continue;
-      int16_t left = int16_t(-(1 << 7)), right = int16_t(frame.hblock);
-      int16_t up = int16_t(-((r + 1) << 7)), down = int16_t((frame.vblock - r) << 7);
-      MotionVector best, nearest, near;
-      MacroBlockMV mode = SearchMVs(r, c, header, frame, best, nearest, near);
-      ClampMV(best, left, right, up, down);
-      ClampMV(nearest, left, right, up, down);
-      ClampMV(near, left, right, up, down);
+void ConfigureMVs(const FrameHeader &header, size_t r, size_t c, bool trim,
+                  Frame &frame) {
+  int16_t left = int16_t(-(1 << 7)), right = int16_t(frame.hblock);
+  int16_t up = int16_t(-((r + 1) << 7)),
+          down = int16_t((frame.vblock - r) << 7);
+  MotionVector best, nearest, near;
+  MacroBlockMV mode = SearchMVs(r, c, header, frame.Y, best, nearest, near);
+  ClampMV(best, left, right, up, down);
+  ClampMV(nearest, left, right, up, down);
+  ClampMV(near, left, right, up, down);
 
-      switch (mode) {
-        case MV_NEAREST:
-          frame.Y[r][c].SetSubBlockMVs(nearest);
-          frame.Y[r][c].SetMotionVector(nearest);
-          break;
+  switch (mode) {
+    case MV_NEAREST:
+      frame.Y[r][c].SetSubBlockMVs(nearest);
+      frame.Y[r][c].SetMotionVector(nearest);
+      break;
 
-        case MV_NEAR:
-          frame.Y[r][c].SetSubBlockMVs(near);
-          frame.Y[r][c].SetMotionVector(near);
-          break;
+    case MV_NEAR:
+      frame.Y[r][c].SetSubBlockMVs(near);
+      frame.Y[r][c].SetMotionVector(near);
+      break;
 
-        case MV_ZERO:
-          frame.Y[r][c].SetSubBlockMVs(kZero);
-          frame.Y[r][c].SetMotionVector(kZero);
-          break;
+    case MV_ZERO:
+      frame.Y[r][c].SetSubBlockMVs(kZero);
+      frame.Y[r][c].SetMotionVector(kZero);
+      break;
 
-        case MV_NEW:
-          // TODO: Read motion vector in mode MV_NEW.
-          MotionVector mv = ReadMotionVector() + best;
-          frame.Y[r][c].SetSubBlockMVs(mv);
-          frame.Y[r][c].SetMotionVector(mv);
-          break;
+    case MV_NEW:
+      // TODO: Read motion vector in mode MV_NEW.
+      MotionVector mv = ReadMotionVector() + best;
+      frame.Y[r][c].SetSubBlockMVs(mv);
+      frame.Y[r][c].SetMotionVector(mv);
+      break;
 
-        case MV_SPLIT:
-          // TODO: Read how the macroblock is splitted.
-          MVPartition part = ReadMVSplit();
-          ConfigureSubBlockMVs(part, r, c, frame.Y);
-          frame.Y[r][c].SetMotionVector(frame.Y[r][c].GetSubBlockMV(15));
-      }
-      ConfigureChromaMVs(frame.Y[r][c], trim, frame.U[r][c]);
-      ConfigureChromaMVs(frame.Y[r][c], trim, frame.V[r][c]);
-    }
+    case MV_SPLIT:
+      // TODO: Read how the macroblock is splitted.
+      MVPartition part = ReadMVSplit();
+      ConfigureSubBlockMVs(part, r, c, frame.Y);
+      frame.Y[r][c].SetMotionVector(frame.Y[r][c].GetSubBlockMV(15));
   }
+  ConfigureChromaMVs(frame.Y[r][c], trim, frame.U[r][c]);
+  ConfigureChromaMVs(frame.Y[r][c], trim, frame.V[r][c]);
 }
 
 template <size_t C>
@@ -261,8 +259,10 @@ void InterpBlock(const Plane<C> &refer,
         continue;
       }
       uint8_t mr = mv.dr & 7, mc = mv.dc & 7;
-      assert(int32_t(r << offset | (i << 2)) + (mv.dr >> 3) >= 0);
-      assert(int32_t(c << offset | (j << 2)) + (mv.dc >> 3) >= 0);
+      ensure(int32_t(r << offset | (i << 2)) + (mv.dr >> 3) >= 0,
+             "[Error] InterpBlock: the motion vectors is out of bound.");
+      ensure(int32_t(c << offset | (j << 2)) + (mv.dc >> 3) >= 0,
+             "[Error] InterpBlock: the motion vectors is out of bound.");
       size_t tr = size_t(int32_t(r << offset | (i << 2)) + (mv.dr >> 3));
       size_t tc = size_t(int32_t(c << offset | (j << 2)) + (mv.dc >> 3));
       if (mr | mc) Sixtap(refer, tr, tc, mr, mc, filter, mb[r][c]);
@@ -290,19 +290,15 @@ template void InterpBlock(const Plane<2> &,
 
 }  // namespace
 
-void InterPredict(const FrameHeader &header, const FrameTag &tag, Frame &frame) {
-  ConfigureMVs(header, tag.version == 3, frame);
-  for (size_t r = 0; r < frame.vblock; ++r) {
-    for (size_t c = 0; c < frame.hblock; ++c) {
-      if (!header.macroblock_header[r][c].is_inter_mb) continue;
-      InterpBlock(header.ref_frame.Y, header.subpixel_filters, r, c,
-                  frame.Y[r].at(c));
-      InterpBlock(header.ref_frame.U, header.subpixel_filters, r, c,
-                  frame.U[r].at(c));
-      InterpBlock(header.ref_frame.V, header.subpixel_filters, r, c,
-                  frame.V[r].at(c));
-    }
-  }
+void InterPredict(const FrameHeader &header, const FrameTag &tag, size_t r,
+                  size_t c, Frame &frame) {
+  ConfigureMVs(header, r, c, tag.version == 3, frame);
+  InterpBlock(header.ref_frame.Y, header.subpixel_filters, r, c,
+              frame.Y[r].at(c));
+  InterpBlock(header.ref_frame.U, header.subpixel_filters, r, c,
+              frame.U[r].at(c));
+  InterpBlock(header.ref_frame.V, header.subpixel_filters, r, c,
+              frame.V[r].at(c));
 }
 
 }  // namespace vp8

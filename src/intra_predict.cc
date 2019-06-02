@@ -280,59 +280,49 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
 
 }  // namespace
 
-void IntraPredict(const FrameHeader &header, Frame &frame) {
-  for (size_t r = 0; r < frame.vblock; ++r) {
-    for (size_t c = 0; c < frame.hblock; ++c) {
-      if (header.macroblock_header[r][c].is_inter_mb) continue;
+void IntraPredict(const FrameHeader &header, size_t r, size_t c, Frame &frame) {
+  auto &mh = header.macroblock_header[r][c];
+  switch (mh.intra_y_mode) {
+    case V_PRED:
+      VPredLuma(r, c, frame.Y);
+      break;
 
-      auto &mh = header.macroblock_header[r][c];
-      switch (mh.intra_y_mode) {
-        case V_PRED:
-          VPredLuma(r, c, frame.Y);
-          break;
+    case H_PRED:
+      HPredLuma(r, c, frame.Y);
+      break;
 
-        case H_PRED:
-          HPredLuma(r, c, frame.Y);
-          break;
+    case DC_PRED:
+      DCPredLuma(r, c, frame.Y);
+      break;
 
-        case DC_PRED:
-          DCPredLuma(r, c, frame.Y);
-          break;
+    case TM_PRED:
+      TMPredLuma(r, c, frame.Y);
+      break;
 
-        case TM_PRED:
-          TMPredLuma(r, c, frame.Y);
-          break;
+    case B_PRED:
+      BPredLuma(r, c, mh.intra_b_mode, frame.Y);
+      break;
+  }
+  switch (mh.intra_uv_mode) {
+    case V_PRED:
+      VPredChroma(r, c, frame.U);
+      VPredChroma(r, c, frame.V);
+      break;
 
-        case B_PRED:
-          BPredLuma(r, c, mh.intra_b_mode, frame.Y);
-          break;
+    case H_PRED:
+      HPredChroma(r, c, frame.U);
+      HPredChroma(r, c, frame.V);
+      break;
 
-        default:
-      }
-      switch (mh.intra_uv_mode) {
-        case V_PRED:
-          VPredChroma(r, c, frame.U);
-          VPredChroma(r, c, frame.V);
-          break;
+    case DC_PRED:
+      DCPredChroma(r, c, frame.U);
+      DCPredChroma(r, c, frame.V);
+      break;
 
-        case H_PRED:
-          HPredChroma(r, c, frame.U);
-          HPredChroma(r, c, frame.V);
-          break;
-
-        case DC_PRED:
-          DCPredChroma(r, c, frame.U);
-          DCPredChroma(r, c, frame.V);
-          break;
-
-        case TM_PRED:
-          TMPredChroma(r, c, frame.U);
-          TMPredChroma(r, c, frame.V);
-          break;
-
-        default:
-      }
-    }
+    case TM_PRED:
+      TMPredChroma(r, c, frame.U);
+      TMPredChroma(r, c, frame.V);
+      break;
   }
 }
 

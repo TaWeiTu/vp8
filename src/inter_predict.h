@@ -3,11 +3,12 @@
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <vector>
 
+#include "bitstream_parser.h"
 #include "frame.h"
 #include "predict_mode.h"
+#include "utils.h"
 
 namespace vp8 {
 namespace {
@@ -16,8 +17,8 @@ static const MotionVector kZero = MotionVector(0, 0);
 
 // Search for motion vectors in the left, above and upper-left macroblocks and
 // return the best, nearest and near motion vectors.
-MacroBlockMV SearchMVs(size_t, size_t, const Plane<4> &, MotionVector &,
-                       MotionVector &, MotionVector &);
+MacroBlockMV SearchMVs(size_t, size_t, const FrameHeader &, const Plane<4> &,
+                       MotionVector &, MotionVector &, MotionVector &);
 
 // Make sure that the motion vector indeed point to a valid position.
 void ClampMV(MotionVector &, int16_t, int16_t, int16_t, int16_t);
@@ -40,7 +41,7 @@ void ConfigureSubBlockMVs(MVPartition, size_t, size_t, Plane<4> &);
 
 // For each (luma or chroma) macroblocks, configure their motion vectors (if
 // needed).
-void ConfigureMVs(const FrameHeader &, bool, Frame &);
+void ConfigureMVs(const FrameHeader &, size_t, size_t, bool, Frame &);
 
 // Horizontal pixel interpolation, this should return a 9x4 temporary matrix for
 // the vertical pixel interpolation later.
@@ -67,7 +68,8 @@ void InterpBlock(const Plane<C> &,
 
 }  // namespace
 
-void InterPredict(const FrameHeader &, const FrameTag &, Frame &);
+void InterPredict(const FrameHeader &, const FrameTag &, size_t, size_t,
+                  Frame &);
 
 }  // namespace vp8
 
