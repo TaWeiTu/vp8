@@ -1,6 +1,7 @@
 #include <cassert>
 
 #include "bitstream_parser.h"
+#include "frame.h"
 #include "utils.h"
 
 namespace vp8 {
@@ -34,6 +35,7 @@ FrameTag BitstreamParser::ReadFrameTag() {
   }
   context_.mb_metadata.resize(((frame_tag_.width + 3) / 4) *
                               ((frame_tag_.height + 3) / 4));
+  fill(context_.mb_metadata.begin(), context_.mb_metadata.end(), 0);
   return frame_tag_;
 }
 
@@ -262,60 +264,71 @@ MacroBlockPreHeader BitstreamParser::ReadMacroBlockPreHeader() {
   return result;
 }
 
-MacroBlockHeader BitstreamParser::ReadMacroBlockHeader(
-    const std::array<uint8_t, 4> &cnt, int sub_mv_context, int above_bmode,
-    int left_bmode, const MacroBlockPreHeader &pre_result) {
+SubBlockMode BitstreamParser::ReadSubBlockMode(int sub_mv_context) {
+  return SubBlockMode(
+      bd_->Tree(kSubMvRefProbs.at(sub_mv_context), kSubBlockMVTree));
+}
+
+MotionVector BitstreamParser::ReadSubBlockMV() {
+  auto h = ReadMvComponent(false);
+  auto w = ReadMvComponent(true);
+  return MotionVector(h, w);
+}
+
+InterMBHeader BitstreamParser::ReadInterMBHeader(
+    const std::array<uint8_t, 4> &cnt) {
   std::array<uint8_t, 4> mv_ref_probs{};
   mv_ref_probs[0] = kSubMvRefProbs[cnt[0]][0];
   mv_ref_probs[1] = kSubMvRefProbs[cnt[1]][1];
   mv_ref_probs[2] = kSubMvRefProbs[cnt[2]][2];
   mv_ref_probs[3] = kSubMvRefProbs[cnt[3]][3];
-  MacroBlockHeader result{};
-  if (pre_result.is_inter_mb) {
-    bool mb_ref_frame_sel1 = bd_->Bool(frame_header_.prob_last),
-         mb_ref_frame_sel2 = false;
-    if (mb_ref_frame_sel1) {
-      mb_ref_frame_sel2 = bd_->Bool(frame_header_.prob_gf);
-    }
-    result.ref_frame = mb_ref_frame_sel2 << 1 | mb_ref_frame_sel1;
-    result.mv_mode = MacroBlockMV(bd_->Tree(mv_ref_probs, kMvRefTree));
-    if (result.mv_mode == MV_SPLIT) {
-      result.mv_split_mode =
-          MVPartition(bd_->Tree(kMvPartitionProbs, kMvPartitionTree));
-      for (int i = 0; i < kNumMvs.at(result.mv_split_mode); i++) {
-        result.sub_mv_mode.at(i) = SubBlockMVMode(
-            bd_->Tree(kSubMvRefProbs.at(sub_mv_context), kSubBlockMVTree));
-        if (result.sub_mv_mode.at(i) == NEW_4x4) {
-          ReadMvComponent(false);
-          ReadMvComponent(true);
-        }
-      }
-    } else if (result.mv_mode == MV_NEW) {
-      ReadMvComponent(false);
-      ReadMvComponent(true);
-    }
-  } else {
-    result.intra_y_mode =
-        MacroBlockMode(bd_->Tree(context_.intra_16x16_prob, kYModeTree));
-    if (result.intra_y_mode == B_PRED) {
-      for (int i = 0; i < 16; i++) {
-        result.intra_b_mode.at(i) = SubBlockMode(
-            bd_->Tree(kKeyFrameBModeProbs.at(above_bmode).at(left_bmode),
-                      kSubBlockModeTree));
-      }
-    }
-    result.intra_uv_mode =
-        MacroBlockMode(bd_->Tree(context_.intra_chroma_prob, kUvModeProb));
+  InterMBHeader result{};
+  bool mb_ref_frame_sel1 = bd_->Bool(frame_header_.prob_last),
+       mb_ref_frame_sel2 = false;
+  if (mb_ref_frame_sel1) {
+    mb_ref_frame_sel2 = bd_->Bool(frame_header_.prob_gf);
+  }
+  result.ref_frame = mb_ref_frame_sel2 << 1 | mb_ref_frame_sel1;
+  result.mv_mode = MacroBlockMV(bd_->Tree(mv_ref_probs, kMvRefTree));
+  if (result.mv_mode == MV_SPLIT) {
+    result.mv_split_mode =
+        MVPartition(bd_->Tree(kMvPartitionProbs, kMvPartitionTree));
+    // The rest is up to the caller to call ReadSubBlockMode() &
+    // ReadSubBlockMV().
+  } else if (result.mv_mode == MV_NEW) {
+    auto h = ReadMvComponent(false);
+    auto w = ReadMvComponent(true);
+    result.mv_new = MotionVector(h, w);
   }
   context_.mb_metadata.at(macroblock_metadata_idx) |=
-      (pre_result.is_inter_mb && result.mv_mode == MV_SPLIT) ||
-      (!pre_result.is_inter_mb && result.intra_y_mode != B_PRED);
-  context_.mb_metadata.at(macroblock_metadata_idx) |= result.mv_mode;
+      (result.mv_mode == MV_SPLIT);
+  context_.mb_metadata.at(macroblock_metadata_idx) |= (result.ref_frame << 4);
   macroblock_metadata_idx++;
   return result;
 }
 
-void BitstreamParser::ReadMvComponent(bool kind) {
+SubBlockMode BitstreamParser::ReadSubBlockBMode(int above_bmode,
+                                                int left_bmode) {
+  return SubBlockMode(bd_->Tree(
+      kKeyFrameBModeProbs.at(above_bmode).at(left_bmode), kSubBlockModeTree));
+}
+
+MacroBlockMode BitstreamParser::ReadIntraMB_UVMode() {
+  return MacroBlockMode(bd_->Tree(context_.intra_chroma_prob, kUvModeProb));
+}
+
+MacroBlockMode BitstreamParser::ReadIntraMB_YMode() {
+  auto intra_y_mode =
+      MacroBlockMode(bd_->Tree(context_.intra_16x16_prob, kYModeTree));
+  // The rest is up to the caller to call ReadSubBlockBMode() &
+  // ReadMB_UVMode().
+  context_.mb_metadata.at(macroblock_metadata_idx) |= (intra_y_mode != B_PRED);
+  context_.mb_metadata.at(macroblock_metadata_idx) |= (intra_y_mode << 6);
+  macroblock_metadata_idx++;
+  return intra_y_mode;
+}
+
+int16_t BitstreamParser::ReadMvComponent(bool kind) {
   auto p = context_.mvc_probs.at(kind);
   int16_t a = 0;
   if (bd_->Bool(p.at(MVP_IS_SHORT))) {
@@ -332,6 +345,7 @@ void BitstreamParser::ReadMvComponent(bool kind) {
     a = bd_->Tree(IteratorArray<decltype(p)>(p.begin() + MVP_SHORT, p.end()),
                   kSmallMvTree);
   }
+  return a;
 }
 
 ResidualData BitstreamParser::ReadResidualData(int first_coeff,
