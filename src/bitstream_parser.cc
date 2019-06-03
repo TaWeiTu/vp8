@@ -262,6 +262,15 @@ MacroBlockPreHeader BitstreamParser::ReadMacroBlockPreHeader() {
   if (!frame_tag_.key_frame) {
     result.is_inter_mb = frame_header_.prob_intra;
   }
+  if (result.is_inter_mb) {
+    bool mb_ref_frame_sel1 = bd_->Bool(frame_header_.prob_last),
+         mb_ref_frame_sel2 = false;
+    if (mb_ref_frame_sel1) {
+      mb_ref_frame_sel2 = bd_->Bool(frame_header_.prob_gf);
+    }
+    result.ref_frame = uint8_t((mb_ref_frame_sel2 << 1) | mb_ref_frame_sel1);
+    context_.mb_metadata.at(macroblock_metadata_idx) |= (result.ref_frame << 4);
+  }
   return result;
 }
 
@@ -284,12 +293,6 @@ InterMBHeader BitstreamParser::ReadInterMBHeader(
   mv_ref_probs[2] = kSubMvRefProbs[cnt[2]][2];
   mv_ref_probs[3] = kSubMvRefProbs[cnt[3]][3];
   InterMBHeader result{};
-  bool mb_ref_frame_sel1 = bd_->Bool(frame_header_.prob_last),
-       mb_ref_frame_sel2 = false;
-  if (mb_ref_frame_sel1) {
-    mb_ref_frame_sel2 = bd_->Bool(frame_header_.prob_gf);
-  }
-  result.ref_frame = uint8_t((mb_ref_frame_sel2 << 1) | mb_ref_frame_sel1);
   result.mv_mode = MacroBlockMV(bd_->Tree(mv_ref_probs, kMvRefTree));
   if (result.mv_mode == MV_SPLIT) {
     result.mv_split_mode =
@@ -303,7 +306,6 @@ InterMBHeader BitstreamParser::ReadInterMBHeader(
   }
   context_.mb_metadata.at(macroblock_metadata_idx) |=
       (result.mv_mode == MV_SPLIT);
-  context_.mb_metadata.at(macroblock_metadata_idx) |= (result.ref_frame << 4);
   macroblock_metadata_idx++;
   return result;
 }

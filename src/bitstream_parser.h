@@ -101,10 +101,11 @@ struct MacroBlockPreHeader {
   uint8_t segment_id;
   bool mb_skip_coeff;
   bool is_inter_mb;
+  // Only used when is_inter_mb == true
+  uint8_t ref_frame;
 };
 
 struct InterMBHeader {
-  uint8_t ref_frame;
   MacroBlockMV mv_mode;
   MVPartition mv_split_mode;
   MotionVector mv_new;
