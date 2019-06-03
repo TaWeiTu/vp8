@@ -166,7 +166,7 @@ class BitstreamParser {
 
   std::pair<FrameTag, FrameHeader> ReadFrameTagHeader();
 
-  MacroblockHeader ReadMacroBlockHeader(
+  MacroBlockHeader ReadMacroBlockHeader(
       const std::array<uint8_t, 4>& mv_ref_probs, int sub_mv_context);
 
   ResidualData ReadResidualData();
