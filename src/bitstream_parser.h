@@ -110,6 +110,10 @@ struct InterMBHeader {
   MotionVector mv_new;
 };
 
+struct IntraMBHeader {
+  MacroBlockMode intra_y_mode;
+};
+
 struct ResidualData {
   std::array<std::array<int16_t, 16>, 25> dct_coeff;
   uint8_t segment_id;
@@ -176,7 +180,7 @@ class BitstreamParser {
   std::array<int16_t, 16> ReadResidualBlock(int first_coeff,
                                             std::array<uint8_t, 4> context);
 
-  int16_t ReadMvComponent(bool kind);
+  uint16_t ReadMvComponent(bool kind);
 
  public:
   BitstreamParser() = default;
@@ -187,7 +191,7 @@ class BitstreamParser {
 
   MacroBlockPreHeader ReadMacroBlockPreHeader();
 
-  SubBlockMode ReadSubBlockMode(int sub_mv_context);
+  SubBlockMode ReadSubBlockMode(uint8_t sub_mv_context);
 
   MotionVector ReadSubBlockMV();
 
@@ -197,7 +201,7 @@ class BitstreamParser {
 
   MacroBlockMode ReadIntraMB_UVMode();
 
-  MacroBlockMode ReadIntraMB_YMode();
+  IntraMBHeader ReadIntraMBHeader();
 
   ResidualData ReadResidualData(int first_coeff,
                                 std::array<uint8_t, 4> context);

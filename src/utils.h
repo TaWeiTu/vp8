@@ -18,6 +18,7 @@ T Clamp128(T x) {
   return std::clamp(x, T(-128), T(127));
 }
 
+void ensure(bool cond, const std::string &message);
 void ensure(bool cond, const std::string &message) {
   if (__builtin_expect(cond, true)) return;
   if (!message.empty()) std::cerr << message << std::endl;
@@ -34,7 +35,7 @@ class IteratorArray {
  public:
   IteratorArray(IterT _begin, IterT _end) : it_begin_(_begin), it_end_(_end) {}
   ObjT at(const size_t idx) const {
-    if (idx >= std::distance(it_begin_, it_end_)) {
+    if (ptrdiff_t(idx) >= std::distance(it_begin_, it_end_)) {
       throw std::out_of_range("Out of range");
     } else {
       return *(it_begin_ + idx);
