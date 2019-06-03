@@ -3,7 +3,9 @@
 namespace vp8 {
 namespace {
 
-InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb, const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
+InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
+                        const std::array<bool, 4> &ref_frame_bias,
+                        uint8_t ref_frame,
                         const std::vector<std::vector<InterContext>> &context,
                         BitstreamParser &ps, MotionVector &best,
                         MotionVector &nearest, MotionVector &near) {
@@ -13,14 +15,18 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb, const std::array
 
   if (r == 0 || context.at(r - 1).at(c).is_inter_mb) {
     MotionVector v = r ? mb.at(r - 1).at(c).GetMotionVector() : kZero;
-    if (r > 0) v = Invert(v, context.at(r - 1).at(c).ref_frame, ref_frame, ref_frame_bias);
+    if (r > 0)
+      v = Invert(v, context.at(r - 1).at(c).ref_frame, ref_frame,
+                 ref_frame_bias);
     if (v != kZero) mv.push_back(v);
     cnt.at(mv.size()) += 2;
   }
 
   if (c == 0 || context.at(r).at(c - 1).is_inter_mb) {
     MotionVector v = c ? mb.at(r).at(c - 1).GetMotionVector() : kZero;
-    if (c > 0) v = Invert(v, context.at(r).at(c - 1).ref_frame, ref_frame, ref_frame_bias);
+    if (c > 0)
+      v = Invert(v, context.at(r).at(c - 1).ref_frame, ref_frame,
+                 ref_frame_bias);
     if (v != kZero) {
       if (!mv.empty() && mv.back() != v) mv.push_back(v);
       cnt.at(mv.size()) += 2;
@@ -31,7 +37,9 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb, const std::array
 
   if (r == 0 || c == 0 || context.at(r - 1).at(c - 1).is_inter_mb) {
     MotionVector v = r && c ? mb.at(r - 1).at(c - 1).GetMotionVector() : kZero;
-    if (r > 0 && c > 0) v = Invert(v, context.at(r - 1).at(c - 1).ref_frame, ref_frame, ref_frame_bias);
+    if (r > 0 && c > 0)
+      v = Invert(v, context.at(r - 1).at(c - 1).ref_frame, ref_frame,
+                 ref_frame_bias);
     if (v != kZero) {
       if (!mv.empty() && mv.back() != v) mv.push_back(v);
       cnt.at(mv.size()) += 1;
@@ -68,10 +76,12 @@ void ClampMV(MotionVector &mv, int16_t left, int16_t right, int16_t up,
   mv.dc = std::clamp(mv.dr, left, right);
 }
 
-MotionVector Invert(const MotionVector &mv, uint8_t ref_frame1, uint8_t ref_frame2, const std::array<bool, 4> &ref_frame_bias) {
-    if (ref_frame_bias[ref_frame1] != ref_frame_bias[ref_frame2])
-        return MotionVector(-mv.dr, -mv.dc);
-    return mv;
+MotionVector Invert(const MotionVector &mv, uint8_t ref_frame1,
+                    uint8_t ref_frame2,
+                    const std::array<bool, 4> &ref_frame_bias) {
+  if (ref_frame_bias[ref_frame1] != ref_frame_bias[ref_frame2])
+    return MotionVector(-mv.dr, -mv.dc);
+  return mv;
 }
 
 uint8_t SubBlockContext(const MotionVector &left, const MotionVector &above) {
@@ -193,15 +203,17 @@ void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
   }
 }
 
-void ConfigureMVs(size_t r, size_t c, bool trim, const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
-                           std::vector<std::vector<InterContext>> &context,
-                           BitstreamParser &ps, Frame &frame) {
+void ConfigureMVs(size_t r, size_t c, bool trim,
+                  const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
+                  std::vector<std::vector<InterContext>> &context,
+                  BitstreamParser &ps, Frame &frame) {
   int16_t left = int16_t(-(1 << 7)), right = int16_t(frame.hblock);
   int16_t up = int16_t(-((r + 1) << 7)),
           down = int16_t((frame.vblock - r) << 7);
 
   MotionVector best, nearest, near, mv;
-  InterMBHeader hd = SearchMVs(r, c, frame.Y, ref_frame_bias, ref_frame, context, ps, best, nearest, near);
+  InterMBHeader hd = SearchMVs(r, c, frame.Y, ref_frame_bias, ref_frame,
+                               context, ps, best, nearest, near);
   ClampMV(best, left, right, up, down);
   ClampMV(nearest, left, right, up, down);
   ClampMV(near, left, right, up, down);
@@ -336,19 +348,18 @@ template void InterpBlock(const Plane<2> &,
 }  // namespace
 
 void InterPredict(const FrameTag &tag, size_t r, size_t c,
-                  const std::array<Frame, 4> &refs, const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
+                  const std::array<Frame, 4> &refs,
+                  const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
                   std::vector<std::vector<InterContext>> &context,
                   BitstreamParser &ps, Frame &frame) {
-  ConfigureMVs(r, c, tag.version == 3, ref_frame_bias, ref_frame, context, ps, frame);
+  ConfigureMVs(r, c, tag.version == 3, ref_frame_bias, ref_frame, context, ps,
+               frame);
   std::array<std::array<int16_t, 6>, 8> subpixel_filters =
       tag.version == 0 ? kBicubicFilter : kBilinearFilter;
 
-  InterpBlock(refs[ref_frame].Y, subpixel_filters, r, c,
-              frame.Y.at(r).at(c));
-  InterpBlock(refs[ref_frame].U, subpixel_filters, r, c,
-              frame.U.at(r).at(c));
-  InterpBlock(refs[ref_frame].V, subpixel_filters, r, c,
-              frame.V.at(r).at(c));
+  InterpBlock(refs[ref_frame].Y, subpixel_filters, r, c, frame.Y.at(r).at(c));
+  InterpBlock(refs[ref_frame].U, subpixel_filters, r, c, frame.U.at(r).at(c));
+  InterpBlock(refs[ref_frame].V, subpixel_filters, r, c, frame.V.at(r).at(c));
 }
 
 }  // namespace vp8

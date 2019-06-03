@@ -22,7 +22,8 @@ struct InterContext {
   explicit InterContext(MacroBlockMV mv_mode_, uint8_t ref_frame_)
       : is_inter_mb(true), mv_mode(mv_mode_), ref_frame(ref_frame_) {}
 
-  explicit InterContext(bool is_inter_mb_, MacroBlockMV mv_mode_, uint8_t ref_frame_)
+  explicit InterContext(bool is_inter_mb_, MacroBlockMV mv_mode_,
+                        uint8_t ref_frame_)
       : is_inter_mb(is_inter_mb_), mv_mode(mv_mode_), ref_frame(ref_frame_) {}
 };
 
@@ -52,7 +53,9 @@ static const std::array<std::array<int16_t, 6>, 8> kBilinearFilter = {
 
 // Search for motion vectors in the left, above and upper-left macroblocks and
 // return the best, nearest and near motion vectors.
-InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb, const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
+InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
+                        const std::array<bool, 4> &ref_frame_bias,
+                        uint8_t ref_frame,
                         const std::vector<std::vector<InterContext>> &context,
                         BitstreamParser &ps, MotionVector &best,
                         MotionVector &nearest, MotionVector &near);
@@ -63,7 +66,9 @@ void ClampMV(MotionVector &mb, int16_t left, int16_t right, int16_t up,
 
 // Invert the motion vector the sign bias is different in the reference frames
 // of two macroblocks.
-MotionVector Invert(const MotionVector &mv, uint8_t ref_frame1, uint8_t ref_frame2, const std::array<bool, 4> &ref_frame_bias);
+MotionVector Invert(const MotionVector &mv, uint8_t ref_frame1,
+                    uint8_t ref_frame2,
+                    const std::array<bool, 4> &ref_frame_bias);
 
 // Decide the probability table of the current subblock based on the motion
 // vectors of the left and above subblocks.
@@ -81,14 +86,16 @@ void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
 
 // For each (luma or chroma) macroblocks, configure their motion vectors (if
 // needed).
-void ConfigureMVs(size_t r, size_t c, bool trim, const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
-                           std::vector<std::vector<InterContext>> &context,
-                           BitstreamParser &ps, Frame &frame);
+void ConfigureMVs(size_t r, size_t c, bool trim,
+                  const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
+                  std::vector<std::vector<InterContext>> &context,
+                  BitstreamParser &ps, Frame &frame);
 
 // Horizontal pixel interpolation, this should return a 9x4 temporary matrix for
 // the vertical pixel interpolation later.
 template <size_t C>
-std::array<std::array<int16_t, 4>, 9> HorSixtap( const Plane<C> &refer, size_t r, size_t c,
+std::array<std::array<int16_t, 4>, 9> HorSixtap(
+    const Plane<C> &refer, size_t r, size_t c,
     const std::array<int16_t, 6> &filter);
 
 // Vertical pixel interpolation.
@@ -110,7 +117,8 @@ void InterpBlock(const Plane<C> &refer,
 }  // namespace
 
 void InterPredict(const FrameTag &tag, size_t r, size_t c,
-                  const std::array<Frame, 4> &refs, const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
+                  const std::array<Frame, 4> &refs,
+                  const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
                   std::vector<std::vector<InterContext>> &context,
                   BitstreamParser &ps, Frame &frame);
 
