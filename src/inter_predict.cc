@@ -12,52 +12,52 @@ MacroBlockMV SearchMVs(size_t r, size_t c, const FrameHeader &header,
 
   auto &mh = header.macroblock_header;
 
-  if (r == 0 || mh[r - 1][c].is_inter_mb) {
-    MotionVector v = r ? mb[r - 1][c].GetMotionVector() : kZero;
-    if (r > 0) v = Invert(v, mh[r - 1][c]);
+  if (r == 0 || mh.at(r - 1).at(c).is_inter_mb) {
+    MotionVector v = r ? mb.at(r - 1).at(c).GetMotionVector() : kZero;
+    if (r > 0) v = Invert(v, mh.at(r - 1).at(c));
     if (v != kZero) mv.push_back(v);
-    cnt[mv.size()] += 2;
+    cnt.at(mv.size()) += 2;
   }
 
-  if (c == 0 || mh[r][c - 1].is_inter_mb) {
-    MotionVector v = c ? mb[r][c - 1].GetMotionVector() : kZero;
-    if (c > 0) v = Invert(v, mh[r][c - 1]);
+  if (c == 0 || mh.at(r).at(c - 1).is_inter_mb) {
+    MotionVector v = c ? mb.at(r).at(c - 1).GetMotionVector() : kZero;
+    if (c > 0) v = Invert(v, mh.at(r).at(c - 1));
     if (v != kZero) {
       if (!mv.empty() && mv.back() != v) mv.push_back(v);
-      cnt[mv.size()] += 2;
+      cnt.at(mv.size()) += 2;
     } else {
-      cnt[0] += 2;
+      cnt.at(0) += 2;
     }
   }
 
-  if (r == 0 || c == 0 || mh[r - 1][c - 1].is_inter_mb) {
-    MotionVector v = r && c ? mb[r - 1][c - 1].GetMotionVector() : kZero;
-    if (r > 0 && c > 0) v = Invert(v, mh[r - 1][c - 1]);
+  if (r == 0 || c == 0 || mh.at(r - 1).at(c - 1).is_inter_mb) {
+    MotionVector v = r && c ? mb.at(r - 1).at(c - 1).GetMotionVector() : kZero;
+    if (r > 0 && c > 0) v = Invert(v, mh.at(r - 1).at(c - 1));
     if (v != kZero) {
       if (!mv.empty() && mv.back() != v) mv.push_back(v);
-      cnt[mv.size()] += 1;
+      cnt.at(mv.size()) += 1;
     } else {
-      cnt[0] += 1;
+      cnt.at(0) += 1;
     }
   }
 
   // found three distinct motion vectors
-  if (mv.size() == 3u && mv[2] == mv[0]) ++cnt[1];
+  if (mv.size() == 3u && mv.at(2) == mv.at(0)) ++cnt.at(1);
   // unfound motion vectors are set to ZERO
   while (mv.size() < 3u) mv.push_back(kZero);
 
-  cnt[3] = (r > 0 && mh[r - 1][c].mode == MV_SPLIT) +
-           (c > 0 && mh[r][c - 1].mode == MV_SPLIT) * 2 +
-           (r > 0 && c > 0 && mh[r - 1][c - 1].mode == MV_SPLIT);
+  cnt.at(3) = (r > 0 && mh.at(r - 1).at(c).mode == MV_SPLIT) +
+              (c > 0 && mh.at(r).at(c - 1).mode == MV_SPLIT) * 2 +
+              (r > 0 && c > 0 && mh.at(r - 1).at(c - 1).mode == MV_SPLIT);
 
-  if (cnt[2] > cnt[1]) {
-    std::swap(cnt[1], cnt[2]);
-    std::swap(mv[0], mv[1]);
+  if (cnt.at(2) > cnt.at(1)) {
+    std::swap(cnt.at(1), cnt.at(2));
+    std::swap(mv.at(0), mv.at(1));
   }
-  if (cnt[1] >= cnt[0]) mv[0] = mv[1];
-  best = mv[0];
-  nearest = mv[1];
-  near = mv[2];
+  if (cnt.at(1) >= cnt.at(0)) mv.at(0) = mv.at(1);
+  best = mv.at(0);
+  nearest = mv.at(1);
+  near = mv.at(2);
   return ReadMode(cnt);
 }
 
@@ -83,10 +83,10 @@ void ConfigureChromaMVs(const MacroBlock<4> &luma, bool trim,
                         MacroBlock<2> &chroma) {
   for (size_t r = 0; r < 2; ++r) {
     for (size_t c = 0; c < 2; ++c) {
-      MotionVector ulv = luma[r << 1][c << 1].GetMotionVector(),
-                   urv = luma[r << 1][c << 1 | 1].GetMotionVector(),
-                   dlv = luma[r << 1 | 1][c << 1].GetMotionVector(),
-                   drv = luma[r << 1 | 1][c << 1 | 1].GetMotionVector();
+      MotionVector ulv = luma.at(r << 1).at(c << 1).GetMotionVector(),
+                   urv = luma.at(r << 1).at(c << 1 | 1).GetMotionVector(),
+                   dlv = luma.at(r << 1 | 1).at(c << 1).GetMotionVector(),
+                   drv = luma.at(r << 1 | 1).at(c << 1 | 1).GetMotionVector();
 
       int16_t sr = int16_t(ulv.dr + urv.dr + dlv.dr + drv.dr);
       int16_t sc = int16_t(ulv.dc + urv.dc + dlv.dc + drv.dc);
@@ -96,7 +96,7 @@ void ConfigureChromaMVs(const MacroBlock<4> &luma, bool trim,
         dr = dr & (-7);
         dc = dc & (-7);
       }
-      chroma[r][c].SetMotionVector(dr, dc);
+      chroma.at(r).at(c).SetMotionVector(dr, dc);
     }
   }
 }
@@ -128,18 +128,20 @@ void ConfigureSubBlockMVs(MVPartition p, size_t r, size_t c, Plane<4> &mb) {
 
   for (size_t i = 0; i < part.size(); ++i) {
     SubBlockMV mode = ReadSubBlockMV();
-    for (size_t j = 0; j < part[i].size(); ++j) {
-      size_t ir = part[i][j] >> 2, ic = part[i][j] & 3;
+    for (size_t j = 0; j < part.at(i).size(); ++j) {
+      size_t ir = part.at(i).at(j) >> 2, ic = part.at(i).at(j) & 3;
       MotionVector mv;
       switch (mode) {
         case LEFT_4x4:
-          mv = ic == 0 ? (c == 0 ? kZero : mb[r][c - 1].GetSubBlockMV(ir, 3))
-                       : mb[r][c].GetSubBlockMV(ir, ic - 1);
+          mv = ic == 0
+                   ? (c == 0 ? kZero : mb.at(r).at(c - 1).GetSubBlockMV(ir, 3))
+                   : mb.at(r).at(c).GetSubBlockMV(ir, ic - 1);
           break;
 
         case ABOVE_4x4:
-          mv = ir == 0 ? (r == 0 ? kZero : mb[r - 1][c].GetSubBlockMV(3, ir))
-                       : mb[r][c].GetSubBlockMV(ir - 1, ic);
+          mv = ir == 0
+                   ? (r == 0 ? kZero : mb.at(r - 1).at(c).GetSubBlockMV(3, ir))
+                   : mb.at(r).at(c).GetSubBlockMV(ir - 1, ic);
           break;
 
         case ZERO_4x4:
@@ -147,10 +149,10 @@ void ConfigureSubBlockMVs(MVPartition p, size_t r, size_t c, Plane<4> &mb) {
           break;
 
         case NEW_4x4:
-          mv = ReadMotionVector() + mb[r][c].GetMotionVector();
+          mv = ReadMotionVector() + mb.at(r).at(c).GetMotionVector();
           break;
       }
-      mb[r][c][ir][ic].SetMotionVector(mv);
+      mb.at(r).at(c).at(ir).at(ic).SetMotionVector(mv);
     }
   }
 }
@@ -168,35 +170,36 @@ void ConfigureMVs(const FrameHeader &header, size_t r, size_t c, bool trim,
 
   switch (mode) {
     case MV_NEAREST:
-      frame.Y[r][c].SetSubBlockMVs(nearest);
-      frame.Y[r][c].SetMotionVector(nearest);
+      frame.Y.at(r).at(c).SetSubBlockMVs(nearest);
+      frame.Y.at(r).at(c).SetMotionVector(nearest);
       break;
 
     case MV_NEAR:
-      frame.Y[r][c].SetSubBlockMVs(near);
-      frame.Y[r][c].SetMotionVector(near);
+      frame.Y.at(r).at(c).SetSubBlockMVs(near);
+      frame.Y.at(r).at(c).SetMotionVector(near);
       break;
 
     case MV_ZERO:
-      frame.Y[r][c].SetSubBlockMVs(kZero);
-      frame.Y[r][c].SetMotionVector(kZero);
+      frame.Y.at(r).at(c).SetSubBlockMVs(kZero);
+      frame.Y.at(r).at(c).SetMotionVector(kZero);
       break;
 
     case MV_NEW:
       // TODO: Read motion vector in mode MV_NEW.
       MotionVector mv = ReadMotionVector() + best;
-      frame.Y[r][c].SetSubBlockMVs(mv);
-      frame.Y[r][c].SetMotionVector(mv);
+      frame.Y.at(r).at(c).SetSubBlockMVs(mv);
+      frame.Y.at(r).at(c).SetMotionVector(mv);
       break;
 
     case MV_SPLIT:
       // TODO: Read how the macroblock is splitted.
       MVPartition part = ReadMVSplit();
       ConfigureSubBlockMVs(part, r, c, frame.Y);
-      frame.Y[r][c].SetMotionVector(frame.Y[r][c].GetSubBlockMV(15));
+      frame.Y.at(r).at(c).SetMotionVector(
+          frame.Y.at(r).at(c).GetSubBlockMV(15));
   }
-  ConfigureChromaMVs(frame.Y[r][c], trim, frame.U[r][c]);
-  ConfigureChromaMVs(frame.Y[r][c], trim, frame.V[r][c]);
+  ConfigureChromaMVs(frame.Y.at(r).at(c), trim, frame.U.at(r).at(c));
+  ConfigureChromaMVs(frame.Y.at(r).at(c), trim, frame.V.at(r).at(c));
 }
 
 template <size_t C>
@@ -206,13 +209,13 @@ std::array<std::array<int16_t, 4>, 9> HorSixtap(
   std::array<std::array<int16_t, 4>, 9> res;
   for (size_t i = 0; i < 9; ++i) {
     for (size_t j = 0; j < 4; ++j) {
-      int32_t sum = int32_t(refer.GetPixel(r + i, c + j - 2)) * filter[0] +
-                    int32_t(refer.GetPixel(r + i, c + j - 1)) * filter[1] +
-                    int32_t(refer.GetPixel(r + i, c + j + 0)) * filter[2] +
-                    int32_t(refer.GetPixel(r + i, c + j + 1)) * filter[3] +
-                    int32_t(refer.GetPixel(r + i, c + j + 2)) * filter[4] +
-                    int32_t(refer.GetPixel(r + i, c + j + 3)) * filter[5];
-      res[i][j] = int16_t((sum + 64) >> 7);
+      int32_t sum = int32_t(refer.GetPixel(r + i, c + j - 2)) * filter.at(0) +
+                    int32_t(refer.GetPixel(r + i, c + j - 1)) * filter.at(1) +
+                    int32_t(refer.GetPixel(r + i, c + j + 0)) * filter.at(2) +
+                    int32_t(refer.GetPixel(r + i, c + j + 1)) * filter.at(3) +
+                    int32_t(refer.GetPixel(r + i, c + j + 2)) * filter.at(4) +
+                    int32_t(refer.GetPixel(r + i, c + j + 3)) * filter.at(5);
+      res.at(i).at(j) = int16_t((sum + 64) >> 7);
     }
   }
   return res;
@@ -222,13 +225,13 @@ void VerSixtap(const std::array<std::array<int16_t, 4>, 9> &refer, size_t r,
                size_t c, const std::array<int16_t, 6> &filter, SubBlock &sub) {
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 4; ++j) {
-      int32_t sum = int32_t(refer[r + i + 0][c + j]) * filter[0] +
-                    int32_t(refer[r + i + 1][c + j]) * filter[1] +
-                    int32_t(refer[r + i + 2][c + j]) * filter[2] +
-                    int32_t(refer[r + i + 3][c + j]) * filter[3] +
-                    int32_t(refer[r + i + 4][c + j]) * filter[4] +
-                    int32_t(refer[r + i + 5][c + j]) * filter[5];
-      sub[i][j] = int16_t((sum + 64) >> 7);
+      int32_t sum = int32_t(refer.at(r + i + 0).at(c + j)) * filter.at(0) +
+                    int32_t(refer.at(r + i + 1).at(c + j)) * filter.at(1) +
+                    int32_t(refer.at(r + i + 2).at(c + j)) * filter.at(2) +
+                    int32_t(refer.at(r + i + 3).at(c + j)) * filter.at(3) +
+                    int32_t(refer.at(r + i + 4).at(c + j)) * filter.at(4) +
+                    int32_t(refer.at(r + i + 5).at(c + j)) * filter.at(5);
+      sub.at(i).at(j) = int16_t((sum + 64) >> 7);
     }
   }
 }
@@ -238,8 +241,8 @@ void Sixtap(const Plane<C> &refer, size_t r, size_t c, uint8_t mr, uint8_t mc,
             const std::array<std::array<int16_t, 6>, 8> &filter,
             SubBlock &sub) {
   std::array<std::array<int16_t, 4>, 9> tmp =
-      HorSixtap(refer, r - 2, c, filter[mr]);
-  VerSixtap(tmp, r, c, filter[mc], sub);
+      HorSixtap(refer, r - 2, c, filter.at(mr));
+  VerSixtap(tmp, r, c, filter.at(mc), sub);
 }
 
 template <size_t C>
@@ -249,12 +252,12 @@ void InterpBlock(const Plane<C> &refer,
   size_t offset = C / 2 + 2;
   for (size_t i = 0; i < C; ++i) {
     for (size_t j = 0; j < C; ++j) {
-      MotionVector mv = mb[i][j].GetMotionVector();
+      MotionVector mv = mb.at(i).at(j).GetMotionVector();
       if (mv == kZero) {
         for (size_t x = 0; x < C; ++x) {
           for (size_t y = 0; y < C; ++y)
-            mb[i][j][x][y] = refer.GetPixel((r << offset) | (i << 2) | x,
-                                            (c << offset) | (j << 2) | y);
+            mb.at(i).at(j).at(x).at(y) = refer.GetPixel(
+                (r << offset) | (i << 2) | x, (c << offset) | (j << 2) | y);
         }
         continue;
       }
@@ -265,7 +268,7 @@ void InterpBlock(const Plane<C> &refer,
              "[Error] InterpBlock: the motion vectors is out of bound.");
       size_t tr = size_t(int32_t(r << offset | (i << 2)) + (mv.dr >> 3));
       size_t tc = size_t(int32_t(c << offset | (j << 2)) + (mv.dc >> 3));
-      if (mr | mc) Sixtap(refer, tr, tc, mr, mc, filter, mb[r][c]);
+      if (mr | mc) Sixtap(refer, tr, tc, mr, mc, filter, mb.at(r).at(c));
     }
   }
 }
@@ -294,11 +297,11 @@ void InterPredict(const FrameHeader &header, const FrameTag &tag, size_t r,
                   size_t c, Frame &frame) {
   ConfigureMVs(header, r, c, tag.version == 3, frame);
   InterpBlock(header.ref_frame.Y, header.subpixel_filters, r, c,
-              frame.Y[r].at(c));
+              frame.Y.at(r).at(c));
   InterpBlock(header.ref_frame.U, header.subpixel_filters, r, c,
-              frame.U[r].at(c));
+              frame.U.at(r).at(c));
   InterpBlock(header.ref_frame.V, header.subpixel_filters, r, c,
-              frame.V[r].at(c));
+              frame.V.at(r).at(c));
 }
 
 }  // namespace vp8

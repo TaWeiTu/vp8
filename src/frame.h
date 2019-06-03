@@ -36,15 +36,9 @@ class SubBlock {
  public:
   SubBlock() = default;
 
-  std::array<int16_t, 4>& operator[](size_t i) {
-    ensure(i < 4, "[Error] SubBlock::operator[]: Index out of range.");
-    return pixels_[i];
-  }
+  std::array<int16_t, 4>& at(size_t i) { return pixels_.at(i); }
 
-  std::array<int16_t, 4> operator[](size_t i) const {
-    ensure(i < 4, "[Error] SubBlock::operator[]: Index out of range.");
-    return pixels_[i];
-  }
+  std::array<int16_t, 4> at(size_t i) const { return pixels_.at(i); }
 
   void FillWith(int16_t p) {
     std::fill(pixels_.begin(), pixels_.end(),
@@ -53,23 +47,19 @@ class SubBlock {
 
   void FillRow(const std::array<int16_t, 4>& row) {
     for (size_t i = 0; i < 4; ++i)
-      std::copy(row.begin(), row.end(), pixels_[i].begin());
+      std::copy(row.begin(), row.end(), pixels_.at(i).begin());
   }
 
   void FillCol(const std::array<int16_t, 4>& col) {
     for (size_t i = 0; i < 4; ++i)
-      std::fill(pixels_[i].begin(), pixels_[i].end(), col[i]);
+      std::fill(pixels_.at(i).begin(), pixels_.at(i).end(), col.at(i));
   }
 
-  std::array<int16_t, 4> GetRow(size_t i) const {
-    ensure(i < 4, "[Error] SubBlock::GetRow: Index out of range.");
-    return pixels_[i];
-  }
+  std::array<int16_t, 4> GetRow(size_t i) const { return pixels_.at(i); }
 
   std::array<int16_t, 4> GetCol(size_t i) const {
-    ensure(i < 4, "[Error] SubBlock::GetCol: Index out of range.");
-    return std::array<int16_t, 4>{pixels_[0][i], pixels_[1][i], pixels_[2][i],
-                                  pixels_[3][i]};
+    return std::array<int16_t, 4>{pixels_.at(0).at(i), pixels_.at(1).at(i),
+                                  pixels_.at(2).at(i), pixels_.at(3).at(i)};
   }
 
   MotionVector GetMotionVector() const { return mv_; }
@@ -88,42 +78,36 @@ class MacroBlock {
  public:
   MacroBlock() : offset_(C == 4 ? 2 : 1), mask_((1 << offset_) - 1) {}
 
-  std::array<SubBlock, C>& operator[](size_t i) {
-    ensure(i < C, "[Error] MacroBlock<C>::operator[]: Index out of range.");
-    return subs_[i];
-  }
+  std::array<SubBlock, C>& at(size_t i) { return subs_.at(i); }
 
-  std::array<SubBlock, C> operator[](size_t i) const {
-    ensure(i < C, "[Error] MacroBlock<C>::operator[]: Index out of range.");
-    return subs_[i];
-  }
+  std::array<SubBlock, C> at(size_t i) const { return subs_.at(i); }
 
   void FillWith(int16_t p) {
     for (size_t i = 0; i < C; ++i) {
-      for (size_t j = 0; j < C; ++j) subs_[i][j].FillWith(p);
+      for (size_t j = 0; j < C; ++j) subs_.at(i).at(j).FillWith(p);
     }
   }
 
   void FillRow(const std::array<int16_t, C * 4>& row) {
     for (size_t i = 0; i < C; ++i) {
       for (size_t j = 0; j < C; ++j)
-        subs_[i][j].FillRow(
-            std::array<int16_t, 4>{row[j], row[j + 1], row[j + 2], row[j + 3]});
+        subs_.at(i).at(j).FillRow(std::array<int16_t, 4>{
+            row.at(j), row.at(j + 1), row.at(j + 2), row.at(j + 3)});
     }
   }
 
   void FillCol(const std::array<int16_t, C * 4>& col) {
     for (size_t i = 0; i < C; ++i) {
       for (size_t j = 0; j < C; ++j)
-        subs_[i][j].FillRow(
-            std::array<int16_t, 4>{col[j], col[j + 1], col[j + 2], col[j + 3]});
+        subs_.at(i).at(j).FillRow(std::array<int16_t, 4>{
+            col.at(j), col.at(j + 1), col.at(j + 2), col.at(j + 3)});
     }
   }
 
   std::array<int16_t, C * 4> GetRow(size_t i) const {
     std::array<int16_t, C * 4> res;
     for (size_t c = 0; c < C; ++c) {
-      std::array<int16_t, 4> row = subs_[i >> 2][c].GetRow(i & 3);
+      std::array<int16_t, 4> row = subs_.at(i >> 2).at(c).GetRow(i & 3);
       std::copy(row.begin(), row.end(), res.begin() + (c << 2));
     }
     return res;
@@ -132,22 +116,18 @@ class MacroBlock {
   std::array<int16_t, C * 4> GetCol(size_t i) const {
     std::array<int16_t, C * 4> res;
     for (size_t c = 0; c < C; ++c) {
-      std::array<int16_t, 4> col = subs_[c][i >> 2].GetCol(i & 3);
+      std::array<int16_t, 4> col = subs_.at(c).at(i >> 2).GetCol(i & 3);
       std::copy(col.begin(), col.end(), res.begin() + (c << 2));
     }
     return res;
   }
 
   int16_t GetPixel(size_t r, size_t c) const {
-    ensure(r < (C << 2) && c < (C << 2),
-           "[Error] MacroBlock<C>::GetPixel: Index out of range.");
-    return subs_[r >> 2][c >> 2][r & 3][c & 3];
+    return subs_.at(r >> 2).at(c >> 2).at(r & 3).at(c & 3);
   }
 
   void SetPixel(size_t r, size_t c, int16_t v) {
-    ensure(r < (C << 2) && c < (C << 2),
-           "[Error] MacroBlock<C>::SetPixel: Index out of range.");
-    subs_[r >> 2][c >> 2][r & 3][c & 3] = v;
+    subs_.at(r >> 2).at(c >> 2).at(r & 3).at(c & 3) = v;
   }
 
   MotionVector GetMotionVector() const { return mv_; }
@@ -157,21 +137,17 @@ class MacroBlock {
   void SetMotionVector(const MotionVector& v) { mv_ = v; }
 
   MotionVector GetSubBlockMV(size_t r, size_t c) const {
-    ensure(r < C && c < C,
-           "[Error] MacroBlock<C>::GetSubBlockMV: Index out of range.");
-    return subs_[r][c].GetMotionVector();
+    return subs_.at(r).at(c).GetMotionVector();
   }
 
   MotionVector GetSubBlockMV(size_t id) const {
-    ensure(id < C * C,
-           "[Error] MacroBlock<C>::GetSubBlockMV: Index out of range.");
-    return subs_[id >> offset_][id & mask_].GetMotionVector();
+    return subs_.at(id >> offset_).at(id & mask_).GetMotionVector();
   }
 
   // The motion vectors are the same for all subblocks.
   void SetSubBlockMVs(const MotionVector& v) {
     for (size_t i = 0; i < C; ++i) {
-      for (size_t j = 0; j < C; ++j) subs_[i][j].SetMotionVector(v);
+      for (size_t j = 0; j < C; ++j) subs_.at(i).at(j).SetMotionVector(v);
     }
   }
 
@@ -192,25 +168,17 @@ class Plane {
   }
 
   int16_t GetPixel(size_t r, size_t c) const {
-    ensure(r < blocks_.size() * 4 * C && c < blocks_[0].size() * 4 * C,
-           "[Error] Plane<C>::GetPixel: Index out of range.");
-    return blocks_[r >> offset_][c >> offset_].GetPixel(r & mask_, c & mask_);
+    return blocks_.at(r >> offset_)
+        .at(c >> offset_)
+        .GetPixel(r & mask_, c & mask_);
   }
 
-  std::vector<MacroBlock<C>>& operator[](size_t i) {
-    ensure(i < blocks_.size(),
-           "[Error] Plane<C>::operator[]: Index out of range.");
-    return blocks_[i];
-  }
+  std::vector<MacroBlock<C>>& at(size_t i) { return blocks_.at(i); }
 
-  const std::vector<MacroBlock<C>>& operator[](size_t i) const {
-    ensure(i < blocks_.size(),
-           "[Error] Plane<C>::operator[]: Index out of range.");
-    return blocks_[i];
-  }
+  const std::vector<MacroBlock<C>>& at(size_t i) const { return blocks_.at(i); }
 
   size_t vblock() const { return blocks_.size(); }
-  size_t hblock() const { return blocks_[0].size(); }
+  size_t hblock() const { return blocks_.at(0).size(); }
 
  private:
   size_t offset_, mask_;

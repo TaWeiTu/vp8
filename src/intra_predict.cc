@@ -5,89 +5,90 @@ namespace {
 
 void VPredChroma(size_t r, size_t c, Plane<2> &mb) {
   if (r == 0)
-    mb[r][c].FillWith(127);
+    mb.at(r).at(c).FillWith(127);
   else
-    mb[r][c].FillRow(mb[r - 1][c].GetRow(7));
+    mb.at(r).at(c).FillRow(mb.at(r - 1).at(c).GetRow(7));
 }
 void HPredChroma(size_t r, size_t c, Plane<2> &mb) {
   if (c == 0)
-    mb[r][c].FillWith(127);
+    mb.at(r).at(c).FillWith(127);
   else
-    mb[r][c].FillCol(mb[r][c - 1].GetCol(7));
+    mb.at(r).at(c).FillCol(mb.at(r).at(c - 1).GetCol(7));
 }
 
 void DCPredChroma(size_t r, size_t c, Plane<2> &mb) {
   if (r == 0 && c == 0) {
-    mb[r][c].FillWith(128);
+    mb.at(r).at(c).FillWith(128);
     return;
   }
 
   int32_t sum = 0, shf = 2;
   if (r > 0) {
-    for (size_t i = 0; i < 8; ++i) sum += mb[r - 1][c].GetPixel(7, i);
+    for (size_t i = 0; i < 8; ++i) sum += mb.at(r - 1).at(c).GetPixel(7, i);
     shf++;
   }
   if (c > 0) {
-    for (size_t i = 0; i < 8; ++i) sum += mb[r][c - 1].GetPixel(i, 7);
+    for (size_t i = 0; i < 8; ++i) sum += mb.at(r).at(c - 1).GetPixel(i, 7);
     shf++;
   }
 
   int16_t avg = int16_t((sum + (1 << (shf - 1))) >> shf);
-  mb[r][c].FillWith(avg);
+  mb.at(r).at(c).FillWith(avg);
 }
 
 void TMPredChroma(size_t r, size_t c, Plane<2> &mb) {
-  int16_t p = (r == 0 || c == 0 ? 128 : mb[r - 1][c - 1].GetPixel(7, 7));
+  int16_t p = (r == 0 || c == 0 ? 128 : mb.at(r - 1).at(c - 1).GetPixel(7, 7));
   for (size_t i = 0; i < 8; ++i) {
     for (size_t j = 0; j < 8; ++j) {
-      int16_t x = (c == 0 ? 129 : mb[r][c - 1].GetPixel(i, 7));
-      int16_t y = (r == 0 ? 127 : mb[r - 1][c].GetPixel(7, i));
-      mb[r][c].SetPixel(i, j, Clamp255(int16_t(x + y - p)));
+      int16_t x = (c == 0 ? 129 : mb.at(r).at(c - 1).GetPixel(i, 7));
+      int16_t y = (r == 0 ? 127 : mb.at(r - 1).at(c).GetPixel(7, i));
+      mb.at(r).at(c).SetPixel(i, j, Clamp255(int16_t(x + y - p)));
     }
   }
 }
 
 void VPredLuma(size_t r, size_t c, Plane<4> &mb) {
   if (r == 0)
-    mb[r][c].FillWith(127);
+    mb.at(r).at(c).FillWith(127);
   else
-    mb[r][c].FillRow(mb[r - 1][c].GetRow(15));
+    mb.at(r).at(c).FillRow(mb.at(r - 1).at(c).GetRow(15));
 }
 
 void HPredLuma(size_t r, size_t c, Plane<4> &mb) {
   if (c == 0)
-    mb[r][c].FillWith(127);
+    mb.at(r).at(c).FillWith(127);
   else
-    mb[r][c].FillCol(mb[r][c - 1].GetCol(15));
+    mb.at(r).at(c).FillCol(mb.at(r).at(c - 1).GetCol(15));
 }
 
 void DCPredLuma(size_t r, size_t c, Plane<4> &mb) {
   if (r == 0 && c == 0) {
-    mb[r][c].FillWith(128);
+    mb.at(r).at(c).FillWith(128);
     return;
   }
 
   int32_t sum = 0, shf = 3;
   if (r > 0) {
-    for (size_t i = 0; i < 8; ++i) sum += mb[r - 1][c].GetPixel(15, i);
+    for (size_t i = 0; i < 8; ++i) sum += mb.at(r - 1).at(c).GetPixel(15, i);
     shf++;
   }
   if (c > 0) {
-    for (size_t i = 0; i < 8; ++i) sum += mb[r][c - 1].GetPixel(i, 15);
+    for (size_t i = 0; i < 8; ++i) sum += mb.at(r).at(c - 1).GetPixel(i, 15);
     shf++;
   }
 
   int16_t avg = int16_t((sum + (1 << (shf - 1))) >> shf);
-  mb[r][c].FillWith(avg);
+  mb.at(r).at(c).FillWith(avg);
 }
 
 void TMPredLuma(size_t r, size_t c, Plane<4> &mb) {
-  int16_t p = (r == 0 || c == 0 ? 128 : mb[r - 1][c - 1].GetPixel(15, 15));
+  int16_t p =
+      (r == 0 || c == 0 ? 128 : mb.at(r - 1).at(c - 1).GetPixel(15, 15));
   for (size_t i = 0; i < 16; ++i) {
     for (size_t j = 0; j < 16; ++j) {
-      int16_t x = (c == 0 ? 129 : mb[r][c - 1].GetPixel(i, 15));
-      int16_t y = (r == 0 ? 127 : mb[r - 1][c].GetPixel(15, i));
-      mb[r][c].SetPixel(i, j, Clamp255(int16_t(x + y - p)));
+      int16_t x = (c == 0 ? 129 : mb.at(r).at(c - 1).GetPixel(i, 15));
+      int16_t y = (r == 0 ? 127 : mb.at(r - 1).at(c).GetPixel(15, i));
+      mb.at(r).at(c).SetPixel(i, j, Clamp255(int16_t(x + y - p)));
     }
   }
 }
@@ -104,23 +105,23 @@ void BPredLuma(size_t r, size_t c,
 
       if (i == 0)
         row_above = r == 0 ? std::array<int16_t, 4>{127, 127, 127, 127}
-                           : mb[r - 1][c][3][j].GetRow(3);
+                           : mb.at(r - 1).at(c).at(3).at(j).GetRow(3);
       else
-        row_above = mb[r][c][i - 1][j].GetRow(3);
+        row_above = mb.at(r).at(c).at(i - 1).at(j).GetRow(3);
 
       if (j == 3) {
         if (r == 0)
           row_right = std::array<int16_t, 4>{127, 127, 127, 127};
-        else if (c + 1 == mb[r].size())
-          row_right = mb[r - 1][c][3][3].GetRow(3);
+        else if (c + 1 == mb.at(r).size())
+          row_right = mb.at(r - 1).at(c).at(3).at(3).GetRow(3);
         else
-          row_right = mb[r - 1][c + 1][3][0].GetRow(3);
+          row_right = mb.at(r - 1).at(c + 1).at(3).at(0).GetRow(3);
       } else {
         if (i == 0)
           row_right = r == 0 ? std::array<int16_t, 4>{127, 127, 127, 127}
-                             : mb[r - 1][c][3][j + 1].GetRow(3);
+                             : mb.at(r - 1).at(c).at(3).at(j + 1).GetRow(3);
         else
-          row_right = mb[r][c][i - 1][j + 1].GetRow(3);
+          row_right = mb.at(r).at(c).at(i - 1).at(j + 1).GetRow(3);
       }
 
       std::copy(row_above.begin(), row_above.end(), above.begin());
@@ -128,23 +129,27 @@ void BPredLuma(size_t r, size_t c,
 
       if (j == 0)
         left = c == 0 ? std::array<int16_t, 4>{129, 129, 129, 129}
-                      : left = mb[r][c - 1][i][3].GetCol(3);
+                      : left = mb.at(r).at(c - 1).at(i).at(3).GetCol(3);
       else
-        left = mb[r][c][i][j - 1].GetCol(3);
+        left = mb.at(r).at(c).at(i).at(j - 1).GetCol(3);
 
       int16_t p = 0;
       if (i > 0 && j > 0)
-        p = mb[r][c][i - 1][j - 1][3][3];
+        p = mb.at(r).at(c).at(i - 1).at(j - 1).at(3).at(3);
       else if (i > 0)
-        p = c == 0 ? 129 : mb[r][c - 1][i - 1][3][3][3];
+        p = c == 0 ? 129 : mb.at(r).at(c - 1).at(i - 1).at(3).at(3).at(3);
       else if (j > 0)
-        p = r == 0 ? 127 : mb[r - 1][c][3][j - 1][3][3];
+        p = r == 0 ? 127 : mb.at(r - 1).at(c).at(3).at(j - 1).at(3).at(3);
       else
         p = r == 0 && c == 0
                 ? 128
-                : r == 0 ? 127 : c == 0 ? 129 : mb[r - 1][c - 1][3][3][3][3];
+                : r == 0
+                      ? 127
+                      : c == 0 ? 129
+                               : mb.at(r - 1).at(c - 1).at(3).at(3).at(3).at(3);
 
-      BPredSubBlock(above, left, p, pred[i][j], mb[r][c][i][j]);
+      BPredSubBlock(above, left, p, pred.at(i).at(j),
+                    mb.at(r).at(c).at(i).at(j));
     }
   }
 }
@@ -153,35 +158,37 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
                    const std::array<int16_t, 4> &left, int16_t p,
                    SubBlockMode mode, SubBlock &sub) {
   const std::array<int16_t, 9> edge = {
-      left[3],  left[2],  left[1],  left[0],  p,
-      above[3], above[2], above[1], above[0],
+      left.at(3),  left.at(2),  left.at(1),  left.at(0),  p,
+      above.at(3), above.at(2), above.at(1), above.at(0),
   };
   switch (mode) {
     case B_VE_PRED: {
       for (size_t i = 0; i < 4; ++i) {
-        int16_t x = i == 0 ? p : above[i - 1];
-        int16_t y = above[i];
-        int16_t z = above[i + 1];
+        int16_t x = i == 0 ? p : above.at(i - 1);
+        int16_t y = above.at(i);
+        int16_t z = above.at(i + 1);
         int16_t avg = (x + y + y + z + 2) >> 2;
-        sub[0][i] = sub[1][i] = sub[2][i] = sub[3][i] = avg;
+        sub.at(0).at(i) = sub.at(1).at(i) = sub.at(2).at(i) = sub.at(3).at(i) =
+            avg;
       }
       break;
     }
 
     case B_HE_PRED: {
       for (size_t i = 0; i < 4; ++i) {
-        int16_t x = i == 0 ? p : left[i - 1];
-        int16_t y = left[i];
-        int16_t z = i == 3 ? above[3] : above[i + 1];
+        int16_t x = i == 0 ? p : left.at(i - 1);
+        int16_t y = left.at(i);
+        int16_t z = i == 3 ? above.at(3) : above.at(i + 1);
         int16_t avg = (x + y + y + z + 2) >> 2;
-        sub[i][0] = sub[i][1] = sub[i][2] = sub[i][3] = avg;
+        sub.at(i).at(0) = sub.at(i).at(1) = sub.at(i).at(2) = sub.at(i).at(3) =
+            avg;
       }
       break;
     }
 
     case B_DC_PRED: {
       int16_t v = 4;
-      for (size_t i = 0; i < 4; ++i) v += above[i] + left[i];
+      for (size_t i = 0; i < 4; ++i) v += above.at(i) + left.at(i);
       v >>= 8;
       sub.FillWith(v);
       break;
@@ -190,19 +197,19 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
     case B_TM_PRED: {
       for (size_t i = 0; i < 4; ++i) {
         for (size_t j = 0; j < 4; ++j)
-          sub[i][j] = Clamp255(int16_t(left[i] + above[j] - p));
+          sub.at(i).at(j) = Clamp255(int16_t(left.at(i) + above.at(j) - p));
       }
       break;
     }
 
     case B_LD_PRED: {
       for (size_t d = 0; d < 7; ++d) {
-        int16_t x = above[d];
-        int16_t y = above[d + 1];
-        int16_t z = d + 2 < 8 ? above[d + 2] : above[7];
+        int16_t x = above.at(d);
+        int16_t y = above.at(d + 1);
+        int16_t z = d + 2 < 8 ? above.at(d + 2) : above.at(7);
         int16_t avg = (x + y + y + z + 2) >> 2;
         for (size_t i = 0; int(d) - int(i) >= 0; ++i) {
-          if (int(d) - int(i) < 4) sub[i][d - i] = avg;
+          if (int(d) - int(i) < 4) sub.at(i).at(d - i) = avg;
         }
       }
       break;
@@ -210,69 +217,87 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
 
     case B_RD_PRED: {
       for (size_t d = 0; d < 7; ++d) {
-        int16_t x = edge[d];
-        int16_t y = edge[d + 1];
-        int16_t z = edge[d + 2];
+        int16_t x = edge.at(d);
+        int16_t y = edge.at(d + 1);
+        int16_t z = edge.at(d + 2);
         int16_t avg = (x + y + y + z + 2) >> 2;
-        for (size_t i = 0; i + d < 4; ++i) sub[i][d + i] = avg;
+        for (size_t i = 0; i + d < 4; ++i) sub.at(i).at(d + i) = avg;
       }
       break;
     }
 
     case B_VR_PRED: {
-      sub[3][0] = (edge[1] + edge[2] + edge[2] + edge[3] + 2) >> 2;
-      sub[2][0] = (edge[2] + edge[3] + edge[3] + edge[4] + 2) >> 2;
-      sub[3][1] = sub[1][0] = (edge[3] + edge[4] + edge[4] + edge[5] + 2) >> 2;
-      sub[2][1] = sub[0][0] = (edge[4] + edge[5] + 1) >> 1;
-      sub[3][2] = sub[1][1] = (edge[4] + edge[5] + edge[5] + edge[6] + 2) >> 2;
-      sub[2][2] = sub[0][1] = (edge[5] + edge[6] + 1) >> 1;
-      sub[3][3] = sub[1][2] = (edge[5] + edge[6] + edge[6] + edge[7] + 2) >> 2;
-      sub[2][3] = sub[0][2] = (edge[6] + edge[7] + 1) >> 1;
-      sub[1][3] = (edge[6] + edge[7] + edge[7] + edge[8] + 2) >> 2;
-      sub[0][3] = (edge[7] + edge[8] + 1) >> 1;
+      sub.at(3).at(0) =
+          (edge.at(1) + edge.at(2) + edge.at(2) + edge.at(3) + 2) >> 2;
+      sub.at(2).at(0) =
+          (edge.at(2) + edge.at(3) + edge.at(3) + edge.at(4) + 2) >> 2;
+      sub.at(3).at(1) = sub.at(1).at(0) =
+          (edge.at(3) + edge.at(4) + edge.at(4) + edge.at(5) + 2) >> 2;
+      sub.at(2).at(1) = sub.at(0).at(0) = (edge.at(4) + edge.at(5) + 1) >> 1;
+      sub.at(3).at(2) = sub.at(1).at(1) =
+          (edge.at(4) + edge.at(5) + edge.at(5) + edge.at(6) + 2) >> 2;
+      sub.at(2).at(2) = sub.at(0).at(1) = (edge.at(5) + edge.at(6) + 1) >> 1;
+      sub.at(3).at(3) = sub.at(1).at(2) =
+          (edge.at(5) + edge.at(6) + edge.at(6) + edge.at(7) + 2) >> 2;
+      sub.at(2).at(3) = sub.at(0).at(2) = (edge.at(6) + edge.at(7) + 1) >> 1;
+      sub.at(1).at(3) =
+          (edge.at(6) + edge.at(7) + edge.at(7) + edge.at(8) + 2) >> 2;
+      sub.at(0).at(3) = (edge.at(7) + edge.at(8) + 1) >> 1;
       break;
     }
 
     case B_VL_PRED: {
-      sub[0][0] = (above[0] + above[1] + 1) >> 1;
-      sub[1][0] = (above[0] + above[1] + above[1] + above[2] + 2) >> 2;
-      sub[2][0] = sub[0][1] = (above[1] + above[2] + 1) >> 1;
-      sub[1][1] = sub[3][0] =
-          (above[1] + above[2] + above[2] + above[3] + 2) >> 2;
-      sub[2][1] = sub[0][2] = (above[2] + above[3] + 1) >> 1;
-      sub[3][1] = sub[1][2] =
-          (above[2] + above[3] + above[3] + above[4] + 2) >> 2;
-      sub[2][2] = sub[0][3] = (above[3] + above[4] + 1) >> 1;
-      sub[3][2] = sub[1][3] =
-          (above[3] + above[4] + above[4] + above[5] + 2) >> 2;
-      sub[2][3] = (above[4] + above[5] + above[5] + above[6] + 2) >> 2;
-      sub[3][3] = (above[5] + above[6] + above[6] + above[7] + 2) >> 2;
+      sub.at(0).at(0) = (above.at(0) + above.at(1) + 1) >> 1;
+      sub.at(1).at(0) =
+          (above.at(0) + above.at(1) + above.at(1) + above.at(2) + 2) >> 2;
+      sub.at(2).at(0) = sub.at(0).at(1) = (above.at(1) + above.at(2) + 1) >> 1;
+      sub.at(1).at(1) = sub.at(3).at(0) =
+          (above.at(1) + above.at(2) + above.at(2) + above.at(3) + 2) >> 2;
+      sub.at(2).at(1) = sub.at(0).at(2) = (above.at(2) + above.at(3) + 1) >> 1;
+      sub.at(3).at(1) = sub.at(1).at(2) =
+          (above.at(2) + above.at(3) + above.at(3) + above.at(4) + 2) >> 2;
+      sub.at(2).at(2) = sub.at(0).at(3) = (above.at(3) + above.at(4) + 1) >> 1;
+      sub.at(3).at(2) = sub.at(1).at(3) =
+          (above.at(3) + above.at(4) + above.at(4) + above.at(5) + 2) >> 2;
+      sub.at(2).at(3) =
+          (above.at(4) + above.at(5) + above.at(5) + above.at(6) + 2) >> 2;
+      sub.at(3).at(3) =
+          (above.at(5) + above.at(6) + above.at(6) + above.at(7) + 2) >> 2;
       break;
     }
 
     case B_HD_PRED: {
-      sub[3][0] = (edge[0] + edge[1] + 1) >> 1;
-      sub[3][1] = (edge[0] + edge[1] + edge[1] + edge[2] + 2) >> 2;
-      sub[2][0] = sub[3][2] = (edge[1] + edge[2] + 1) >> 1;
-      sub[2][1] = sub[3][3] = (edge[1] + edge[2] + edge[2] + edge[3] + 2) >> 2;
-      sub[2][2] = sub[1][0] = (edge[2] + edge[3] + 1) >> 1;
-      sub[2][3] = sub[1][1] = (edge[2] + edge[3] + edge[3] + edge[4] + 2) >> 2;
-      sub[1][2] = sub[0][0] = (edge[3] + edge[4] + 1) >> 1;
-      sub[1][3] = sub[0][1] = (edge[3] + edge[4] + edge[4] + edge[5] + 2) >> 2;
-      sub[0][2] = (edge[4] + edge[5] + edge[5] + edge[6] + 2) >> 2;
-      sub[0][3] = (edge[5] + edge[6] + edge[6] + edge[7] + 2) >> 2;
+      sub.at(3).at(0) = (edge.at(0) + edge.at(1) + 1) >> 1;
+      sub.at(3).at(1) =
+          (edge.at(0) + edge.at(1) + edge.at(1) + edge.at(2) + 2) >> 2;
+      sub.at(2).at(0) = sub.at(3).at(2) = (edge.at(1) + edge.at(2) + 1) >> 1;
+      sub.at(2).at(1) = sub.at(3).at(3) =
+          (edge.at(1) + edge.at(2) + edge.at(2) + edge.at(3) + 2) >> 2;
+      sub.at(2).at(2) = sub.at(1).at(0) = (edge.at(2) + edge.at(3) + 1) >> 1;
+      sub.at(2).at(3) = sub.at(1).at(1) =
+          (edge.at(2) + edge.at(3) + edge.at(3) + edge.at(4) + 2) >> 2;
+      sub.at(1).at(2) = sub.at(0).at(0) = (edge.at(3) + edge.at(4) + 1) >> 1;
+      sub.at(1).at(3) = sub.at(0).at(1) =
+          (edge.at(3) + edge.at(4) + edge.at(4) + edge.at(5) + 2) >> 2;
+      sub.at(0).at(2) =
+          (edge.at(4) + edge.at(5) + edge.at(5) + edge.at(6) + 2) >> 2;
+      sub.at(0).at(3) =
+          (edge.at(5) + edge.at(6) + edge.at(6) + edge.at(7) + 2) >> 2;
       break;
     }
 
     case B_HU_PRED: {
-      sub[0][0] = (left[0] + left[1] + 1) >> 1;
-      sub[0][1] = (left[0] + left[1] + left[1] + left[2] + 2) >> 2;
-      sub[0][2] = sub[1][0] = (left[1] + left[2] + 1) >> 1;
-      sub[0][3] = sub[1][1] = (left[1] + left[2] + left[2] + left[3] + 2) >> 2;
-      sub[1][2] = sub[2][0] = (left[2] + left[3] + 1) >> 1;
-      sub[1][3] = sub[2][1] = (left[2] + left[3] + left[3] + left[3] + 2) >> 2;
-      sub[2][2] = sub[2][3] = sub[3][0] = sub[3][1] = sub[3][2] = sub[3][3] =
-          left[3];
+      sub.at(0).at(0) = (left.at(0) + left.at(1) + 1) >> 1;
+      sub.at(0).at(1) =
+          (left.at(0) + left.at(1) + left.at(1) + left.at(2) + 2) >> 2;
+      sub.at(0).at(2) = sub.at(1).at(0) = (left.at(1) + left.at(2) + 1) >> 1;
+      sub.at(0).at(3) = sub.at(1).at(1) =
+          (left.at(1) + left.at(2) + left.at(2) + left.at(3) + 2) >> 2;
+      sub.at(1).at(2) = sub.at(2).at(0) = (left.at(2) + left.at(3) + 1) >> 1;
+      sub.at(1).at(3) = sub.at(2).at(1) =
+          (left.at(2) + left.at(3) + left.at(3) + left.at(3) + 2) >> 2;
+      sub.at(2).at(2) = sub.at(2).at(3) = sub.at(3).at(0) = sub.at(3).at(1) =
+          sub.at(3).at(2) = sub.at(3).at(3) = left.at(3);
       break;
     }
   }
@@ -281,7 +306,7 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
 }  // namespace
 
 void IntraPredict(const FrameHeader &header, size_t r, size_t c, Frame &frame) {
-  auto &mh = header.macroblock_header[r][c];
+  auto &mh = header.macroblock_header.at(r).at(c);
   switch (mh.intra_y_mode) {
     case V_PRED:
       VPredLuma(r, c, frame.Y);
