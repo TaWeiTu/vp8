@@ -14,17 +14,10 @@ int16_t plus128(int16_t);
 
 class LoopFilter {
  public:
-  LoopFilter(int16_t p3, int16_t p2, int16_t p1, int16_t p0, int16_t q0,
-             int16_t q1, int16_t q2, int16_t q3) {
-    p3_ = p3;
-    p2_ = p2;
-    p1_ = p1;
-    p0_ = p0;
-    q0_ = q0;
-    q1_ = q1;
-    q2_ = q2;
-    q3_ = q3;
-  }
+  LoopFilter() = default;
+  LoopFilter(int16_t, int16_t, int16_t, int16_t, int16_t, int16_t, int16_t,
+             int16_t);
+
   bool IsFilter(int16_t, const int16_t) const;
   bool IsHighVariance(int16_t) const;
   int16_t Adjust(bool);

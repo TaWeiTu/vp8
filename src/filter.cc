@@ -9,6 +9,10 @@ int16_t minus128(int16_t x) { return int16_t(Clamp128(x - int16_t(128))); }
 
 int16_t plus128(int16_t x) { return int16_t(Clamp255(x + int16_t(128))); }
 
+LoopFilter::LoopFilter(int16_t p3, int16_t p2, int16_t p1, int16_t p0,
+                       int16_t q0, int16_t q1, int16_t q2, int16_t q3)
+    : p3_(p3), p2_(p2), p1_(p1), p0_(p0), q0_(q0), q1_(q1), q2_(q2), q3_(q3) {}
+
 bool LoopFilter::IsFilter(int16_t interior, int16_t edge) const {
   return ((abs(p0_ - q0_) << 2) + (abs(p1_ - q1_) >> 2)) <= edge &&
          abs(p3_ - p2_) <= interior && abs(p2_ - p1_) <= interior &&
