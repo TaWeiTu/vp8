@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "utils.h"
 
 namespace vp8 {

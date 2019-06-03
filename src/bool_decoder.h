@@ -16,11 +16,11 @@ class BoolDecoder {
   explicit BoolDecoder(std::unique_ptr<std::ifstream>);
 
   // Decode a 1-bit boolean value.
-  uint8_t Bool(uint8_t);
+  uint8_t Bool(uint8_t prob);
   // Decode an unsigned n-bit literal.
-  uint16_t Lit(size_t);
+  uint16_t Lit(size_t n);
   // Decode a signed n-bit literal.
-  int16_t SignedLit(size_t);
+  int16_t SignedLit(size_t n);
   // Decode a 8-bit probability (being an alias of Lit(8)).
   uint8_t Prob8();
   // Decode a 7-bit probability p and return p ? p << 1 : 1.
@@ -37,7 +37,7 @@ class BoolDecoder {
   }
 
   // Read an unsigned n-bit integer (uncoded) presented in little-endian format.
-  uint32_t Raw(size_t);
+  uint32_t Raw(size_t n);
 
  private:
   uint32_t value_;

@@ -94,7 +94,7 @@ void TMPredLuma(size_t r, size_t c, Plane<4> &mb) {
 }
 
 void BPredLuma(size_t r, size_t c,
-               const std::array<std::array<SubBlockMode, 4>, 4> &pred,
+               const std::array<SubBlockMode, 16> &pred,
                Plane<4> &mb) {
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 4; ++j) {
@@ -148,7 +148,7 @@ void BPredLuma(size_t r, size_t c,
                       : c == 0 ? 129
                                : mb.at(r - 1).at(c - 1).at(3).at(3).at(3).at(3);
 
-      BPredSubBlock(above, left, p, pred.at(i).at(j),
+      BPredSubBlock(above, left, p, pred.at(i << 2 | j),
                     mb.at(r).at(c).at(i).at(j));
     }
   }
@@ -305,8 +305,8 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
 
 }  // namespace
 
-void IntraPredict(const FrameHeader &header, size_t r, size_t c, Frame &frame) {
-  auto &mh = header.macroblock_header.at(r).at(c);
+void IntraPredict(const FrameHeader &header, size_t r, size_t c,
+                  const MacroBlockHeader &mh, Frame &frame) {
   switch (mh.intra_y_mode) {
     case V_PRED:
       VPredLuma(r, c, frame.Y);
