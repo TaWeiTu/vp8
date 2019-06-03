@@ -172,7 +172,7 @@ void BPredLuma(size_t r, size_t c,
                       : c == 0 ? 129
                                : mb.at(r - 1).at(c - 1).at(3).at(3).at(3).at(3);
 
-      SubBlockMode mode = ps.ReadSubBlockMode(LeftSubBlockMode(i << 2 | j),
+      SubBlockMode mode = ps.ReadSubBlockBMode(LeftSubBlockMode(i << 2 | j),
                                               AboveSubBlockMode(i << 2 | j));
       context[r << 2 | i][c << 2 | j] = IntraContext(mode);
       BPredSubBlock(above, left, p, mode, mb.at(r).at(c).at(i).at(j));

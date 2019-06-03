@@ -17,7 +17,9 @@ struct IntraContext {
   SubBlockMode mode;
 
   IntraContext() : is_intra_mb(false) {}
+
   explicit IntraContext(SubBlockMode mode_) : is_intra_mb(true), mode(mode_) {}
+
   explicit IntraContext(bool is_intra_mb_, SubBlockMode mode_)
       : is_intra_mb(is_intra_mb_), mode(mode_) {}
 };
