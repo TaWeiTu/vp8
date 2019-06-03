@@ -301,11 +301,14 @@ void InterPredict(const FrameHeader &header, const FrameTag &tag, size_t r,
                   const std::vector<std::vector<MacroBlockHeader>> &mbheaders,
                   MacroBlockHeader &mh, Frame &frame) {
   ConfigureMVs(header, r, c, tag.version == 3, mh, frame);
-  InterpBlock(header.ref_frame.Y, header.subpixel_filters, r, c,
+  std::array<std::array<int16_t, 6>> subpixel_filters = 
+    tag.version == 0 ? kBicubicFilter : kBilinearFilter;
+
+  InterpBlock(header.ref_frame.Y, subpixel_filters, r, c,
               frame.Y.at(r).at(c));
-  InterpBlock(header.ref_frame.U, header.subpixel_filters, r, c,
+  InterpBlock(header.ref_frame.U, subpixel_filters, r, c,
               frame.U.at(r).at(c));
-  InterpBlock(header.ref_frame.V, header.subpixel_filters, r, c,
+  InterpBlock(header.ref_frame.V, subpixel_filters, r, c,
               frame.V.at(r).at(c));
 }
 

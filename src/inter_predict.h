@@ -7,13 +7,32 @@
 
 #include "bitstream_parser.h"
 #include "frame.h"
-#include "predict_mode.h"
 #include "utils.h"
 
 namespace vp8 {
 namespace {
 
 static const MotionVector kZero = MotionVector(0, 0);
+
+static const std::array<std::array<int16_t, 6>, 8> kBicubicFilter = {
+    {{0, 0, 128, 0, 0, 0},
+     {0, -6, 123, 12, -1, 0},
+     {2, -11, 108, 36, -8, 1},
+     {0, -9, 93, 50, -6, 0},
+     {3, -16, 77, 77, -16, 3},
+     {0, -6, 50, 93, -9, 0},
+     {1, -8, 36, 108, -11, 2},
+     {0, -1, 12, 123, -6, 0}}};
+
+static const std::array<std::array<int16_t, 6>, 8> kBilinearFilter = {
+    {{0, 0, 128, 0, 0, 0},
+     {0, 0, 112, 16, 0, 0},
+     {0, 0, 96, 32, 0, 0},
+     {0, 0, 80, 48, 0, 0},
+     {0, 0, 64, 64, 0, 0},
+     {0, 0, 48, 80, 0, 0},
+     {0, 0, 32, 96, 0, 0},
+     {0, 0, 16, 112, 0, 0}}};
 
 // Search for motion vectors in the left, above and upper-left macroblocks and
 // return the best, nearest and near motion vectors.

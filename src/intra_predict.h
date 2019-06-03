@@ -7,7 +7,6 @@
 
 #include "bitstream_parser.h"
 #include "frame.h"
-#include "predict_mode.h"
 #include "utils.h"
 
 namespace vp8 {
