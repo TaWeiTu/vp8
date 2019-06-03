@@ -93,9 +93,24 @@ void TMPredLuma(size_t r, size_t c, Plane<4> &mb) {
   }
 }
 
-void BPredLuma(size_t r, size_t c,
-               const std::array<SubBlockMode, 16> &pred,
-               Plane<4> &mb) {
+void BPredLuma(size_t r, size_t c, std::vector<std::vector<IntraContext>> &context, BitstreamParser &ps, Plane<4> &mb) {
+  std::function<MotionVector(size_t)> LeftMotionVector = [&mb, r,
+                                                          c](size_t idx) {
+    if ((idx & 3) == 0) {
+      if (c == 0) return kZero;
+      return mb.at(r).at(c - 1).GetSubBlockMV(idx + 3);
+    }
+    return mb.at(r).at(c).GetSubBlockMV(idx - 1);
+  };
+
+  std::function<MotionVector(size_t)> AboveMotionVector = [&mb, r,
+                                                           c](size_t idx) {
+    if (idx < 4) {
+      if (r == 0) return kZero;
+      return mb.at(r - 1).at(c).GetSubBlockMV(idx + 12);
+    }
+    return mb.at(r).at(c).GetSubBlockMV(idx - 4);
+  };
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 4; ++j) {
       std::array<int16_t, 8> above;
@@ -305,27 +320,31 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
 
 }  // namespace
 
-void IntraPredict(const FrameHeader &header, size_t r, size_t c,
-                  const MacroBlockHeader &mh, Frame &frame) {
+void IntraPredict(const FrameHeader &header, size_t r, size_t c, std::vector<std::vector<IntraContext>> &context, BitstreamParser &ps, Frame &frame) {
+  IntraMBHeader mh = ps.ReadIntraMBHeader();
   switch (mh.intra_y_mode) {
     case V_PRED:
       VPredLuma(r, c, frame.Y);
+      context.at(r).at(c) = IntraContext(true, V_PRED);
       break;
 
     case H_PRED:
       HPredLuma(r, c, frame.Y);
+      context.at(r).at(c) = IntraContext(true, H_PRED);
       break;
 
     case DC_PRED:
       DCPredLuma(r, c, frame.Y);
+      context.at(r).at(c) = IntraContext(true, DC_PRED);
       break;
 
     case TM_PRED:
       TMPredLuma(r, c, frame.Y);
+      context.at(r).at(c) = IntraContext(true, TM_PRED);
       break;
 
     case B_PRED:
-      BPredLuma(r, c, mh.intra_b_mode, frame.Y);
+      BPredLuma(r, c, context, ps, frame.Y);
       break;
   }
   switch (mh.intra_uv_mode) {

@@ -35,15 +35,6 @@ static const std::array<std::array<int16_t, 6>, 8> kBilinearFilter = {
      {0, 0, 32, 96, 0, 0},
      {0, 0, 16, 112, 0, 0}}};
 
-struct BlockContext {
-  bool is_inter_mb;
-  MacroBlockMV mv_mode;
-
-  BlockContext() = default;
-  explicit BlockContext(bool is_inter_mb_, MacroBlockMV mv_mode_)
-      : is_inter_mb(is_inter_mb_), mv_mode(mv_mode_) {}
-};
-
 // Search for motion vectors in the left, above and upper-left macroblocks and
 // return the best, nearest and near motion vectors.
 MacroBlockMV SearchMVs(size_t r, size_t c, const FrameHeader &header,
@@ -102,6 +93,15 @@ void InterpBlock(const Plane<C> &refer,
                  size_t c, MacroBlock<C> &mb);
 
 }  // namespace
+
+struct InterContext {
+  bool is_inter_mb;
+  MacroBlockMV mv_mode;
+
+  InterContext() : is_inter_mb(false) {}
+  explicit InterContext(bool is_inter_mb_, MacroBlockMV mv_mode_)
+      : is_inter_mb(is_inter_mb_), mv_mode(mv_mode_) {}
+};
 
 void InterPredict(const FrameHeader &header, const FrameTag &tag, size_t r,
                   size_t c, Frame &frame);

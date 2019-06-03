@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <vector>
 
 #include "bitstream_parser.h"
@@ -28,6 +29,15 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
                    const std::array<int16_t, 4> &left, int16_t p, SubBlockMode mode,
                    SubBlock &sub);
 }  // namespace
+
+struct IntraContext {
+  bool is_intra_mb;
+  SubBlockMode mode;
+
+  IntraContext() : is_intra_mb(false) {}
+  explicit InterContext(bool is_intra_mb_, SubBlockMode mode_)
+      : is_intra_mb(is_intra_mb_), mode(mode_) {}
+};
 
 void IntraPredict(const FrameHeader &header, size_t r, size_t c, const MacroBlockHeader &mh,
                   Frame &frame);

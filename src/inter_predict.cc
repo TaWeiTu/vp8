@@ -3,10 +3,11 @@
 namespace vp8 {
 namespace {
 
-MacroBlockHeader SearchMVs(
-    size_t r, size_t c, const FrameHeader &header, const Plane<4> &mb,
-    const std::vector<std::vector<BlockContext>> &context, BitstreamParser &ps,
-    MotionVector &best, MotionVector &nearest, MotionVector &near) {
+InterMBHeader SearchMVs(size_t r, size_t c, const FrameHeader &header,
+                        const Plane<4> &mb,
+                        const std::vector<std::vector<BlockContext>> &context,
+                        BitstreamParser &ps, MotionVector &best,
+                        MotionVector &nearest, MotionVector &near) {
   static std::array<uint8_t, 4> cnt;
   std::fill(cnt.begin(), cnt.end(), 0);
   std::vector<MotionVector> mv;
@@ -46,9 +47,9 @@ MacroBlockHeader SearchMVs(
   while (mv.size() < 3u) mv.push_back(kZero);
 
   cnt.at(3) =
-      (r > 0 && context.at(r - 1).at(c).mv_mode == MV_SPLIT) +
-      (c > 0 && context.at(r).at(c - 1).mv_mode == MV_SPLIT) * 2 +
-      (r > 0 && c > 0 && context.at(r - 1).at(c - 1).mv_mode == MV_SPLIT);
+      (r > 0 && context.at(r - 1).at(c).mode == MV_SPLIT) +
+      (c > 0 && context.at(r).at(c - 1).mode == MV_SPLIT) * 2 +
+      (r > 0 && c > 0 && context.at(r - 1).at(c - 1).mode == MV_SPLIT);
 
   if (cnt.at(2) > cnt.at(1)) {
     std::swap(cnt.at(1), cnt.at(2));
@@ -59,7 +60,7 @@ MacroBlockHeader SearchMVs(
   nearest = mv.at(1);
   near = mv.at(2);
 
-  return ps.ReadMacroBlockHeader(cnt);
+  return ps.ReadInterMBHeader(cnt);
 }
 
 void ClampMV(MotionVector &mv, int16_t left, int16_t right, int16_t up,
@@ -187,7 +188,7 @@ void ConfigureMVs(const FrameHeader &header, size_t r, size_t c, bool trim,
           down = int16_t((frame.vblock - r) << 7);
 
   MotionVector best, nearest, near;
-  MacroBlockHeader hd =
+  InterMBHeader hd =
       SearchMVs(r, c, header, frame.Y, context, ps, best, nearest, near);
   ClampMV(best, left, right, up, down);
   ClampMV(nearest, left, right, up, down);
@@ -318,10 +319,8 @@ template void InterpBlock(const Plane<2> &,
 }  // namespace
 
 void InterPredict(const FrameHeader &header, const FrameTag &tag, size_t r,
-                  size_t c, const MacroBlockPreHeader &pre, 
-                  std::vector<std::vector<BlockContext>> &context,
-                  BitstreamParser &ps,
-                  Frame &frame) {
+                  size_t c, std::vector<std::vector<InterContext>> &context,
+                  BitstreamParser &ps, Frame &frame) {
   ConfigureMVs(header, r, c, tag.version == 3, context, ps, frame);
   std::array<std::array<int16_t, 6>, 8> subpixel_filters =
       tag.version == 0 ? kBicubicFilter : kBilinearFilter;
