@@ -96,10 +96,13 @@ struct FrameHeader {
   std::array<int16_t, 4> loop_filter_level_segment;
 };
 
-struct MacroBlockHeader {
+struct MacroBlockPreHeader {
   uint8_t segment_id;
   bool mb_skip_coeff;
   bool is_inter_mb;
+};
+
+struct MacroBlockHeader {
   uint8_t ref_frame;
   MacroBlockMV mv_mode;
   MVPartition mv_split_mode;
@@ -184,9 +187,12 @@ class BitstreamParser {
 
   std::pair<FrameTag, FrameHeader> ReadFrameTagHeader();
 
-  MacroBlockHeader ReadMacroBlockHeader(
-      const std::array<uint8_t, 4>& mv_ref_probs, int sub_mv_context,
-      int above_bmode, int left_bmode);
+  MacroBlockPreHeader ReadMacroBlockPreHeader();
+
+  MacroBlockHeader ReadMacroBlockHeader(const std::array<uint8_t, 4>& cnt,
+                                        int sub_mv_context, int above_bmode,
+                                        int left_bmode,
+                                        const MacroBlockPreHeader& pre_result);
 
   ResidualData ReadResidualData(int first_coeff,
                                 std::array<uint8_t, 4> context);
