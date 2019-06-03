@@ -49,8 +49,7 @@ static const std::array<std::array<int16_t, 6>, 8> kBilinearFilter = {
 
 // Search for motion vectors in the left, above and upper-left macroblocks and
 // return the best, nearest and near motion vectors.
-InterMBHeader SearchMVs(size_t r, size_t c, const FrameHeader &header,
-                        const Plane<4> &mb,
+InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
                         const std::vector<std::vector<InterContext>> &context,
                         BitstreamParser &ps, MotionVector &best,
                         MotionVector &nearest, MotionVector &near);
@@ -79,7 +78,7 @@ void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
 
 // For each (luma or chroma) macroblocks, configure their motion vectors (if
 // needed).
-void ConfigureMVs(const FrameHeader &header, size_t r, size_t c, bool trim,
+InterMBHeader ConfigureMVs(size_t r, size_t c, bool trim,
                   std::vector<std::vector<InterContext>> &context,
                   BitstreamParser &ps, Frame &frame);
 
@@ -108,8 +107,9 @@ void InterpBlock(const Plane<C> &refer,
 
 }  // namespace
 
-void InterPredict(const FrameHeader &header, const FrameTag &tag, size_t r,
-                  size_t c, std::vector<std::vector<InterContext>> &context,
+void InterPredict(const FrameTag &tag, size_t r, size_t c,
+                  const std::array<Frame, 4> &refs,
+                  std::vector<std::vector<InterContext>> &context,
                   BitstreamParser &ps, Frame &frame);
 
 }  // namespace vp8

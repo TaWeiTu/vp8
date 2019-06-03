@@ -42,7 +42,7 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
                    SubBlockMode mode, SubBlock &sub);
 }  // namespace
 
-void IntraPredict(const FrameHeader &header, size_t r, size_t c,
+void IntraPredict(size_t r, size_t c,
                   std::vector<std::vector<IntraContext>> &context,
                   BitstreamParser &ps, Frame &frame);
 

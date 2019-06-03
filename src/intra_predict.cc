@@ -326,12 +326,16 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
           sub.at(3).at(2) = sub.at(3).at(3) = left.at(3);
       break;
     }
+
+    default:
+      ensure(false, "[Error] BPredSubBlock: Unknown subblock mode.");
+      break;
   }
 }
 
 }  // namespace
 
-void IntraPredict(const FrameHeader &header, size_t r, size_t c,
+void IntraPredict(size_t r, size_t c,
                   std::vector<std::vector<IntraContext>> &context,
                   BitstreamParser &ps, Frame &frame) {
   IntraMBHeader mh = ps.ReadIntraMBHeader();
@@ -359,6 +363,10 @@ void IntraPredict(const FrameHeader &header, size_t r, size_t c,
     case B_PRED:
       BPredLuma(r, c, context, ps, frame.Y);
       break;
+
+    default:
+      ensure(false, "[Error] IntraPredict: Unknown Y mode.");
+      break;
   }
   MacroBlockMode intra_uv_mode = ps.ReadIntraMB_UVMode();
   switch (intra_uv_mode) {
@@ -380,6 +388,10 @@ void IntraPredict(const FrameHeader &header, size_t r, size_t c,
     case TM_PRED:
       TMPredChroma(r, c, frame.U);
       TMPredChroma(r, c, frame.V);
+      break;
+
+    default:
+      ensure(false, "[Error] IntraPredict: Unknown UV mode.");
       break;
   }
 }

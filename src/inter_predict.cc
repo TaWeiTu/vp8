@@ -3,8 +3,7 @@
 namespace vp8 {
 namespace {
 
-InterMBHeader SearchMVs(size_t r, size_t c, const FrameHeader &header,
-                        const Plane<4> &mb,
+InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
                         const std::vector<std::vector<InterContext>> &context,
                         BitstreamParser &ps, MotionVector &best,
                         MotionVector &nearest, MotionVector &near) {
@@ -127,6 +126,10 @@ void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
     case MV_16:
       for (uint8_t i = 0; i < 16; ++i) part.push_back({i});
       break;
+
+    default:
+      ensure(false, "[Error] Unknown subblock partition.");
+      break;
   }
 
   auto LeftMotionVector = [&mb, r, c](size_t idx) {
@@ -178,16 +181,15 @@ void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
   }
 }
 
-void ConfigureMVs(const FrameHeader &header, size_t r, size_t c, bool trim,
+InterMBHeader ConfigureMVs(size_t r, size_t c, bool trim,
                   std::vector<std::vector<InterContext>> &context,
                   BitstreamParser &ps, Frame &frame) {
   int16_t left = int16_t(-(1 << 7)), right = int16_t(frame.hblock);
   int16_t up = int16_t(-((r + 1) << 7)),
           down = int16_t((frame.vblock - r) << 7);
 
-  MotionVector best, nearest, near;
-  InterMBHeader hd =
-      SearchMVs(r, c, header, frame.Y, context, ps, best, nearest, near);
+  MotionVector best, nearest, near, mv;
+  InterMBHeader hd = SearchMVs(r, c, frame.Y, context, ps, best, nearest, near);
   ClampMV(best, left, right, up, down);
   ClampMV(nearest, left, right, up, down);
   ClampMV(near, left, right, up, down);
@@ -211,18 +213,24 @@ void ConfigureMVs(const FrameHeader &header, size_t r, size_t c, bool trim,
       break;
 
     case MV_NEW:
-      MotionVector mv = hd.mv_new + best;
+      mv = hd.mv_new + best;
       frame.Y.at(r).at(c).SetSubBlockMVs(mv);
       frame.Y.at(r).at(c).SetMotionVector(mv);
       break;
 
     case MV_SPLIT:
       ConfigureSubBlockMVs(hd, r, c, ps, frame.Y);
-      MotionVector pres = frame.Y.at(r).at(c).GetSubBlockMV(15);
-      frame.Y.at(r).at(c).SetMotionVector(pres);
+      mv = frame.Y.at(r).at(c).GetSubBlockMV(15);
+      frame.Y.at(r).at(c).SetMotionVector(mv);
+      break;
+
+    default:
+      ensure(false, "[Error] Unknown macroblock motion vector mode.");
+      break;
   }
   ConfigureChromaMVs(frame.Y.at(r).at(c), trim, frame.U.at(r).at(c));
   ConfigureChromaMVs(frame.Y.at(r).at(c), trim, frame.V.at(r).at(c));
+  return hd;
 }
 
 template <size_t C>
@@ -316,16 +324,17 @@ template void InterpBlock(const Plane<2> &,
 
 }  // namespace
 
-void InterPredict(const FrameHeader &header, const FrameTag &tag, size_t r,
-                  size_t c, std::vector<std::vector<InterContext>> &context,
+void InterPredict(const FrameTag &tag, size_t r, size_t c,
+                  const std::array<Frame, 4> &refs,
+                  std::vector<std::vector<InterContext>> &context,
                   BitstreamParser &ps, Frame &frame) {
-  ConfigureMVs(header, r, c, tag.version == 3, context, ps, frame);
+  InterMBHeader hd = ConfigureMVs(r, c, tag.version == 3, context, ps, frame);
   std::array<std::array<int16_t, 6>, 8> subpixel_filters =
       tag.version == 0 ? kBicubicFilter : kBilinearFilter;
 
-  InterpBlock(header.ref_frame.Y, subpixel_filters, r, c, frame.Y.at(r).at(c));
-  InterpBlock(header.ref_frame.U, subpixel_filters, r, c, frame.U.at(r).at(c));
-  InterpBlock(header.ref_frame.V, subpixel_filters, r, c, frame.V.at(r).at(c));
+  InterpBlock(refs[hd.ref_frame].Y, subpixel_filters, r, c, frame.Y.at(r).at(c));
+  InterpBlock(refs[hd.ref_frame].U, subpixel_filters, r, c, frame.U.at(r).at(c));
+  InterpBlock(refs[hd.ref_frame].V, subpixel_filters, r, c, frame.V.at(r).at(c));
 }
 
 }  // namespace vp8
