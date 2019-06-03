@@ -7,6 +7,7 @@
 
 #include "bitstream_const.h"
 #include "bool_decoder.h"
+#include "frame.h"
 
 namespace vp8 {
 
@@ -102,14 +103,11 @@ struct MacroBlockPreHeader {
   bool is_inter_mb;
 };
 
-struct MacroBlockHeader {
+struct InterMBHeader {
   uint8_t ref_frame;
   MacroBlockMV mv_mode;
   MVPartition mv_split_mode;
-  std::array<SubBlockMV, 16> sub_mv_mode;
-  MacroBlockMode intra_y_mode;
-  std::array<SubBlockMode, 16> intra_b_mode;
-  MacroBlockMode intra_uv_mode;
+  MotionVector mv_new;
 };
 
 struct ResidualData {
@@ -178,7 +176,7 @@ class BitstreamParser {
   std::array<int16_t, 16> ReadResidualBlock(int first_coeff,
                                             std::array<uint8_t, 4> context);
 
-  void ReadMvComponent(bool kind);
+  int16_t ReadMvComponent(bool kind);
 
  public:
   BitstreamParser() = default;
@@ -189,10 +187,17 @@ class BitstreamParser {
 
   MacroBlockPreHeader ReadMacroBlockPreHeader();
 
-  MacroBlockHeader ReadMacroBlockHeader(const std::array<uint8_t, 4>& cnt,
-                                        int sub_mv_context, int above_bmode,
-                                        int left_bmode,
-                                        const MacroBlockPreHeader& pre_result);
+  SubBlockMode ReadSubBlockMode(int sub_mv_context);
+
+  MotionVector ReadSubBlockMV();
+
+  InterMBHeader ReadInterMBHeader(const std::array<uint8_t, 4>& cnt);
+
+  SubBlockMode ReadSubBlockBMode(int above_bmode, int left_bmode);
+
+  MacroBlockMode ReadIntraMB_UVMode();
+
+  MacroBlockMode ReadIntraMB_YMode();
 
   ResidualData ReadResidualData(int first_coeff,
                                 std::array<uint8_t, 4> context);
