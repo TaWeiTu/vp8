@@ -185,25 +185,32 @@ template <size_t C>
 class Plane {
  public:
   Plane() : offset_(C == 4 ? 4 : 3), mask_((1 << offset_) - 1) {}
+
   explicit Plane(size_t h, size_t w)
       : offset_(C == 4 ? 4 : 3), mask_((1 << offset_) - 1) {
     blocks_.resize(h, std::vector<MacroBlock<C>>(w));
   }
+
   int16_t GetPixel(size_t r, size_t c) const {
     ensure(r < blocks_.size() * 4 * C && c < blocks_[0].size() * 4 * C,
            "[Error] Plane<C>::GetPixel: Index out of range.");
     return blocks_[r >> offset_][c >> offset_].GetPixel(r & mask_, c & mask_);
   }
+
   std::vector<MacroBlock<C>>& operator[](size_t i) {
     ensure(i < blocks_.size(),
            "[Error] Plane<C>::operator[]: Index out of range.");
     return blocks_[i];
   }
+
   const std::vector<MacroBlock<C>>& operator[](size_t i) const {
     ensure(i < blocks_.size(),
            "[Error] Plane<C>::operator[]: Index out of range.");
     return blocks_[i];
   }
+
+  size_t vblock() const { return blocks_.size(); }
+  size_t hblock() const { return blocks_[0].size(); }
 
  private:
   size_t offset_, mask_;

@@ -70,7 +70,7 @@ uint8_t BoolDecoder::Prob7() {
   return res ? uint8_t(res << 1) : 1;
 }
 
-uint32_t BoolDecoder::ReadUncoded(size_t n) {
+uint32_t BoolDecoder::Raw(size_t n) {
   uint32_t res = 0;
   for (size_t i = 0; i < n; ++i) res |= uint32_t(ReadByte()) << (i << 3);
   return res;

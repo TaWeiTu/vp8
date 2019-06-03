@@ -36,7 +36,7 @@ class BoolDecoder {
   }
 
   // Read an unsigned n-bit integer (uncoded) presented in little-endian format.
-  uint32_t ReadUncoded(size_t);
+  uint32_t Raw(size_t);
 
  private:
   uint32_t value_;
