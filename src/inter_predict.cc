@@ -3,11 +3,10 @@
 namespace vp8 {
 namespace {
 
-MacroBlockHeader SearchMVs(size_t r, size_t c, const FrameHeader &header,
-                       const Plane<4> &mb,
-                       const std::vector<std::vector<BlockContext>> &context, BitstreamParser &ps,
-                       MotionVector &best,
-                       MotionVector &nearest, MotionVector &near) {
+MacroBlockHeader SearchMVs(
+    size_t r, size_t c, const FrameHeader &header, const Plane<4> &mb,
+    const std::vector<std::vector<BlockContext>> &context, BitstreamParser &ps,
+    MotionVector &best, MotionVector &nearest, MotionVector &near) {
   static std::array<uint8_t, 4> cnt;
   std::fill(cnt.begin(), cnt.end(), 0);
   std::vector<MotionVector> mv;
@@ -49,7 +48,7 @@ MacroBlockHeader SearchMVs(size_t r, size_t c, const FrameHeader &header,
   cnt.at(3) =
       (r > 0 && context.at(r - 1).at(c).mv_mode == MV_SPLIT) +
       (c > 0 && context.at(r).at(c - 1).mv_mode == MV_SPLIT) * 2 +
-      (r > 0 && c > 0 && mbheaders.at(r - 1).at(c - 1).mv_mode == MV_SPLIT);
+      (r > 0 && c > 0 && context.at(r - 1).at(c - 1).mv_mode == MV_SPLIT);
 
   if (cnt.at(2) > cnt.at(1)) {
     std::swap(cnt.at(1), cnt.at(2));
@@ -59,6 +58,7 @@ MacroBlockHeader SearchMVs(size_t r, size_t c, const FrameHeader &header,
   best = mv.at(0);
   nearest = mv.at(1);
   near = mv.at(2);
+
   return ps.ReadMacroBlockHeader(cnt);
 }
 
@@ -68,7 +68,7 @@ void ClampMV(MotionVector &mv, int16_t left, int16_t right, int16_t up,
   mv.dc = std::clamp(mv.dr, left, right);
 }
 
-uint8_t SubBlockProb(const MotionVector &left, const MotionVector &above) {
+uint8_t SubBlockContext(const MotionVector &left, const MotionVector &above) {
   uint8_t lez = (left.dr == 0 && left.dc == 0);
   uint8_t aez = (above.dr == 0 && above.dc == 0);
   uint8_t lea = (left.dr == above.dr && left.dc == above.dc);
@@ -102,7 +102,8 @@ void ConfigureChromaMVs(const MacroBlock<4> &luma, bool trim,
   }
 }
 
-void ConfigureSubBlockMVs(const MacroBlockHeader &hd, size_t r, size_t c, Plane<4> &mb) {
+void ConfigureSubBlockMVs(const MacroBlockHeader &hd, size_t r, size_t c,
+                          BitstreamParser &ps, Plane<4> &mb) {
   std::vector<std::vector<uint8_t>> part;
   switch (hd.mv_split_mode) {
     case MV_TOP_BOTTOM:
@@ -127,8 +128,28 @@ void ConfigureSubBlockMVs(const MacroBlockHeader &hd, size_t r, size_t c, Plane<
       break;
   }
 
+  std::function<MotionVector(size_t)> LeftMotionVector = [&mb, r,
+                                                          c](size_t idx) {
+    if ((idx & 3) == 0) {
+      if (c == 0) return kZero;
+      return mb.at(r).at(c - 1).GetSubBlockMV(idx + 3);
+    }
+    return mb.at(r).at(c).GetSubBlockMV(idx - 1);
+  };
+
+  std::function<MotionVector(size_t)> AboveMotionVector = [&mb, r,
+                                                           c](size_t idx) {
+    if (idx < 4) {
+      if (r == 0) return kZero;
+      return mb.at(r - 1).at(c).GetSubBlockMV(idx + 12);
+    }
+    return mb.at(r).at(c).GetSubBlockMV(idx - 4);
+  };
+
   for (size_t i = 0; i < part.size(); ++i) {
-    SubBlockMV mode = hd.sub_mv_mode[i];
+    uint8_t context = SubBlockContext(LeftMotionVector(part.at(i).at(0)),
+                                      AboveMotionVector(part.at(i).at(0)));
+    SubBlockMV mode = ps.ReadSubBlockMode(context);
     for (size_t j = 0; j < part.at(i).size(); ++j) {
       size_t ir = part.at(i).at(j) >> 2, ic = part.at(i).at(j) & 3;
       MotionVector mv;
@@ -150,7 +171,7 @@ void ConfigureSubBlockMVs(const MacroBlockHeader &hd, size_t r, size_t c, Plane<
           break;
 
         case NEW_4x4:
-          mv = mh.ReadMotionVector() + mb.at(r).at(c).GetMotionVector();
+          mv = ps.ReadSubBlockMV() + mb.at(r).at(c).GetMotionVector();
           break;
       }
       mb.at(r).at(c).at(ir).at(ic).SetMotionVector(mv);
@@ -158,17 +179,21 @@ void ConfigureSubBlockMVs(const MacroBlockHeader &hd, size_t r, size_t c, Plane<
   }
 }
 
-void ConfigureMVs(const FrameHeader &header, size_t r, size_t c, bool trim, const std::vector<std::vector<BlockContext>> &context, BitstreamParser &ps
-                  Frame &frame) {
+void ConfigureMVs(const FrameHeader &header, size_t r, size_t c, bool trim,
+                  std::vector<std::vector<BlockContext>> &context,
+                  BitstreamParser &ps, Frame &frame) {
   int16_t left = int16_t(-(1 << 7)), right = int16_t(frame.hblock);
   int16_t up = int16_t(-((r + 1) << 7)),
           down = int16_t((frame.vblock - r) << 7);
 
   MotionVector best, nearest, near;
-  MacroBlockHeader hd = SearchMVs(r, c, header, frame.Y, context, ps , best, nearest, near);
+  MacroBlockHeader hd =
+      SearchMVs(r, c, header, frame.Y, context, ps, best, nearest, near);
   ClampMV(best, left, right, up, down);
   ClampMV(nearest, left, right, up, down);
   ClampMV(near, left, right, up, down);
+
+  context.at(r).at(c) = BlockContext(true, hd.mv_mode);
 
   switch (hd.mv_mode) {
     case MV_NEAREST:
@@ -187,17 +212,15 @@ void ConfigureMVs(const FrameHeader &header, size_t r, size_t c, bool trim, cons
       break;
 
     case MV_NEW:
-      // TODO: Read motion vector in mode MV_NEW.
-      MotionVector mv = mh.ReadMotionVector() + best;
+      MotionVector mv = hd.mv + best;
       frame.Y.at(r).at(c).SetSubBlockMVs(mv);
       frame.Y.at(r).at(c).SetMotionVector(mv);
       break;
 
     case MV_SPLIT:
-      // TODO: Read how the macroblock is splitted.
-      ConfigureSubBlockMVs(hd, r, c, frame.Y);
-      frame.Y.at(r).at(c).SetMotionVector(
-          frame.Y.at(r).at(c).GetSubBlockMV(15));
+      ConfigureSubBlockMVs(hd, r, c, ps, frame.Y);
+      MotionVector pres = frame.Y.at(r).at(c).GetSubBlockMV(15);
+      frame.Y.at(r).at(c).SetMotionVector(pres);
   }
   ConfigureChromaMVs(frame.Y.at(r).at(c), trim, frame.U.at(r).at(c));
   ConfigureChromaMVs(frame.Y.at(r).at(c), trim, frame.V.at(r).at(c));
@@ -295,12 +318,12 @@ template void InterpBlock(const Plane<2> &,
 }  // namespace
 
 void InterPredict(const FrameHeader &header, const FrameTag &tag, size_t r,
-                  size_t c,
-                  const std::vector<std::vector<BlockContext>> &context,
-                  const MacroBlockPreHeader &pre, BitstreamParser &ps,
+                  size_t c, const MacroBlockPreHeader &pre, 
+                  std::vector<std::vector<BlockContext>> &context,
+                  BitstreamParser &ps,
                   Frame &frame) {
   ConfigureMVs(header, r, c, tag.version == 3, context, ps, frame);
-  std::array<std::array<int16_t, 6>> subpixel_filters =
+  std::array<std::array<int16_t, 6>, 8> subpixel_filters =
       tag.version == 0 ? kBicubicFilter : kBilinearFilter;
 
   InterpBlock(header.ref_frame.Y, subpixel_filters, r, c, frame.Y.at(r).at(c));

@@ -10,7 +10,7 @@ void Reconstruct(const FrameHeader &header, BitstreamParser &ps, Frame &frame) {
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
       MacroBlockPreHeader pre = ps.ReadMacroBlockPreHeader();
-      if (pre.is_inter_mb) InterPredict(header, r, c, context, pre, ps, frame);
+      if (pre.is_inter_mb) InterPredict(header, r, c, pre, context, ps, frame);
       else IntraPredict(header, r, c, pre, ps, frame);
       mbheaders[r][c] = mh;
 

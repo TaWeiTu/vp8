@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <vector>
 
 #include "bitstream_parser.h"
@@ -60,7 +61,7 @@ MotionVector Invert(const MotionVector &, bool, bool);
 
 // Decide the probability table of the current subblock based on the motion
 // vectors of the left and above subblocks.
-uint8_t SubBlockProb(const MotionVector &left, const MotionVector &above);
+uint8_t SubBlockContext(const MotionVector &left, const MotionVector &above);
 
 // The motion vectors of chroma subblocks are the average value of the motion
 // vectors occupying the same position in the luma subblocks.
