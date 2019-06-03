@@ -1,6 +1,6 @@
 CXX := clang++
 DBGFLAGS := -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -fsanitize=undefined -fsanitize=address -fsanitize-address-use-after-scope -fstack-protector-all -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -std=c++17 -Og -g3 -Wno-padded -march=native
-CFLAGS := -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -std=c++17 -O3 -march=native 
+CFLAGS := -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -std=c++17 -O3 -march=native
 CHECK := cppcheck --enable=all --inconclusive --check-config --suppress=missingIncludeSystem
 
 all: decode
@@ -36,6 +36,10 @@ src/yuv.o: src/yuv.cc src/yuv.h src/utils.h src/frame.h
 src/filter.o: src/filter.cc src/filter.h src/utils.h src/frame.h
 	$(CHECK) src/filter.cc
 	$(CXX) $(CFLAGS) -c -o src/filter.o src/filter.cc 
+
+src/bitstream_parser.o: src/bitstream_parser.cc src/bitstream_parser.h src/bitstream_const.h src/utils.o src/bool_decoder.o
+	$(CHECK) src/bitstream_parser.cc
+	$(CXX) $(CFLAGS) -c -o src/bitstream_parser.o src/bitstream_parser.cc 
 
 .PHONY: clean
 clean: 
