@@ -5,7 +5,7 @@ namespace {
 
 InterMBHeader SearchMVs(size_t r, size_t c, const FrameHeader &header,
                         const Plane<4> &mb,
-                        const std::vector<std::vector<BlockContext>> &context,
+                        const std::vector<std::vector<InterContext>> &context,
                         BitstreamParser &ps, MotionVector &best,
                         MotionVector &nearest, MotionVector &near) {
   static std::array<uint8_t, 4> cnt;
@@ -47,9 +47,9 @@ InterMBHeader SearchMVs(size_t r, size_t c, const FrameHeader &header,
   while (mv.size() < 3u) mv.push_back(kZero);
 
   cnt.at(3) =
-      (r > 0 && context.at(r - 1).at(c).mode == MV_SPLIT) +
-      (c > 0 && context.at(r).at(c - 1).mode == MV_SPLIT) * 2 +
-      (r > 0 && c > 0 && context.at(r - 1).at(c - 1).mode == MV_SPLIT);
+      (r > 0 && context.at(r - 1).at(c).mv_mode == MV_SPLIT) +
+      (c > 0 && context.at(r).at(c - 1).mv_mode == MV_SPLIT) * 2 +
+      (r > 0 && c > 0 && context.at(r - 1).at(c - 1).mv_mode == MV_SPLIT);
 
   if (cnt.at(2) > cnt.at(1)) {
     std::swap(cnt.at(1), cnt.at(2));
@@ -103,7 +103,7 @@ void ConfigureChromaMVs(const MacroBlock<4> &luma, bool trim,
   }
 }
 
-void ConfigureSubBlockMVs(const MacroBlockHeader &hd, size_t r, size_t c,
+void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
                           BitstreamParser &ps, Plane<4> &mb) {
   std::vector<std::vector<uint8_t>> part;
   switch (hd.mv_split_mode) {
@@ -129,8 +129,7 @@ void ConfigureSubBlockMVs(const MacroBlockHeader &hd, size_t r, size_t c,
       break;
   }
 
-  std::function<MotionVector(size_t)> LeftMotionVector = [&mb, r,
-                                                          c](size_t idx) {
+  auto LeftMotionVector = [&mb, r, c](size_t idx) {
     if ((idx & 3) == 0) {
       if (c == 0) return kZero;
       return mb.at(r).at(c - 1).GetSubBlockMV(idx + 3);
@@ -138,8 +137,7 @@ void ConfigureSubBlockMVs(const MacroBlockHeader &hd, size_t r, size_t c,
     return mb.at(r).at(c).GetSubBlockMV(idx - 1);
   };
 
-  std::function<MotionVector(size_t)> AboveMotionVector = [&mb, r,
-                                                           c](size_t idx) {
+  auto AboveMotionVector = [&mb, r, c](size_t idx) {
     if (idx < 4) {
       if (r == 0) return kZero;
       return mb.at(r - 1).at(c).GetSubBlockMV(idx + 12);
@@ -181,7 +179,7 @@ void ConfigureSubBlockMVs(const MacroBlockHeader &hd, size_t r, size_t c,
 }
 
 void ConfigureMVs(const FrameHeader &header, size_t r, size_t c, bool trim,
-                  std::vector<std::vector<BlockContext>> &context,
+                  std::vector<std::vector<InterContext>> &context,
                   BitstreamParser &ps, Frame &frame) {
   int16_t left = int16_t(-(1 << 7)), right = int16_t(frame.hblock);
   int16_t up = int16_t(-((r + 1) << 7)),
@@ -194,7 +192,7 @@ void ConfigureMVs(const FrameHeader &header, size_t r, size_t c, bool trim,
   ClampMV(nearest, left, right, up, down);
   ClampMV(near, left, right, up, down);
 
-  context.at(r).at(c) = BlockContext(true, hd.mv_mode);
+  context.at(r).at(c) = InterContext(hd.mv_mode);
 
   switch (hd.mv_mode) {
     case MV_NEAREST:
@@ -213,7 +211,7 @@ void ConfigureMVs(const FrameHeader &header, size_t r, size_t c, bool trim,
       break;
 
     case MV_NEW:
-      MotionVector mv = hd.mv + best;
+      MotionVector mv = hd.mv_new + best;
       frame.Y.at(r).at(c).SetSubBlockMVs(mv);
       frame.Y.at(r).at(c).SetMotionVector(mv);
       break;

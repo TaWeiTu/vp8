@@ -11,6 +11,18 @@
 #include "utils.h"
 
 namespace vp8 {
+
+struct InterContext {
+  bool is_inter_mb;
+  MacroBlockMV mv_mode;
+
+  InterContext() : is_inter_mb(false) {}
+  explicit InterContext(MacroBlockMV mv_mode_)
+      : is_inter_mb(true), mv_mode(mv_mode_) {}
+  explicit InterContext(bool is_inter_mb_, MacroBlockMV mv_mode_)
+      : is_inter_mb(is_inter_mb_), mv_mode(mv_mode_) {}
+};
+
 namespace {
 
 static const MotionVector kZero = MotionVector(0, 0);
@@ -37,10 +49,11 @@ static const std::array<std::array<int16_t, 6>, 8> kBilinearFilter = {
 
 // Search for motion vectors in the left, above and upper-left macroblocks and
 // return the best, nearest and near motion vectors.
-MacroBlockMV SearchMVs(size_t r, size_t c, const FrameHeader &header,
-                       const Plane<4> &mb, MacroBlockHeader &mh,
-                       MotionVector &best, MotionVector &nearest,
-                       MotionVector &near);
+InterMBHeader SearchMVs(size_t r, size_t c, const FrameHeader &header,
+                        const Plane<4> &mb,
+                        const std::vector<std::vector<InterContext>> &context,
+                        BitstreamParser &ps, MotionVector &best,
+                        MotionVector &nearest, MotionVector &near);
 
 // Make sure that the motion vector indeed point to a valid position.
 void ClampMV(MotionVector &mb, int16_t left, int16_t right, int16_t up,
@@ -61,13 +74,14 @@ void ConfigureChromaMVs(const MacroBlock<4> &luma, bool trim,
 
 // In case of mode MV_SPLIT, set the motion vectors of each subblock
 // independently.
-void ConfigureSubBlockMVs(MVPartition p, size_t r, size_t c,
-                          MacroBlockHeader &mh, Plane<4> &mb);
+void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
+                          BitstreamParser &ps, Plane<4> &mb);
 
 // For each (luma or chroma) macroblocks, configure their motion vectors (if
 // needed).
 void ConfigureMVs(const FrameHeader &header, size_t r, size_t c, bool trim,
-                  MacroBlockHeader &mh, Frame &frame);
+                  std::vector<std::vector<InterContext>> &context,
+                  BitstreamParser &ps, Frame &frame);
 
 // Horizontal pixel interpolation, this should return a 9x4 temporary matrix for
 // the vertical pixel interpolation later.
@@ -94,17 +108,9 @@ void InterpBlock(const Plane<C> &refer,
 
 }  // namespace
 
-struct InterContext {
-  bool is_inter_mb;
-  MacroBlockMV mv_mode;
-
-  InterContext() : is_inter_mb(false) {}
-  explicit InterContext(bool is_inter_mb_, MacroBlockMV mv_mode_)
-      : is_inter_mb(is_inter_mb_), mv_mode(mv_mode_) {}
-};
-
 void InterPredict(const FrameHeader &header, const FrameTag &tag, size_t r,
-                  size_t c, Frame &frame);
+                  size_t c, std::vector<std::vector<InterContext>> &context,
+                  BitstreamParser &ps, Frame &frame);
 
 }  // namespace vp8
 

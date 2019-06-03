@@ -93,24 +93,33 @@ void TMPredLuma(size_t r, size_t c, Plane<4> &mb) {
   }
 }
 
-void BPredLuma(size_t r, size_t c, std::vector<std::vector<IntraContext>> &context, BitstreamParser &ps, Plane<4> &mb) {
-  std::function<MotionVector(size_t)> LeftMotionVector = [&mb, r,
-                                                          c](size_t idx) {
+void BPredLuma(size_t r, size_t c,
+               std::vector<std::vector<IntraContext>> &context,
+               BitstreamParser &ps, Plane<4> &mb) {
+  auto LeftSubBlockMode = [&context, r, c](size_t idx) {
     if ((idx & 3) == 0) {
-      if (c == 0) return kZero;
-      return mb.at(r).at(c - 1).GetSubBlockMV(idx + 3);
+      if (c == 0) return B_DC_PRED;
+      ensure(context.at(r << 2 | (idx >> 2))
+                 .at((c - 1) << 2 | (idx & 3))
+                 .is_intra_mb,
+             "[Read the spec] Really?");
+      return context.at(r << 2 | (idx >> 2)).at((c - 1) << 2 | (idx & 3)).mode;
     }
-    return mb.at(r).at(c).GetSubBlockMV(idx - 1);
+    return context.at(r << 2 | (idx >> 2)).at(c << 2 | ((idx & 3) - 1)).mode;
   };
 
-  std::function<MotionVector(size_t)> AboveMotionVector = [&mb, r,
-                                                           c](size_t idx) {
+  auto AboveSubBlockMode = [&context, r, c](size_t idx) {
     if (idx < 4) {
-      if (r == 0) return kZero;
-      return mb.at(r - 1).at(c).GetSubBlockMV(idx + 12);
+      if (r == 0) return B_DC_PRED;
+      ensure(context.at((r - 1) << 2 | (idx >> 2))
+                 .at(c << 2 | (idx & 3))
+                 .is_intra_mb,
+             "[Read the spec] Really?");
+      return context.at((r - 1) << 2 | (idx >> 2)).at(c << 2 | (idx & 3)).mode;
     }
-    return mb.at(r).at(c).GetSubBlockMV(idx - 4);
+    return context.at(r << 2 | ((idx >> 2) - 1)).at(c << 2 | (idx & 3)).mode;
   };
+
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 4; ++j) {
       std::array<int16_t, 8> above;
@@ -163,8 +172,10 @@ void BPredLuma(size_t r, size_t c, std::vector<std::vector<IntraContext>> &conte
                       : c == 0 ? 129
                                : mb.at(r - 1).at(c - 1).at(3).at(3).at(3).at(3);
 
-      BPredSubBlock(above, left, p, pred.at(i << 2 | j),
-                    mb.at(r).at(c).at(i).at(j));
+      SubBlockMode mode = ps.ReadSubBlockMode(LeftSubBlockMode(i << 2 | j),
+                                              AboveSubBlockMode(i << 2 | j));
+      context[r << 2 | i][c << 2 | j] = IntraContext(mode);
+      BPredSubBlock(above, left, p, mode, mb.at(r).at(c).at(i).at(j));
     }
   }
 }
@@ -320,34 +331,37 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
 
 }  // namespace
 
-void IntraPredict(const FrameHeader &header, size_t r, size_t c, std::vector<std::vector<IntraContext>> &context, BitstreamParser &ps, Frame &frame) {
+void IntraPredict(const FrameHeader &header, size_t r, size_t c,
+                  std::vector<std::vector<IntraContext>> &context,
+                  BitstreamParser &ps, Frame &frame) {
   IntraMBHeader mh = ps.ReadIntraMBHeader();
   switch (mh.intra_y_mode) {
     case V_PRED:
       VPredLuma(r, c, frame.Y);
-      context.at(r).at(c) = IntraContext(true, V_PRED);
+      context.at(r).at(c) = IntraContext(true, B_VE_PRED);
       break;
 
     case H_PRED:
       HPredLuma(r, c, frame.Y);
-      context.at(r).at(c) = IntraContext(true, H_PRED);
+      context.at(r).at(c) = IntraContext(true, B_HE_PRED);
       break;
 
     case DC_PRED:
       DCPredLuma(r, c, frame.Y);
-      context.at(r).at(c) = IntraContext(true, DC_PRED);
+      context.at(r).at(c) = IntraContext(true, B_DC_PRED);
       break;
 
     case TM_PRED:
       TMPredLuma(r, c, frame.Y);
-      context.at(r).at(c) = IntraContext(true, TM_PRED);
+      context.at(r).at(c) = IntraContext(true, B_TM_PRED);
       break;
 
     case B_PRED:
       BPredLuma(r, c, context, ps, frame.Y);
       break;
   }
-  switch (mh.intra_uv_mode) {
+  MacroBlockMode intra_uv_mode = ps.ReadIntraMB_UVMode();
+  switch (intra_uv_mode) {
     case V_PRED:
       VPredChroma(r, c, frame.U);
       VPredChroma(r, c, frame.V);
