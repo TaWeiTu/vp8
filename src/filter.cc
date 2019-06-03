@@ -81,49 +81,49 @@ void LoopFilter::MacroBlockFilter(int16_t hev_threshold, int16_t interior_limit,
 
 void LoopFilter::Horizontal(const SubBlock &lsb, const SubBlock &rsb,
                             size_t idx) {
-  p3_ = lsb[idx][0];
-  p2_ = lsb[idx][1];
-  p1_ = lsb[idx][2];
-  p0_ = lsb[idx][3];
-  q0_ = rsb[idx][0];
-  q1_ = rsb[idx][1];
-  q2_ = rsb[idx][2];
-  q3_ = rsb[idx][3];
+  p3_ = lsb.at(idx).at(0);
+  p2_ = lsb.at(idx).at(1);
+  p1_ = lsb.at(idx).at(2);
+  p0_ = lsb.at(idx).at(3);
+  q0_ = rsb.at(idx).at(0);
+  q1_ = rsb.at(idx).at(1);
+  q2_ = rsb.at(idx).at(2);
+  q3_ = rsb.at(idx).at(3);
 }
 
 void LoopFilter::FillHorizontal(SubBlock &lsb, SubBlock &rsb,
                                 size_t idx) const {
-  lsb[idx][0] = p3_;
-  lsb[idx][1] = p2_;
-  lsb[idx][2] = p1_;
-  lsb[idx][3] = p0_;
-  rsb[idx][0] = q0_;
-  rsb[idx][1] = q1_;
-  rsb[idx][2] = q2_;
-  rsb[idx][3] = q3_;
+  lsb.at(idx).at(0) = p3_;
+  lsb.at(idx).at(1) = p2_;
+  lsb.at(idx).at(2) = p1_;
+  lsb.at(idx).at(3) = p0_;
+  rsb.at(idx).at(0) = q0_;
+  rsb.at(idx).at(1) = q1_;
+  rsb.at(idx).at(2) = q2_;
+  rsb.at(idx).at(3) = q3_;
 }
 
 void LoopFilter::Vertical(const SubBlock &usb, const SubBlock &dsb,
                           size_t idx) {
-  p3_ = usb[0][idx];
-  p2_ = usb[1][idx];
-  p1_ = usb[2][idx];
-  p0_ = usb[3][idx];
-  q0_ = dsb[0][idx];
-  q1_ = dsb[1][idx];
-  q2_ = dsb[2][idx];
-  q3_ = dsb[3][idx];
+  p3_ = usb.at(0).at(idx);
+  p2_ = usb.at(1).at(idx);
+  p1_ = usb.at(2).at(idx);
+  p0_ = usb.at(3).at(idx);
+  q0_ = dsb.at(0).at(idx);
+  q1_ = dsb.at(1).at(idx);
+  q2_ = dsb.at(2).at(idx);
+  q3_ = dsb.at(3).at(idx);
 }
 
 void LoopFilter::FillVertical(SubBlock &usb, SubBlock &dsb, size_t idx) const {
-  usb[0][idx] = p3_;
-  usb[1][idx] = p2_;
-  usb[2][idx] = p1_;
-  usb[3][idx] = p0_;
-  dsb[0][idx] = q0_;
-  dsb[1][idx] = q1_;
-  dsb[2][idx] = q2_;
-  dsb[3][idx] = q3_;
+  usb.at(0).at(idx) = p3_;
+  usb.at(1).at(idx) = p2_;
+  usb.at(2).at(idx) = p1_;
+  usb.at(3).at(idx) = p0_;
+  dsb.at(0).at(idx) = q0_;
+  dsb.at(1).at(idx) = q1_;
+  dsb.at(2).at(idx) = q2_;
+  dsb.at(3).at(idx) = q3_;
 }
 }  // namespace
 
@@ -133,7 +133,7 @@ void FrameFilter(FrameHeader &header, uint8_t sharpness_level,
                  size_t vblock, bool is_key_frame, LoopFilter &filter) {
   for (size_t r = 0; r < vblock; r++) {
     for (size_t c = 0; c < hblock; c++) {
-      MacroBlock<C> &mb = frame[r][c];
+      MacroBlock<C> &mb = frame.at(r).at(c);
       uint8_t loop_filter_level = header.loop_filter_level;
       bool filter_type = header.filter_type;
 
@@ -167,10 +167,10 @@ void FrameFilter(FrameHeader &header, uint8_t sharpness_level,
           (int16_t(loop_filter_level) * 2) + int16_t(interior_limit);
 
       if (c > 0) {
-        MacroBlock<C> &lmb = frame[r][c - 1];
+        MacroBlock<C> &lmb = frame.at(r).at(c - 1);
         for (size_t i = 0; i < C; i++) {
-          SubBlock &rsb = mb[i][0];
-          SubBlock &lsb = lmb[i][C - 1];
+          SubBlock &rsb = mb.at(i).at(0);
+          SubBlock &lsb = lmb.at(i).at(C - 1);
 
           for (size_t j = 0; j < 4; j++) {
             filter.Horizontal(lsb, rsb, j);
@@ -184,8 +184,8 @@ void FrameFilter(FrameHeader &header, uint8_t sharpness_level,
       if (filter_type) {
         for (size_t i = 0; i < C; i++) {
           for (size_t j = 1; j < C; j++) {
-            SubBlock &rsb = mb[i][j];
-            SubBlock &lsb = mb[i][j - 1];
+            SubBlock &rsb = mb.at(i).at(j);
+            SubBlock &lsb = mb.at(i).at(j - 1);
 
             for (size_t a = 0; a < 4; a++) {
               filter.Horizontal(lsb, rsb, a);
@@ -198,10 +198,10 @@ void FrameFilter(FrameHeader &header, uint8_t sharpness_level,
       }
 
       if (r > 0) {
-        MacroBlock<C> &umb = frame[r - 1][c];
+        MacroBlock<C> &umb = frame.at(r - 1).at(c);
         for (size_t i = 0; i < C; i++) {
-          SubBlock &dsb = mb[0][i];
-          SubBlock &usb = umb[C - 1][i];
+          SubBlock &dsb = mb.at(0).at(i);
+          SubBlock &usb = umb.at(C - 1).at(i);
 
           for (size_t j = 0; j < 4; j++) {
             filter.Vertical(usb, dsb, j);
@@ -215,8 +215,8 @@ void FrameFilter(FrameHeader &header, uint8_t sharpness_level,
       if (filter_type) {
         for (size_t i = 1; i < C; i++) {
           for (size_t j = 0; j < C; j++) {
-            SubBlock &dsb = mb[i][j];
-            SubBlock &usb = mb[i - 1][j];
+            SubBlock &dsb = mb.at(i).at(j);
+            SubBlock &usb = mb.at(i - 1).at(j);
 
             for (size_t a = 0; a < 4; a++) {
               filter.Vertical(usb, dsb, a);
