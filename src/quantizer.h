@@ -15,7 +15,7 @@ struct QuantizerHeader {
   uint8_t uv_dc_delta_q;
   uint8_t uv_ac_delta_q;
 };
-
+namespace {
 const std::vector<int16_t> kDClookup = {
     4,   5,   6,   7,   8,   9,   10,  10,  11,  12,  13,  14,  15,  16,  17,
     17,  18,  19,  20,  20,  21,  21,  22,  22,  23,  23,  24,  25,  25,  26,
@@ -38,14 +38,16 @@ const std::vector<int16_t> kAClookup = {
     185, 189, 193, 197, 201, 205, 209, 213, 217, 221, 225, 229, 234, 239, 245,
     249, 254, 259, 264, 269, 274, 279, 284};
 
+void Quantize(std::vector<int16_t> &, int16_t, int16_t);
+void Dequantize(std::vector<int16_t> &, int16_t, int16_t);
+
+}  // namespace
 void QuantizeY(std::vector<int16_t> &, uint8_t, const QuantizerHeader &);
 void QuantizeUV(std::vector<int16_t> &, uint8_t, const QuantizerHeader &);
 void QuantizeY2(std::vector<int16_t> &, uint8_t, const QuantizerHeader &);
-void Quantize(std::vector<int16_t> &, int16_t, int16_t);
 void DequantizeY(std::vector<int16_t> &, uint8_t, const QuantizerHeader &);
 void DequantizeUV(std::vector<int16_t> &, uint8_t, const QuantizerHeader &);
 void DequantizeY2(std::vector<int16_t> &, uint8_t, const QuantizerHeader &);
-void Dequantize(std::vector<int16_t> &, int16_t, int16_t);
 
 }  // namespace vp8
 
