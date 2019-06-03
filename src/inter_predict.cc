@@ -102,7 +102,8 @@ void ConfigureChromaMVs(const MacroBlock<4> &luma, bool trim,
   }
 }
 
-void ConfigureSubBlockMVs(MVPartition p, size_t r, size_t c, MacroBlockHeader &mh, Plane<4> &mb) {
+void ConfigureSubBlockMVs(MVPartition p, size_t r, size_t c,
+                          MacroBlockHeader &mh, Plane<4> &mb) {
   std::vector<std::vector<uint8_t>> part;
   switch (p) {
     case MV_TOP_BOTTOM:
