@@ -245,10 +245,8 @@ void BitstreamParser::MvProbUpdate() {
   }
 }
 
-MacroBlockHeader BitstreamParser::ReadMacroBlockHeader(
-    const std::array<uint8_t, 4> &mv_ref_probs, int sub_mv_context,
-    int above_bmode, int left_bmode) {
-  MacroBlockHeader result{};
+MacroBlockPreHeader BitstreamParser::ReadMacroBlockPreHeader() {
+  MacroBlockPreHeader result{};
   if (frame_header_.update_mb_segmentation_map) {
     result.segment_id = bd_->Tree(context_.segment_prob, kMbSegmentTree);
     context_.mb_metadata.at(macroblock_metadata_idx) |= result.segment_id << 2;
@@ -261,7 +259,19 @@ MacroBlockHeader BitstreamParser::ReadMacroBlockHeader(
   if (!frame_tag_.key_frame) {
     result.is_inter_mb = frame_header_.prob_intra;
   }
-  if (result.is_inter_mb) {
+  return result;
+}
+
+MacroBlockHeader BitstreamParser::ReadMacroBlockHeader(
+    const std::array<uint8_t, 4> &cnt, int sub_mv_context, int above_bmode,
+    int left_bmode, const MacroBlockPreHeader &pre_result) {
+  std::array<uint8_t, 4> mv_ref_probs{};
+  mv_ref_probs[0] = kSubMvRefProbs[cnt[0]][0];
+  mv_ref_probs[1] = kSubMvRefProbs[cnt[1]][1];
+  mv_ref_probs[2] = kSubMvRefProbs[cnt[2]][2];
+  mv_ref_probs[3] = kSubMvRefProbs[cnt[3]][3];
+  MacroBlockHeader result{};
+  if (pre_result.is_inter_mb) {
     bool mb_ref_frame_sel1 = bd_->Bool(frame_header_.prob_last),
          mb_ref_frame_sel2 = false;
     if (mb_ref_frame_sel1) {
@@ -294,14 +304,14 @@ MacroBlockHeader BitstreamParser::ReadMacroBlockHeader(
                       kSubBlockModeTree));
       }
     }
-    context_.mb_metadata.at(macroblock_metadata_idx) |=
-        (result.is_inter_mb && result.mv_mode == MV_SPLIT) ||
-        (!result.is_inter_mb && result.intra_y_mode != B_PRED);
-    context_.mb_metadata.at(macroblock_metadata_idx) |= result.mv_mode;
-    macroblock_metadata_idx++;
     result.intra_uv_mode =
         MacroBlockMode(bd_->Tree(context_.intra_chroma_prob, kUvModeProb));
   }
+  context_.mb_metadata.at(macroblock_metadata_idx) |=
+      (pre_result.is_inter_mb && result.mv_mode == MV_SPLIT) ||
+      (!pre_result.is_inter_mb && result.intra_y_mode != B_PRED);
+  context_.mb_metadata.at(macroblock_metadata_idx) |= result.mv_mode;
+  macroblock_metadata_idx++;
   return result;
 }
 

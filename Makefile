@@ -37,7 +37,7 @@ src/filter.o: src/filter.cc src/filter.h src/utils.h src/frame.h
 	$(CHECK) src/filter.cc
 	$(CXX) $(CFLAGS) -c -o src/filter.o src/filter.cc 
 
-src/bitstream_parser.o: src/bitstream_parser.cc src/bitstream_parser.h src/bitstream_const.h src/utils.o src/bool_decoder.o
+src/bitstream_parser.o: src/bitstream_parser.cc src/bitstream_parser.h src/bitstream_const.h src/bool_decoder.o
 	$(CHECK) src/bitstream_parser.cc
 	$(CXX) $(CFLAGS) -c -o src/bitstream_parser.o src/bitstream_parser.cc 
 
