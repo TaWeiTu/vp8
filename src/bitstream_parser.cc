@@ -265,8 +265,8 @@ MacroBlockPreHeader BitstreamParser::ReadMacroBlockPreHeader() {
   return result;
 }
 
-SubBlockMode BitstreamParser::ReadSubBlockMode(uint8_t sub_mv_context) {
-  return SubBlockMode(
+SubBlockMVMode BitstreamParser::ReadSubBlockMVMode(uint8_t sub_mv_context) {
+  return SubBlockMVMode(
       bd_->Tree(kSubMvRefProbs.at(sub_mv_context), kSubBlockMVTree));
 }
 

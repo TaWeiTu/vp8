@@ -191,7 +191,7 @@ class BitstreamParser {
 
   MacroBlockPreHeader ReadMacroBlockPreHeader();
 
-  SubBlockMode ReadSubBlockMode(uint8_t sub_mv_context);
+  SubBlockMVMode ReadSubBlockMVMode(uint8_t sub_mv_context);
 
   MotionVector ReadSubBlockMV();
 
