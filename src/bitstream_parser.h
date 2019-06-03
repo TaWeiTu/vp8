@@ -106,7 +106,7 @@ struct MacroBlockHeader {
   uint8_t ref_frame;
   MacroBlockMV mv_mode;
   MVPartition mv_split_mode;
-  std::array<SubBlockMV, 16> sub_mv_mode;
+  std::array<SubBlockMVMode, 16> sub_mv_mode;
   MacroBlockMode intra_y_mode;
   std::array<SubBlockMode, 16> intra_b_mode;
   MacroBlockMode intra_uv_mode;

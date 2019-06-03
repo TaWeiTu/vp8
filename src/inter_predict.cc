@@ -149,7 +149,7 @@ void ConfigureSubBlockMVs(const MacroBlockHeader &hd, size_t r, size_t c,
   for (size_t i = 0; i < part.size(); ++i) {
     uint8_t context = SubBlockContext(LeftMotionVector(part.at(i).at(0)),
                                       AboveMotionVector(part.at(i).at(0)));
-    SubBlockMV mode = ps.ReadSubBlockMode(context);
+    SubBlockMVMode mode = ps.ReadSubBlockMode(context);
     for (size_t j = 0; j < part.at(i).size(); ++j) {
       size_t ir = part.at(i).at(j) >> 2, ic = part.at(i).at(j) & 3;
       MotionVector mv;

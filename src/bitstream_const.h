@@ -90,12 +90,12 @@ enum MvpIndices {
   kMvpCount = kMvpBits + 10
 };
 
-enum SubBlockMV {
+enum SubBlockMVMode {
   LEFT_4x4 = kNumIntraBModes,
   ABOVE_4x4,
   ZERO_4x4,
   NEW_4x4,
-  kNumSubBlockMv
+  kNumSubBlockMVMode
 };
 
 static const std::array<TreeIndex, 8> kKeyFrameYModeTree = {
@@ -121,7 +121,7 @@ constexpr std::array<TreeIndex, 2 * (kNumMvRefs - 1)> kMvRefTree = {
 constexpr std::array<TreeIndex, 2 * (kNumMvPartitions - 1)> kMvPartitionTree = {
     -MV_16, 2, -MV_QUARTERS, 4, -MV_TOP_BOTTOM, -MV_LEFT_RIGHT};
 
-constexpr std::array<TreeIndex, 2 * (kNumSubBlockMv - 1)> kSubBlockMvTree = {
+constexpr std::array<TreeIndex, 2 * (kNumSubBlockMVMode - 1)> kSubBlockMVTree = {
     -LEFT_4x4, 2, -ABOVE_4x4, 4, -ZERO_4x4, -NEW_4x4};
 
 constexpr std::array<TreeIndex, 2 * (8 - 1)> kSmallMvTree = {
@@ -163,7 +163,7 @@ constexpr std::array<Prob, kNumYModes - 1> kPretendItsHuffman = {128, 128, 128,
 constexpr std::array<Prob, kNumMvPartitions - 1> kMvPartitionProbs = {110, 111,
                                                                       150};
 
-constexpr std::array<std::array<Prob, kNumSubBlockMv - 1>, 5> kSubMvRefProbs = {
+constexpr std::array<std::array<Prob, kNumSubBlockMVMode - 1>, 5> kSubMvRefProbs = {
     {{147, 136, 18}, {106, 145, 1}, {179, 121, 1}, {223, 1, 34}, {208, 1, 1}}};
 
 constexpr std::array<

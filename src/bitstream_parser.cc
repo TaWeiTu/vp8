@@ -283,8 +283,8 @@ MacroBlockHeader BitstreamParser::ReadMacroBlockHeader(
       result.mv_split_mode =
           MVPartition(bd_->Tree(kMvPartitionProbs, kMvPartitionTree));
       for (int i = 0; i < kNumMvs.at(result.mv_split_mode); i++) {
-        result.sub_mv_mode.at(i) = SubBlockMV(
-            bd_->Tree(kSubMvRefProbs.at(sub_mv_context), kSubBlockMvTree));
+        result.sub_mv_mode.at(i) = SubBlockMVMode(
+            bd_->Tree(kSubMvRefProbs.at(sub_mv_context), kSubBlockMVTree));
         if (result.sub_mv_mode.at(i) == NEW_4x4) {
           ReadMvComponent(false);
           ReadMvComponent(true);
