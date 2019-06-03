@@ -9,10 +9,6 @@
 
 namespace vp8 {
 
-enum SegmentMode { kSegmentModeDelta = 0, kSegmentModeAbsolute };
-
-enum DctToken { /* TODO */ };
-
 struct FrameTag {
   // frame_tag {
   bool key_frame;
@@ -98,16 +94,43 @@ struct FrameHeader {
   std::array<int16_t, 4> loop_filter_level_segment;
 };
 
-struct MacroblockHeader {
-  // TODO
+struct MacroBlockHeader {
+	uint8_t segment_id;
+	bool mb_skip_coeff;
+	bool is_inter_mb;
+	uint8_t ref_frame;
+	uint8_t mv_mode;
+	uint8_t mv_split_mode;
+	std::array<uint8_t, 16> sub_mv_mode;
+	uint8_t intra_y_mode;
+	std::array<uint8_t, 16> intra_b_mode;
+	uint8_t intra_uv_mode;
 };
 
 struct ResidualData {
   std::array<std::array<int16_t, 16>, 25> dct_coeff;
+	uint8_t segment_id;
+	int8_t loop_filter_level;
 };
 
 struct ParserContext {
   // TODO
+	// Bit packed as following: 
+	// (prediction_mode << 6) | (ref_frame << 4) |
+	// (segment_id << 2) | (mb_skip_coeff << 1) |
+	// (is_inter_mb && mv_mode == MV_SPLIT) || (!is_inter_mv && intra_y_mode != B_PRED)
+	std::vector<uint8_t> mb_metadata;
+	std::array<uint8_t, 4> intra_16x16_prob;
+	std::array<uint8_t, 3> intra_chroma_prob;
+	std::array<uint8_t, 3> segment_prob;
+	std::array<int8_t, 4> ref_frame_delta_lf;
+	std::array<int8_t, 4> mb_mode_delta_lf;
+	using CoeffProbs std::array<std::array<std::array<std::array, 11>, 3>, 4>, 8>;
+	std::reference_wrapper<CoeffProbs> coeff_prob;
+	CoeffProbs coeff_prob_persistent;
+	CoeffProbs coeff_prob_temp;
+	std::array<std::array<uint8_t, 19>, 2> mv_prob;
+	std::array<std::array<uint8_t, 10>, 2> mvc_probs;
 };
 
 class BitstreamParser {
@@ -116,6 +139,7 @@ class BitstreamParser {
   FrameTag frame_tag_;
   FrameHeader frame_header_;
   ParserContext context_;
+	size_t macroblock_metadata_idx, residual_macroblock_idx;
 
   FrameTag ReadFrameTag();
 
@@ -136,6 +160,8 @@ class BitstreamParser {
   void ReadMvComponent();
 
  public:
+	BitstreamParser() = default;
+
   std::unique_ptr<BoolDecoder> DropStream();
 
   std::pair<FrameTag, FrameHeader> ReadFrameTagHeader();
