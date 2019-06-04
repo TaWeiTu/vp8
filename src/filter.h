@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include "bitstream_parser.h"
 #include "frame.h"
 #include "utils.h"
 
@@ -37,9 +38,8 @@ class LoopFilter {
 }  // namespace
 
 template <size_t C>
-void FrameFilter(FrameHeader &, uint8_t,
-                 std::vector<std::vector<MacroBlock<C>>> &, size_t, size_t,
-                 bool, LoopFilter &);
+void FrameFilter(const FrameHeader &, uint8_t, size_t, size_t, bool,
+                 Plane<C> &);
 
 }  // namespace vp8
 

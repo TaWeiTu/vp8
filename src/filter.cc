@@ -132,9 +132,10 @@ void LoopFilter::FillVertical(SubBlock &usb, SubBlock &dsb, size_t idx) const {
 }  // namespace
 
 template <size_t C>
-void FrameFilter(FrameHeader &header, uint8_t sharpness_level,
-                 std::vector<std::vector<MacroBlock<C>>> &frame, size_t hblock,
-                 size_t vblock, bool is_key_frame, LoopFilter &filter) {
+void FrameFilter(const FrameHeader &header, uint8_t sharpness_level,
+                 size_t hblock, size_t vblock, bool is_key_frame,
+                 Plane<C> &frame) {
+  LoopFilter filter;
   for (size_t r = 0; r < vblock; r++) {
     for (size_t c = 0; c < hblock; c++) {
       MacroBlock<C> &mb = frame.at(r).at(c);

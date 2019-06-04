@@ -5,19 +5,19 @@ CHECK := cppcheck --enable=all --inconclusive --check-config --suppress=missingI
 
 all: decode
 	
-decode: src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o
+decode: src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o
 	$(CHECK) src/decode.cc
-	$(CXX) $(CFLAGS) -o decode src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/decode.cc
+	$(CXX) $(CFLAGS) -o decode src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/decode.cc
 
 src/bool_decoder.o: src/bool_decoder.cc src/bool_decoder.h src/utils.h
 	$(CHECK) src/bool_decoder.cc
 	$(CXX) $(CFLAGS) -c -o src/bool_decoder.o src/bool_decoder.cc 
 
-src/intra_predict.o: src/intra_predict.cc src/intra_predict.h src/utils.h src/frame.h
+src/intra_predict.o: src/intra_predict.cc src/intra_predict.h src/utils.h src/frame.h src/bitstream_parser.o
 	$(CHECK) src/intra_predict.cc
 	$(CXX) $(CFLAGS) -c -o src/intra_predict.o src/intra_predict.cc 
 
-src/inter_predict.o: src/inter_predict.cc src/inter_predict.h src/utils.h src/frame.h
+src/inter_predict.o: src/inter_predict.cc src/inter_predict.h src/utils.h src/frame.h src/bitstream_parser.o
 	$(CHECK) src/inter_predict.cc
 	$(CXX) $(CFLAGS) -c -o src/inter_predict.o src/inter_predict.cc 
 
