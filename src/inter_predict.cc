@@ -327,37 +327,22 @@ void InterpBlock(const Plane<C> &refer,
   }
 }
 
-// Ugly hacks to allow definitions of template funcitons in the .cc file.
-// template std::array<std::array<int16_t, 4>, 9> HorSixtap<4>(
-    // const Plane<4> &, size_t, size_t, const std::array<int16_t, 6> &);
-// template std::array<std::array<int16_t, 4>, 9> HorSixtap<2>(
-    // const Plane<2> &, size_t, size_t, const std::array<int16_t, 6> &);
+template std::array<std::array<int16_t, 4>, 9> HorSixtap<4>(
+    const Plane<4> &, size_t, size_t, const std::array<int16_t, 6> &);
+template std::array<std::array<int16_t, 4>, 9> HorSixtap<2>(
+    const Plane<2> &, size_t, size_t, const std::array<int16_t, 6> &);
 
-// template void Sixtap<4>(const Plane<4> &, size_t, size_t, uint8_t, uint8_t,
-                     // const std::array<std::array<int16_t, 6>, 8> &, SubBlock &);
-// template void Sixtap<2>(const Plane<2> &, size_t, size_t, uint8_t, uint8_t,
-                     // const std::array<std::array<int16_t, 6>, 8> &, SubBlock &);
+template void Sixtap<4>(const Plane<4> &, size_t, size_t, uint8_t, uint8_t,
+                     const std::array<std::array<int16_t, 6>, 8> &, SubBlock &);
+template void Sixtap<2>(const Plane<2> &, size_t, size_t, uint8_t, uint8_t,
+                     const std::array<std::array<int16_t, 6>, 8> &, SubBlock &);
 
-// template void InterpBlock<4>(const Plane<4> &,
-                          // const std::array<std::array<int16_t, 6>, 8> &, size_t,
-                          // size_t, MacroBlock<4> &);
-// template void InterpBlock<2>(const Plane<2> &,
-                          // const std::array<std::array<int16_t, 6>, 8> &, size_t,
-                          // size_t, MacroBlock<2> &);
-
-// void AvoidLinkerError() {
-  // MacroBlock<4> mb4;
-  // MacroBlock<2> mb2;
-  // SubBlock sub;
-  // HorSixtap(Plane<4>(), 0, 0, std::array<int16_t, 6>());
-  // HorSixtap(Plane<2>(), 0, 0, std::array<int16_t, 6>());
-
-  // Sixtap(Plane<4>(), 0, 0, 0, 0, std::array<std::array<int16_t, 6>, 8>(), sub);
-  // Sixtap(Plane<2>(), 0, 0, 0, 0, std::array<std::array<int16_t, 6>, 8>(), sub);
-
-  // InterpBlock(Plane<4>(), std::array<std::array<int16_t, 6>, 8>(), 0, 0, mb4);
-  // InterpBlock(Plane<2>(), std::array<std::array<int16_t, 6>, 8>(), 0, 0, mb2);
-// }
+template void InterpBlock<4>(const Plane<4> &,
+                          const std::array<std::array<int16_t, 6>, 8> &, size_t,
+                          size_t, MacroBlock<4> &);
+template void InterpBlock<2>(const Plane<2> &,
+                          const std::array<std::array<int16_t, 6>, 8> &, size_t,
+                          size_t, MacroBlock<2> &);
 
 }  // namespace
 

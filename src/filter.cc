@@ -132,9 +132,9 @@ void LoopFilter::FillVertical(SubBlock &usb, SubBlock &dsb, size_t idx) const {
 }  // namespace
 
 template <size_t C>
-void FrameFilter(const FrameHeader &header, uint8_t sharpness_level,
-                 size_t hblock, size_t vblock, bool is_key_frame,
-                 Plane<C> &frame) {
+void FrameFilter(const FrameHeader &header, size_t hblock, size_t vblock,
+                 bool is_key_frame, Plane<C> &frame) {
+  uint8_t sharpness_level = header.sharpness_level;
   LoopFilter filter;
   for (size_t r = 0; r < vblock; r++) {
     for (size_t c = 0; c < hblock; c++) {
@@ -234,6 +234,19 @@ void FrameFilter(const FrameHeader &header, uint8_t sharpness_level,
       }
     }
   }
+}
+
+void AvoidLinkerError() {
+  FrameHeader header;
+  Plane<4ul> pn4;
+  Plane<2ul> pn2;
+
+  FrameFilter<4ul>(header, 0, 0, false, pn4);
+  FrameFilter<2ul>(header, 0, 0, false, pn2);
+
+  // template void FrameFilter<4>(const FrameHeader &, size_t, size_t, bool,
+  // Plane<4> &); template void FrameFilter<2>(const FrameHeader &, size_t,
+  // size_t, bool, Plane<2> &);
 }
 
 }  // namespace vp8

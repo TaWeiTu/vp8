@@ -1,8 +1,13 @@
 #ifndef QUANTIZER_H_
 #define QUANTIZER_H_
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
 #include <vector>
+
+#include "bitstream_parser.h"
+#include "utils.h"
 
 namespace vp8 {
 

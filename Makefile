@@ -1,11 +1,11 @@
 CXX := clang++
 DBGFLAGS := -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -fsanitize=undefined -fsanitize=address -fsanitize-address-use-after-scope -fstack-protector-all -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-switch-enum -std=c++17 -Og -g3 -Wno-padded -march=native
-CFLAGS := -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-switch-enum -std=c++17 -O3 -march=native -flto
+CFLAGS := -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-switch-enum -Wno-unused-function -Wno-unused-member-function -std=c++17 -O3 -march=native -flto
 CHECK := cppcheck --enable=all --inconclusive --check-config --suppress=missingIncludeSystem
 
 all: decode
 	
-decode: src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/reconstruct.o
+decode: src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/reconstruct.o src/decode.cc
 	$(CHECK) src/decode.cc
 	$(CXX) $(CFLAGS) -o decode src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/reconstruct.o src/decode.cc
 
@@ -41,7 +41,7 @@ src/bitstream_parser.o: src/bitstream_parser.cc src/bitstream_parser.h src/bitst
 	$(CHECK) src/bitstream_parser.cc
 	$(CXX) $(CFLAGS) -c -o src/bitstream_parser.o src/bitstream_parser.cc 
 
-src/reconstruct.o: src/reconstruct.cc src/reconstruct.h src/bitstream_parser.o src/intra_predict.o src/inter_predict.o
+src/reconstruct.o: src/reconstruct.cc src/reconstruct.h src/bitstream_parser.o src/intra_predict.o src/inter_predict.o src/filter.o
 	$(CHECK) src/reconstruct.cc
 	$(CXX) $(CFLAGS) -c -o src/reconstruct.o src/reconstruct.cc 
 

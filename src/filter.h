@@ -37,9 +37,10 @@ class LoopFilter {
 
 }  // namespace
 
+void AvoidLinkerError();
+
 template <size_t C>
-void FrameFilter(const FrameHeader &, uint8_t, size_t, size_t, bool,
-                 Plane<C> &);
+void FrameFilter(const FrameHeader &, size_t, size_t, bool, Plane<C> &);
 
 }  // namespace vp8
 

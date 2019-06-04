@@ -1,13 +1,5 @@
 #include "quantizer.h"
 
-#include <algorithm>
-#include <array>
-#include <cstdint>
-#include <vector>
-
-#include "bitstream_parser.h"
-#include "utils.h"
-
 namespace vp8 {
 namespace {
 

@@ -24,10 +24,8 @@ void AddResidual(const FrameHeader &header,
                  const std::vector<std::vector<InterContext>> &interc,
                  const std::vector<std::vector<IntraContext>> &intrac,
                  BitstreamParser &ps, Frame &frame) {
-
-  uint8_t qp = header.quant_indices.q_ac_qi;
-  if (header.segmentation_enabled)
-    qp = 
+  uint8_t qp = header.quant_indices.y_ac_qi;
+  // if (header.segmentation_enabled) qp = 0;
 
   std::vector<bool> y2_row(frame.vblock, false);
   std::vector<bool> y2_col(frame.hblock, false);
@@ -58,8 +56,9 @@ void AddResidual(const FrameHeader &header,
         }
       }
 
-      ResidualData rd = ps.ReadResidualData(ResidualParam(
-          y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
+      // ResidualData rd = ps.ReadResidualData(ResidualParam(
+      // y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
+      ResidualData rd;
 
       bool has_y2 =
           (interc.at(r).at(c).is_inter_mb &&
@@ -68,7 +67,7 @@ void AddResidual(const FrameHeader &header,
 
       std::array<std::array<int16_t, 4>, 4> y2;
       if (has_y2) {
-        DequantizeY2(rd.dct_coeff.at(0));
+        DequantizeY2(rd.dct_coeff.at(0), qp, header.quant_indices);
         bool nonzero = false;
         for (size_t i = 0; i < 4; ++i) {
           for (size_t j = 0; j < 4; ++j) {
@@ -81,7 +80,7 @@ void AddResidual(const FrameHeader &header,
         IWHT(y2);
       }
       for (size_t p = 1; p <= 16; ++p) {
-        DequantizeY(rd.dct_coeff.at(p));
+        DequantizeY(rd.dct_coeff.at(p), qp, header.quant_indices);
         std::array<std::array<int16_t, 4>, 4> y;
         bool nonzero = false;
         for (size_t i = 0; i < 4; ++i) {
@@ -102,7 +101,7 @@ void AddResidual(const FrameHeader &header,
         }
       }
       for (size_t p = 17; p <= 24; ++p) {
-        DequantizeUV(rd.dct_coeff.at(p));
+        DequantizeUV(rd.dct_coeff.at(p), qp, header.quant_indices);
         std::array<std::array<int16_t, 4>, 4> uv;
         bool nonzero = false;
         for (size_t i = 0; i < 4; ++i) {
@@ -147,6 +146,10 @@ void Reconstruct(const FrameHeader &header, const FrameTag &tag,
   std::vector<std::vector<IntraContext>> intrac(
       frame.vblock << 2, std::vector<IntraContext>(frame.hblock << 2));
   Predict(tag, refs, ref_frame_bias, interc, intrac, ps, frame);
+  AddResidual(header, interc, intrac, ps, frame);
+  FrameFilter(header, frame.hblock, frame.vblock, tag.key_frame, frame.Y);
+  FrameFilter(header, frame.hblock, frame.vblock, tag.key_frame, frame.U);
+  FrameFilter(header, frame.hblock, frame.vblock, tag.key_frame, frame.V);
 }
 
 }  // namespace vp8
