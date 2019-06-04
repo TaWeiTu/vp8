@@ -148,19 +148,19 @@ void BitstreamParser::MbLfAdjust() {
       for (unsigned i = 0; i < 4; i++) {
         bool ref_frame_delta_update_flag = bd_->LitU8(1);
         if (ref_frame_delta_update_flag) {
-          int8_t delta_magnitude = int8_t(bd_->LitU8(6));
+          int8_t delta_q = int8_t(bd_->LitU8(6));
           bool delta_sign = bd_->LitU8(1);
           context_.ref_frame_delta_lf.at(i) =
-              delta_sign ? -delta_magnitude : delta_magnitude;
+              delta_sign ? -delta_q : delta_q;
         }
       }
       for (unsigned i = 0; i < 4; i++) {
         bool mb_mode_delta_update_flag = bd_->LitU8(1);
         if (mb_mode_delta_update_flag) {
-          int8_t delta_magnitude = int8_t(bd_->LitU8(6));
+          int8_t delta_q = int8_t(bd_->LitU8(6));
           bool delta_sign = bd_->LitU8(1);
           context_.mb_mode_delta_lf.at(i) =
-              delta_sign ? -delta_magnitude : delta_magnitude;
+              delta_sign ? -delta_q : delta_q;
         }
       }
     }
@@ -172,42 +172,42 @@ QuantIndices BitstreamParser::ReadQuantIndices() {
   result.y_ac_qi = bd_->Prob7();
   result.y_dc_delta_present = bd_->LitU8(1);
   if (result.y_dc_delta_present) {
-    result.y_dc_delta_magnitude = bd_->LitU8(4);
+    result.y_dc_delta_q = bd_->LitU8(4);
     bool y_dc_delta_sign = bd_->LitU8(1);
     if (y_dc_delta_sign) {
-      result.y_dc_delta_magnitude = -result.y_dc_delta_magnitude;
+      result.y_dc_delta_q = -result.y_dc_delta_q;
     }
   }
   result.y2_dc_delta_present = bd_->LitU8(1);
   if (result.y2_dc_delta_present) {
-    result.y2_dc_delta_magnitude = bd_->LitU8(4);
+    result.y2_dc_delta_q = bd_->LitU8(4);
     bool y2_dc_delta_sign = bd_->LitU8(1);
     if (y2_dc_delta_sign) {
-      result.y2_dc_delta_magnitude = -result.y2_dc_delta_magnitude;
+      result.y2_dc_delta_q = -result.y2_dc_delta_q;
     }
   }
   result.y2_ac_delta_present = bd_->LitU8(1);
   if (result.y2_ac_delta_present) {
-    result.y2_ac_delta_magnitude = bd_->LitU8(4);
+    result.y2_ac_delta_q = bd_->LitU8(4);
     bool y2_ac_delta_sign = bd_->LitU8(1);
     if (y2_ac_delta_sign) {
-      result.y2_ac_delta_magnitude = -result.y2_ac_delta_magnitude;
+      result.y2_ac_delta_q = -result.y2_ac_delta_q;
     }
   }
   result.uv_dc_delta_present = bd_->LitU8(1);
   if (result.uv_dc_delta_present) {
-    result.uv_dc_delta_magnitude = bd_->LitU8(4);
+    result.uv_dc_delta_q = bd_->LitU8(4);
     bool uv_dc_delta_sign = bd_->LitU8(1);
     if (uv_dc_delta_sign) {
-      result.uv_dc_delta_magnitude = -result.uv_dc_delta_magnitude;
+      result.uv_dc_delta_q = -result.uv_dc_delta_q;
     }
   }
   result.uv_ac_delta_present = bd_->LitU8(1);
   if (result.uv_ac_delta_present) {
-    result.uv_ac_delta_magnitude = bd_->LitU8(4);
+    result.uv_ac_delta_q = bd_->LitU8(4);
     bool uv_ac_delta_sign = bd_->LitU8(1);
     if (uv_ac_delta_sign) {
-      result.uv_ac_delta_magnitude = -result.uv_ac_delta_magnitude;
+      result.uv_ac_delta_q = -result.uv_ac_delta_q;
     }
   }
   return result;

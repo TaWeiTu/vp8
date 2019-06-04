@@ -1,39 +1,43 @@
 #include "quantizer.h"
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <vector>
 
+#include "bitstream_parser.h"
 #include "utils.h"
 
 namespace vp8 {
 namespace {
-void Quantize(std::vector<int16_t>& coefficients, int16_t DCfact,
+
+void Quantize(std::array<int16_t, 16>& coefficients, int16_t DCfact,
               int16_t ACfact) {
   coefficients.at(0) /= DCfact;
   for (size_t i = 1; i < 16; i++) {
     coefficients.at(i) /= ACfact;
   }
 }
-void Dequantize(std::vector<int16_t>& coefficients, int16_t DCfact,
+void Dequantize(std::array<int16_t, 16>& coefficients, int16_t DCfact,
                 int16_t ACfact) {
   coefficients.at(0) *= DCfact;
   for (size_t i = 1; i < 16; i++) {
     coefficients.at(i) *= ACfact;
   }
 }
+
 }  // namespace
 
-void QuantizeY(std::vector<int16_t>& coefficients, uint8_t qp,
-               const QuantizerHeader& quantizer_header) {
+void QuantizeY(std::array<int16_t, 16>& coefficients, uint8_t qp,
+               const QuantIndices& quantizer_header) {
   int16_t DCfact = std::clamp(kDClookup.at(qp + quantizer_header.y_dc_delta_q),
                               int16_t(8), int16_t(132));
   int16_t ACfact = std::clamp(kAClookup.at(qp), int16_t(8), int16_t(132));
   Quantize(coefficients, DCfact, ACfact);
 }
 
-void QuantizeUV(std::vector<int16_t>& coefficients, uint8_t qp,
-                const QuantizerHeader& quantizer_header) {
+void QuantizeUV(std::array<int16_t, 16>& coefficients, uint8_t qp,
+                const QuantIndices& quantizer_header) {
   int16_t DCfact = std::clamp(kDClookup.at(qp + quantizer_header.uv_dc_delta_q),
                               int16_t(8), int16_t(132));
   int16_t ACfact = std::clamp(kAClookup.at(qp + quantizer_header.uv_ac_delta_q),
@@ -41,8 +45,8 @@ void QuantizeUV(std::vector<int16_t>& coefficients, uint8_t qp,
   Quantize(coefficients, DCfact, ACfact);
 }
 
-void QuantizeY2(std::vector<int16_t>& coefficients, uint8_t qp,
-                const QuantizerHeader& quantizer_header) {
+void QuantizeY2(std::array<int16_t, 16>& coefficients, uint8_t qp,
+                const QuantIndices& quantizer_header) {
   int16_t DCfact =
       std::clamp(int16_t(kDClookup.at(qp + quantizer_header.y2_dc_delta_q) * 2),
                  int16_t(8), int16_t(132));
@@ -52,16 +56,16 @@ void QuantizeY2(std::vector<int16_t>& coefficients, uint8_t qp,
   Quantize(coefficients, DCfact, ACfact);
 }
 
-void DequantizeY(std::vector<int16_t>& coefficients, uint8_t qp,
-                 const QuantizerHeader& quantizer_header) {
+void DequantizeY(std::array<int16_t, 16>& coefficients, uint8_t qp,
+                 const QuantIndices& quantizer_header) {
   int16_t DCfact = std::clamp(kDClookup.at(qp + quantizer_header.y_dc_delta_q),
                               int16_t(8), int16_t(132));
   int16_t ACfact = std::clamp(kAClookup.at(qp), int16_t(8), int16_t(132));
   Dequantize(coefficients, DCfact, ACfact);
 }
 
-void DequantizeUV(std::vector<int16_t>& coefficients, uint8_t qp,
-                  const QuantizerHeader& quantizer_header) {
+void DequantizeUV(std::array<int16_t, 16>& coefficients, uint8_t qp,
+                  const QuantIndices& quantizer_header) {
   int16_t DCfact = std::clamp(kDClookup.at(qp + quantizer_header.uv_dc_delta_q),
                               int16_t(8), int16_t(132));
   int16_t ACfact = std::clamp(kAClookup.at(qp + quantizer_header.uv_ac_delta_q),
@@ -69,8 +73,8 @@ void DequantizeUV(std::vector<int16_t>& coefficients, uint8_t qp,
   Dequantize(coefficients, DCfact, ACfact);
 }
 
-void DequantizeY2(std::vector<int16_t>& coefficients, uint8_t qp,
-                  const QuantizerHeader& quantizer_header) {
+void DequantizeY2(std::array<int16_t, 16>& coefficients, uint8_t qp,
+                  const QuantIndices& quantizer_header) {
   int16_t DCfact =
       std::clamp(int16_t(kDClookup.at(qp + quantizer_header.y2_dc_delta_q) * 2),
                  int16_t(8), int16_t(132));

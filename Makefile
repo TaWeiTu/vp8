@@ -25,7 +25,7 @@ src/dct.o: src/dct.cc src/dct.h
 	$(CHECK) src/dct.cc
 	$(CXX) $(CFLAGS) -c -o src/dct.o src/dct.cc 
 
-src/quantizer.o: src/quantizer.cc src/quantizer.h src/utils.h
+src/quantizer.o: src/quantizer.cc src/quantizer.h src/utils.h src/bitstream_parser.o
 	$(CHECK) src/quantizer.cc
 	$(CXX) $(CFLAGS) -c -o src/quantizer.o src/quantizer.cc 
 

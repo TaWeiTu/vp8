@@ -29,16 +29,11 @@ struct FrameTag {
 
 struct QuantIndices {
   uint8_t y_ac_qi;
-  bool y_dc_delta_present;
-  uint8_t y_dc_delta_magnitude;
-  bool y2_dc_delta_present;
-  uint8_t y2_dc_delta_magnitude;
-  bool y2_ac_delta_present;
-  uint8_t y2_ac_delta_magnitude;
-  bool uv_dc_delta_present;
-  uint8_t uv_dc_delta_magnitude;
-  bool uv_ac_delta_present;
-  uint8_t uv_ac_delta_magnitude;
+  uint8_t y_dc_delta_q;
+  uint8_t y2_dc_delta_q;
+  uint8_t y2_ac_delta_q;
+  uint8_t uv_dc_delta_q;
+  uint8_t uv_ac_delta_q;
 };
 
 struct FrameHeader {

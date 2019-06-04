@@ -5,9 +5,11 @@
 #include <vector>
 
 #include "bitstream_parser.h"
+#include "dct.h"
 #include "frame.h"
 #include "inter_predict.h"
 #include "intra_predict.h"
+#include "quantizer.h"
 
 namespace vp8 {
 namespace {
