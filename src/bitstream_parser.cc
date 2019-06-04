@@ -170,40 +170,40 @@ void BitstreamParser::MbLfAdjust() {
 QuantIndices BitstreamParser::ReadQuantIndices() {
   QuantIndices result{};
   result.y_ac_qi = bd_->Prob7();
-  result.y_dc_delta_present = bd_->LitU8(1);
-  if (result.y_dc_delta_present) {
+  bool y_dc_delta_present = bd_->LitU8(1);
+  if (y_dc_delta_present) {
     result.y_dc_delta_q = bd_->LitU8(4);
     bool y_dc_delta_sign = bd_->LitU8(1);
     if (y_dc_delta_sign) {
       result.y_dc_delta_q = -result.y_dc_delta_q;
     }
   }
-  result.y2_dc_delta_present = bd_->LitU8(1);
-  if (result.y2_dc_delta_present) {
+  bool y2_dc_delta_present = bd_->LitU8(1);
+  if (y2_dc_delta_present) {
     result.y2_dc_delta_q = bd_->LitU8(4);
     bool y2_dc_delta_sign = bd_->LitU8(1);
     if (y2_dc_delta_sign) {
       result.y2_dc_delta_q = -result.y2_dc_delta_q;
     }
   }
-  result.y2_ac_delta_present = bd_->LitU8(1);
-  if (result.y2_ac_delta_present) {
+  bool y2_ac_delta_present = bd_->LitU8(1);
+  if (y2_ac_delta_present) {
     result.y2_ac_delta_q = bd_->LitU8(4);
     bool y2_ac_delta_sign = bd_->LitU8(1);
     if (y2_ac_delta_sign) {
       result.y2_ac_delta_q = -result.y2_ac_delta_q;
     }
   }
-  result.uv_dc_delta_present = bd_->LitU8(1);
-  if (result.uv_dc_delta_present) {
+  bool uv_dc_delta_present = bd_->LitU8(1);
+  if (uv_dc_delta_present) {
     result.uv_dc_delta_q = bd_->LitU8(4);
     bool uv_dc_delta_sign = bd_->LitU8(1);
     if (uv_dc_delta_sign) {
       result.uv_dc_delta_q = -result.uv_dc_delta_q;
     }
   }
-  result.uv_ac_delta_present = bd_->LitU8(1);
-  if (result.uv_ac_delta_present) {
+  bool uv_ac_delta_present = bd_->LitU8(1);
+  if (uv_ac_delta_present) {
     result.uv_ac_delta_q = bd_->LitU8(4);
     bool uv_ac_delta_sign = bd_->LitU8(1);
     if (uv_ac_delta_sign) {
