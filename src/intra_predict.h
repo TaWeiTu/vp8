@@ -14,14 +14,12 @@ namespace vp8 {
 
 struct IntraContext {
   bool is_intra_mb;
+  bool is_b_pred;
   SubBlockMode mode;
 
   IntraContext() : is_intra_mb(false) {}
 
-  explicit IntraContext(SubBlockMode mode_) : is_intra_mb(true), mode(mode_) {}
-
-  explicit IntraContext(bool is_intra_mb_, SubBlockMode mode_)
-      : is_intra_mb(is_intra_mb_), mode(mode_) {}
+  explicit IntraContext(bool is_b_pred_, SubBlockMode mode_) : is_intra_mb(true), is_b_pred(is_b_pred_), mode(mode_) {}
 };
 
 namespace {

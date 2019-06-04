@@ -211,6 +211,30 @@ class BitstreamParser {
 
   const FrameHeader& frame_header() { return frame_header_; }
 };
+
+struct ResidualParam {
+  uint8_t y2_nonzero;
+  std::array<bool, 4> y1_above;
+  std::array<bool, 4> y1_left;
+  std::array<bool, 2> u_above;
+  std::array<bool, 2> u_left;
+  std::array<bool, 2> v_above;
+  std::array<bool, 2> v_left;
+
+  ResidualParam() = default;
+  ResidualParam(uint8_t y2_nonzero_, std::array<bool, 4> y1_above_,
+                std::array<bool, 4> y1_left_, std::array<bool, 2> u_above_,
+                std::array<bool, 2> u_left_, std::array<bool, 2> v_above_,
+                std::array<bool, 2> v_left_)
+      : y2_nonzero(y2_nonzero_),
+        y1_above(y1_above_),
+        y1_left(y1_left_),
+        u_above(u_above_),
+        u_left(u_left_),
+        v_above(v_above_),
+        v_left(v_left_) {}
+};
+
 }  // namespace vp8
 
 #endif  // BITSTREAM_PARSER_H_

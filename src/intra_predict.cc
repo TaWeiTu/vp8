@@ -174,7 +174,7 @@ void BPredLuma(size_t r, size_t c,
 
       SubBlockMode mode = ps.ReadSubBlockBMode(LeftSubBlockMode(i << 2 | j),
                                                AboveSubBlockMode(i << 2 | j));
-      context[r << 2 | i][c << 2 | j] = IntraContext(mode);
+      context[r << 2 | i][c << 2 | j] = IntraContext(true, mode);
       BPredSubBlock(above, left, p, mode, mb.at(r).at(c).at(i).at(j));
     }
   }
@@ -342,22 +342,34 @@ void IntraPredict(size_t r, size_t c,
   switch (mh.intra_y_mode) {
     case V_PRED:
       VPredLuma(r, c, frame.Y);
-      context.at(r).at(c) = IntraContext(true, B_VE_PRED);
+      for (size_t i = 0; i < 2; ++i) {
+        for (size_t j = 0; j < 2; ++j)
+          context.at(r << 1 | i).at(c << 1 | j) = IntraContext(false, B_VE_PRED);
+      }
       break;
 
     case H_PRED:
       HPredLuma(r, c, frame.Y);
-      context.at(r).at(c) = IntraContext(true, B_HE_PRED);
+      for (size_t i = 0; i < 2; ++i) {
+        for (size_t j = 0; j < 2; ++j)
+          context.at(r << 1 | i).at(c << 1 | j) = IntraContext(false, B_HE_PRED);
+      }
       break;
 
     case DC_PRED:
       DCPredLuma(r, c, frame.Y);
-      context.at(r).at(c) = IntraContext(true, B_DC_PRED);
+      for (size_t i = 0; i < 2; ++i) {
+        for (size_t j = 0; j < 2; ++j)
+          context.at(r << 1 | i).at(c << 1 | j) = IntraContext(false, B_DC_PRED);
+      }
       break;
 
     case TM_PRED:
       TMPredLuma(r, c, frame.Y);
-      context.at(r).at(c) = IntraContext(true, B_TM_PRED);
+      for (size_t i = 0; i < 2; ++i) {
+        for (size_t j = 0; j < 2; ++j)
+          context.at(r << 1 | i).at(c << 1 | j) = IntraContext(false, B_TM_PRED);
+      }
       break;
 
     case B_PRED:
