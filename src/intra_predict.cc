@@ -1,7 +1,7 @@
 #include "intra_predict.h"
 
 namespace vp8 {
-namespace {
+namespace internal {
 
 void VPredChroma(size_t r, size_t c, Plane<2> &mb) {
   if (r == 0)
@@ -333,7 +333,9 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
   }
 }
 
-}  // namespace
+}  // namespace internal
+
+using namespace internal;
 
 void IntraPredict(size_t r, size_t c,
                   std::vector<std::vector<IntraContext>> &context,

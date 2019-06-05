@@ -1,9 +1,7 @@
 #include "filter.h"
 
-#include <vector>
-
 namespace vp8 {
-namespace {
+// namespace {
 
 int16_t minus128(int16_t x) { return int16_t(Clamp128(x - int16_t(128))); }
 
@@ -129,7 +127,7 @@ void LoopFilter::FillVertical(SubBlock &usb, SubBlock &dsb, size_t idx) const {
   dsb.at(2).at(idx) = q2_;
   dsb.at(3).at(idx) = q3_;
 }
-}  // namespace
+// }  // namespace
 
 template <size_t C>
 void FrameFilter(const FrameHeader &header, size_t hblock, size_t vblock,
@@ -236,17 +234,9 @@ void FrameFilter(const FrameHeader &header, size_t hblock, size_t vblock,
   }
 }
 
-void AvoidLinkerError() {
-  FrameHeader header;
-  Plane<4ul> pn4;
-  Plane<2ul> pn2;
-
-  FrameFilter<4ul>(header, 0, 0, false, pn4);
-  FrameFilter<2ul>(header, 0, 0, false, pn2);
-
-  // template void FrameFilter<4>(const FrameHeader &, size_t, size_t, bool,
-  // Plane<4> &); template void FrameFilter<2>(const FrameHeader &, size_t,
-  // size_t, bool, Plane<2> &);
-}
+template void FrameFilter<4>(const FrameHeader &, size_t, size_t, bool,
+                             Plane<4> &);
+template void FrameFilter<2>(const FrameHeader &, size_t, size_t, bool,
+                             Plane<2> &);
 
 }  // namespace vp8

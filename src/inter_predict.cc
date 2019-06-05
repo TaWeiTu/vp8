@@ -1,7 +1,7 @@
 #include "inter_predict.h"
 
 namespace vp8 {
-namespace {
+namespace internal {
 
 InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
                         const std::array<bool, 4> &ref_frame_bias,
@@ -257,7 +257,7 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
 }
 
 template <size_t C>
-std::array<std::array<int16_t, 4>, 9> HorSixtap(
+std::array<std::array<int16_t, 4>, 9> HorizontalSixtap(
     const Plane<C> &refer, size_t r, size_t c,
     const std::array<int16_t, 6> &filter) {
   std::array<std::array<int16_t, 4>, 9> res;
@@ -275,8 +275,9 @@ std::array<std::array<int16_t, 4>, 9> HorSixtap(
   return res;
 }
 
-void VerSixtap(const std::array<std::array<int16_t, 4>, 9> &refer, size_t r,
-               size_t c, const std::array<int16_t, 6> &filter, SubBlock &sub) {
+void VerticalSixtap(const std::array<std::array<int16_t, 4>, 9> &refer,
+                    size_t r, size_t c, const std::array<int16_t, 6> &filter,
+                    SubBlock &sub) {
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 4; ++j) {
       int32_t sum = int32_t(refer.at(r + i + 0).at(c + j)) * filter.at(0) +
@@ -295,8 +296,8 @@ void Sixtap(const Plane<C> &refer, size_t r, size_t c, uint8_t mr, uint8_t mc,
             const std::array<std::array<int16_t, 6>, 8> &filter,
             SubBlock &sub) {
   std::array<std::array<int16_t, 4>, 9> tmp =
-      HorSixtap(refer, r - 2, c, filter.at(mr));
-  VerSixtap(tmp, r, c, filter.at(mc), sub);
+      HorizontalSixtap(refer, r - 2, c, filter.at(mr));
+  VerticalSixtap(tmp, r, c, filter.at(mc), sub);
 }
 
 template <size_t C>
@@ -327,24 +328,28 @@ void InterpBlock(const Plane<C> &refer,
   }
 }
 
-template std::array<std::array<int16_t, 4>, 9> HorSixtap<4>(
+template std::array<std::array<int16_t, 4>, 9> HorizontalSixtap<4>(
     const Plane<4> &, size_t, size_t, const std::array<int16_t, 6> &);
-template std::array<std::array<int16_t, 4>, 9> HorSixtap<2>(
+template std::array<std::array<int16_t, 4>, 9> HorizontalSixtap<2>(
     const Plane<2> &, size_t, size_t, const std::array<int16_t, 6> &);
 
 template void Sixtap<4>(const Plane<4> &, size_t, size_t, uint8_t, uint8_t,
-                     const std::array<std::array<int16_t, 6>, 8> &, SubBlock &);
+                        const std::array<std::array<int16_t, 6>, 8> &,
+                        SubBlock &);
 template void Sixtap<2>(const Plane<2> &, size_t, size_t, uint8_t, uint8_t,
-                     const std::array<std::array<int16_t, 6>, 8> &, SubBlock &);
+                        const std::array<std::array<int16_t, 6>, 8> &,
+                        SubBlock &);
 
 template void InterpBlock<4>(const Plane<4> &,
-                          const std::array<std::array<int16_t, 6>, 8> &, size_t,
-                          size_t, MacroBlock<4> &);
+                             const std::array<std::array<int16_t, 6>, 8> &,
+                             size_t, size_t, MacroBlock<4> &);
 template void InterpBlock<2>(const Plane<2> &,
-                          const std::array<std::array<int16_t, 6>, 8> &, size_t,
-                          size_t, MacroBlock<2> &);
+                             const std::array<std::array<int16_t, 6>, 8> &,
+                             size_t, size_t, MacroBlock<2> &);
 
-}  // namespace
+}  // namespace internal
+
+using namespace internal;
 
 void InterPredict(const FrameTag &tag, size_t r, size_t c,
                   const std::array<Frame, 4> &refs,

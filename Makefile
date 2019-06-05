@@ -1,6 +1,6 @@
 CXX := clang++
 DBGFLAGS := -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -fsanitize=undefined -fsanitize=address -fsanitize-address-use-after-scope -fstack-protector-all -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-switch-enum -std=c++17 -Og -g3 -Wno-padded -march=native
-CFLAGS := -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-switch-enum -Wno-unused-function -Wno-unused-member-function -std=c++17 -O3 -march=native -flto
+CFLAGS := -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-switch-enum -std=c++17 -O3 -march=native
 CHECK := cppcheck --enable=all --inconclusive --check-config --suppress=missingIncludeSystem
 
 all: decode
@@ -48,6 +48,7 @@ src/reconstruct.o: src/reconstruct.cc src/reconstruct.h src/bitstream_parser.o s
 .PHONY: clean
 clean: 
 	rm src/*.o
+	rm ./decode
 
 .PHONY: test
 test: test/main.cc test/dct_test.h src/dct.o test/yuv_test.h src/yuv.o src/utils.h

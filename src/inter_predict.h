@@ -27,7 +27,7 @@ struct InterContext {
       : is_inter_mb(is_inter_mb_), mv_mode(mv_mode_), ref_frame(ref_frame_) {}
 };
 
-namespace {
+namespace internal {
 
 static const MotionVector kZero = MotionVector(0, 0);
 
@@ -94,13 +94,14 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
 // Horizontal pixel interpolation, this should return a 9x4 temporary matrix for
 // the vertical pixel interpolation later.
 template <size_t C>
-std::array<std::array<int16_t, 4>, 9> HorSixtap(
+std::array<std::array<int16_t, 4>, 9> HorizontalSixtap(
     const Plane<C> &refer, size_t r, size_t c,
     const std::array<int16_t, 6> &filter);
 
 // Vertical pixel interpolation.
-void VerSixtap(const std::array<std::array<int16_t, 4>, 9> &refer, size_t r,
-               size_t c, const std::array<int16_t, 6> &filter, SubBlock &sub);
+void VerticalSixtap(const std::array<std::array<int16_t, 4>, 9> &refer,
+                    size_t r, size_t c, const std::array<int16_t, 6> &filter,
+                    SubBlock &sub);
 
 // Sixtap pixel interpolation. First do the horizontal interpolation, then
 // vertical.
@@ -114,7 +115,7 @@ void InterpBlock(const Plane<C> &refer,
                  const std::array<std::array<int16_t, 6>, 8> &filter, size_t r,
                  size_t c, MacroBlock<C> &mb);
 
-}  // namespace
+}  // namespace internal
 
 void InterPredict(const FrameTag &tag, size_t r, size_t c,
                   const std::array<Frame, 4> &refs,

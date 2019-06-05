@@ -1,7 +1,7 @@
 #include "quantizer.h"
 
 namespace vp8 {
-namespace {
+namespace internal {
 
 void Quantize(std::array<int16_t, 16>& coefficients, int16_t DCfact,
               int16_t ACfact) {
@@ -18,7 +18,9 @@ void Dequantize(std::array<int16_t, 16>& coefficients, int16_t DCfact,
   }
 }
 
-}  // namespace
+}  // namespace internal
+
+using namespace internal;
 
 void QuantizeY(std::array<int16_t, 16>& coefficients, uint8_t qp,
                const QuantIndices& quantizer_header) {

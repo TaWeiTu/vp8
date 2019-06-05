@@ -13,7 +13,7 @@
 #include "quantizer.h"
 
 namespace vp8 {
-namespace {
+namespace internal {
 
 void Predict(const FrameTag &tag, const std::array<Frame, 4> &refs,
              const std::array<bool, 4> &ref_frame_bias,
@@ -26,7 +26,7 @@ void AddResidual(const FrameHeader &header,
                  const std::vector<std::vector<IntraContext>> &intrac,
                  BitstreamParser &ps, Frame &frame);
 
-}  // namespace
+}  // namespace internal
 
 void Reconstruct(const FrameHeader &header, const FrameTag &tag,
                  const std::array<Frame, 4> &refs,

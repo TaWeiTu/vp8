@@ -22,7 +22,7 @@ struct IntraContext {
   explicit IntraContext(bool is_b_pred_, SubBlockMode mode_) : is_intra_mb(true), is_b_pred(is_b_pred_), mode(mode_) {}
 };
 
-namespace {
+namespace internal {
 
 void VPredChroma(size_t r, size_t c, Plane<2> &mb);
 void HPredChroma(size_t r, size_t c, Plane<2> &mb);
@@ -40,7 +40,7 @@ void BPredLuma(size_t r, size_t c,
 void BPredSubBlock(const std::array<int16_t, 8> &above,
                    const std::array<int16_t, 4> &left, int16_t p,
                    SubBlockMode mode, SubBlock &sub);
-}  // namespace
+}  // namespace internal
 
 void IntraPredict(size_t r, size_t c,
                   std::vector<std::vector<IntraContext>> &context,

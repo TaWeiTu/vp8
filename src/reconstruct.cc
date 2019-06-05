@@ -1,7 +1,7 @@
 #include "reconstruct.h"
 
 namespace vp8 {
-namespace {
+namespace internal {
 
 void Predict(const FrameTag &tag, const std::array<Frame, 4> &refs,
              const std::array<bool, 4> &ref_frame_bias,
@@ -135,12 +135,15 @@ void AddResidual(const FrameHeader &header,
   }
 }
 
-}  // namespace
+}  // namespace internal
+
+using namespace internal;
 
 void Reconstruct(const FrameHeader &header, const FrameTag &tag,
                  const std::array<Frame, 4> &refs,
                  const std::array<bool, 4> &ref_frame_bias, BitstreamParser &ps,
                  Frame &frame) {
+
   std::vector<std::vector<InterContext>> interc(
       frame.vblock, std::vector<InterContext>(frame.hblock));
   std::vector<std::vector<IntraContext>> intrac(
