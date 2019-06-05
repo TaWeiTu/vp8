@@ -150,9 +150,7 @@ void Reconstruct(const FrameHeader &header, const FrameTag &tag,
       frame.vblock << 2, std::vector<IntraContext>(frame.hblock << 2));
   Predict(tag, refs, ref_frame_bias, interc, intrac, ps, frame);
   AddResidual(header, interc, intrac, ps, frame);
-  FrameFilter(header, frame.hblock, frame.vblock, tag.key_frame, frame.Y);
-  FrameFilter(header, frame.hblock, frame.vblock, tag.key_frame, frame.U);
-  FrameFilter(header, frame.hblock, frame.vblock, tag.key_frame, frame.V);
+  FrameFilter(header, tag.key_frame, frame);
 }
 
 }  // namespace vp8

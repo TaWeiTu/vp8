@@ -35,10 +35,12 @@ class LoopFilter {
   int16_t q0_, q1_, q2_, q3_;
 };
 
+template <size_t C>
+void PlaneFilter(const FrameHeader &, size_t, size_t, bool, Plane<C> &);
+
 }  // namespace internal
 
-template <size_t C>
-void FrameFilter(const FrameHeader &, size_t, size_t, bool, Plane<C> &);
+void FrameFilter(const FrameHeader &, bool, Frame &);
 
 }  // namespace vp8
 
