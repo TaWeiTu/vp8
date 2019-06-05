@@ -168,10 +168,6 @@ const std::array<std::array<Prob, kMVPCount>, kNumMVDimen> kDefaultMVContext = {
 
      }}};
 
-// TODO: WTF
-constexpr std::array<Prob, kNumYModes - 1> kPretendItsHuffman = {128, 128, 128,
-                                                                 128};
-
 constexpr std::array<Prob, kNumMVPartitions - 1> kMVPartitionProbs = {110, 111,
                                                                       150};
 
