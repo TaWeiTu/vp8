@@ -137,21 +137,19 @@ struct ParserContext {
   CoeffProbs coeff_prob_persistent;
   CoeffProbs coeff_prob_temp;
   std::reference_wrapper<CoeffProbs> coeff_prob;
-  std::array<std::array<uint8_t, kNumMVRefs>, kNumMVDimen> mv_prob;
-  std::array<std::array<uint8_t, 10>, 2> mvc_probs;
+  std::array<std::array<uint8_t, kMVPCount>, kNumMVDimen> mv_prob;
 
   ParserContext()
       : mb_metadata(),
-        intra_16x16_prob(),
-        intra_chroma_prob(),
-        segment_prob(),
-        ref_frame_delta_lf(),
-        mb_mode_delta_lf(),
-        coeff_prob_persistent(),
-        coeff_prob_temp(),
+        intra_16x16_prob(kYModeProb),
+        intra_chroma_prob(kUVModeProb),
+        segment_prob(),        // Set to 255 if not updated
+        ref_frame_delta_lf(),  // Deltas; normal to be zero
+        mb_mode_delta_lf(),    // Deltas; normal to be zero
+        coeff_prob_persistent(kDefaultCoeffProbs),
+        coeff_prob_temp(),  // Temporary buffer; normal to be zero
         coeff_prob(std::ref(coeff_prob_persistent)),
-        mv_prob(),
-        mvc_probs() {}
+        mv_prob(kDefaultMVContext) {}
 };
 
 struct ResidualParam {

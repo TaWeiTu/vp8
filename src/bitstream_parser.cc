@@ -36,23 +36,22 @@ FrameTag BitstreamParser::ReadFrameTag() {
     frame_tag_.height = vertical_size_code & 0x3FFF;
     frame_tag_.vertical_scale = uint16_t(vertical_size_code >> 14);
   }
-  uint32_t macroblock_cnt = (uint32_t(frame_tag_.width + 15) / 16) *
-                            (uint32_t(frame_tag_.height + 15) / 16);
-  context_.mb_metadata.resize(macroblock_cnt);
-  fill(context_.mb_metadata.begin(), context_.mb_metadata.end(), 0);
   return frame_tag_;
 }
 
 FrameHeader BitstreamParser::ReadFrameHeader() {
   FrameHeader frame_header{};
   if (frame_tag_.key_frame) {
-    // TODO: Set context defaults
-    context_ = ParserContext{};
+    context_ = ParserContext();
     frame_header.color_space = bd_->LitU8(1);
     frame_header.clamping_type = bd_->LitU8(1);
     ensure(!frame_header.color_space && !frame_header.clamping_type,
            "[Error] ReadFrameHeader: Unsupported color_space / clamping_type");
   }
+  uint32_t macroblock_cnt = (uint32_t(frame_tag_.width + 15) / 16) *
+                            (uint32_t(frame_tag_.height + 15) / 16);
+  context_.mb_metadata.resize(macroblock_cnt);
+  fill(context_.mb_metadata.begin(), context_.mb_metadata.end(), 0);
   frame_header.segmentation_enabled = bd_->LitU8(1);
   if (frame_header.segmentation_enabled) {
     UpdateSegmentation();
@@ -353,7 +352,7 @@ IntraMBHeader BitstreamParser::ReadIntraMBHeader() {
 }
 
 int16_t BitstreamParser::ReadMVComponent(bool kind) {
-  auto p = context_.mvc_probs.at(kind);
+  auto p = context_.mv_prob.at(kind);
   int16_t a = 0;
   if (bd_->Bool(p.at(MVP_IS_SHORT))) {
     for (unsigned i = 0; i < 3; i++) {
