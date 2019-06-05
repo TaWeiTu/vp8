@@ -8,7 +8,7 @@
 #include "utils.h"
 
 namespace vp8 {
-// namespace {
+namespace internal {
 
 int16_t minus128(int16_t);
 int16_t plus128(int16_t);
@@ -35,7 +35,7 @@ class LoopFilter {
   int16_t q0_, q1_, q2_, q3_;
 };
 
-// }  // namespace
+}  // namespace internal
 
 template <size_t C>
 void FrameFilter(const FrameHeader &, size_t, size_t, bool, Plane<C> &);

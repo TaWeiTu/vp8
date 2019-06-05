@@ -1,7 +1,7 @@
 #include "filter.h"
 
 namespace vp8 {
-// namespace {
+namespace internal {
 
 int16_t minus128(int16_t x) { return int16_t(Clamp128(x - int16_t(128))); }
 
@@ -127,7 +127,10 @@ void LoopFilter::FillVertical(SubBlock &usb, SubBlock &dsb, size_t idx) const {
   dsb.at(2).at(idx) = q2_;
   dsb.at(3).at(idx) = q3_;
 }
-// }  // namespace
+
+}  // namespace internal
+
+using namespace internal;
 
 template <size_t C>
 void FrameFilter(const FrameHeader &header, size_t hblock, size_t vblock,
