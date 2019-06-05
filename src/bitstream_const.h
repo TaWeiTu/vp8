@@ -9,6 +9,18 @@ namespace vp8 {
 using TreeIndex = int8_t;
 using Prob = uint8_t;
 
+const int kMaxMacroBlockSegments = 4;
+const int kNumMacroBlockSegmentProb = 3;
+const int kNumLfPredictionDelta = 4;
+const int kNumBlockType = 4;
+const int kNumCoeffBand = 8;
+const int kNumDctContextType = 3;
+const int kNumCoeffProb = 11;
+const int kNumYModeProb = 4;
+const int kNumUVModeProb = 3;
+const int kNumMVDimen = 2;
+const int kNumResidualBlock = 24;
+
 enum SegmentMode { SEGMENT_MODE_DELTA = 0, SEGMENT_MODE_ABSOLUTE };
 
 enum RefFrame {
@@ -25,7 +37,7 @@ enum MacroBlockMode {
   H_PRED,
   TM_PRED,
   B_PRED,
-  kNumUvModes = B_PRED,
+  kNumUVModes = B_PRED,
   kNumYModes
 };
 
@@ -36,7 +48,7 @@ enum MacroBlockMV {
   MV_NEW,
   MV_SPLIT,
   // kNumMacroblockMV
-  kNumMvRefs = MV_SPLIT + 1 - MV_NEAREST
+  kNumMVRefs = MV_SPLIT + 1 - MV_NEAREST
 };
 
 enum SubBlockMode {
@@ -77,17 +89,17 @@ enum MVPartition {
   MV_LEFT_RIGHT,
   MV_QUARTERS,
   MV_16,
-  kNumMvPartitions
+  kNumMVPartitions
 };
 
-constexpr std::array<uint8_t, 4> kNumMvs = {2, 2, 4, 16};
+constexpr std::array<uint8_t, 4> kNumMVs = {2, 2, 4, 16};
 
-enum MvpIndices {
+enum MVPIndices {
   MVP_IS_SHORT,
   MVP_SIGN,
   MVP_SHORT,
-  kMvpBits = MVP_SHORT + 7,
-  kMvpCount = kMvpBits + 10
+  kMVPBits = MVP_SHORT + 7,
+  kMVPCount = kMVPBits + 10
 };
 
 enum SubBlockMVMode {
@@ -115,16 +127,16 @@ static const std::array<TreeIndex, 18> kSubBlockModeTree{
 constexpr std::array<TreeIndex, 2 * (4 - 1)> kMbSegmentTree = {2,  4,  -0,
                                                                -1, -2, -3};
 
-constexpr std::array<TreeIndex, 2 * (kNumMvRefs - 1)> kMvRefTree = {
+constexpr std::array<TreeIndex, 2 * (kNumMVRefs - 1)> kMVRefTree = {
     -MV_ZERO, 2, -MV_NEAREST, 4, -MV_NEAR, 6, -MV_NEW, -MV_SPLIT};
 
-constexpr std::array<TreeIndex, 2 * (kNumMvPartitions - 1)> kMvPartitionTree = {
+constexpr std::array<TreeIndex, 2 * (kNumMVPartitions - 1)> kMVPartitionTree = {
     -MV_16, 2, -MV_QUARTERS, 4, -MV_TOP_BOTTOM, -MV_LEFT_RIGHT};
 
-constexpr std::array<TreeIndex, 2 * (kNumSubBlockMVMode - 1)> kSubBlockMVTree = {
-    -LEFT_4x4, 2, -ABOVE_4x4, 4, -ZERO_4x4, -NEW_4x4};
+constexpr std::array<TreeIndex, 2 * (kNumSubBlockMVMode - 1)> kSubBlockMVTree =
+    {-LEFT_4x4, 2, -ABOVE_4x4, 4, -ZERO_4x4, -NEW_4x4};
 
-constexpr std::array<TreeIndex, 2 * (8 - 1)> kSmallMvTree = {
+constexpr std::array<TreeIndex, 2 * (8 - 1)> kSmallMVTree = {
     2, 8, 4, 6, -0, -1, -2, -3, 10, 12, -4, -5, -6, -7};
 
 constexpr std::array<TreeIndex, 2 * (kNumDctTokens - 1)> kCoeffTree = {
@@ -141,13 +153,13 @@ static const std::array<std::array<Prob, 4>, 6> kModeProb = {
      {159, 134, 128, 34},
      {234, 188, 128, 28}}};
 
-const std::array<std::array<Prob, kMvpCount>, 2> kMvUpdateProbs = {
+const std::array<std::array<Prob, kMVPCount>, 2> kMVUpdateProbs = {
     {{237, 246, 253, 253, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 250,
       250, 252, 254, 254},
      {231, 243, 245, 253, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 251,
       251, 254, 254, 254}}};
 
-const std::array<std::array<Prob, kMvpCount>, 2> kDefaultMvContext = {
+const std::array<std::array<Prob, kMVPCount>, 2> kDefaultMVContext = {
     {{162, 128, 225, 146, 172, 147, 214, 39, 156, 128, 129, 132, 75, 145, 178,
       206, 239, 254, 254},
 
@@ -160,11 +172,15 @@ const std::array<std::array<Prob, kMvpCount>, 2> kDefaultMvContext = {
 constexpr std::array<Prob, kNumYModes - 1> kPretendItsHuffman = {128, 128, 128,
                                                                  128};
 
-constexpr std::array<Prob, kNumMvPartitions - 1> kMvPartitionProbs = {110, 111,
+constexpr std::array<Prob, kNumMVPartitions - 1> kMVPartitionProbs = {110, 111,
                                                                       150};
 
-constexpr std::array<std::array<Prob, kNumSubBlockMVMode - 1>, 5> kSubMvRefProbs = {
-    {{147, 136, 18}, {106, 145, 1}, {179, 121, 1}, {223, 1, 34}, {208, 1, 1}}};
+constexpr std::array<std::array<Prob, kNumSubBlockMVMode - 1>, 5>
+    kSubMVRefProbs = {{{147, 136, 18},
+                       {106, 145, 1},
+                       {179, 121, 1},
+                       {223, 1, 34},
+                       {208, 1, 1}}};
 
 constexpr std::array<
     std::array<std::array<Prob, kNumIntraBModes - 1>, kNumIntraBModes>,
@@ -480,10 +496,13 @@ constexpr std::array<
 
 constexpr std::array<Prob, kNumYModes - 1> kYModeProb = {112, 86, 140, 37};
 
-constexpr std::array<Prob, kNumUvModes - 1> kUvModeProb = {162, 101, 204};
+constexpr std::array<Prob, kNumUVModes - 1> kUVModeProb = {162, 101, 204};
 
 constexpr std::array<Prob, kNumIntraBModes - 1> kBModeProb = {
     120, 90, 79, 133, 87, 85, 80, 111, 151};
+
+constexpr std::array<unsigned, 16> kCoeffBands = {0, 1, 2, 3, 6, 4, 5, 6,
+                                                  6, 6, 6, 6, 6, 6, 6, 7};
 
 }  // namespace vp8
 

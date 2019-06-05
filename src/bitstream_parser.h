@@ -50,7 +50,7 @@ struct FrameHeader {
   uint8_t loop_filter_level;
   uint8_t sharpness_level;
   // mb_lf_adjustments
-  uint8_t log2_nbr_of_dct_partitions;
+  uint8_t nbr_of_dct_partitions;
   QuantIndices quant_indices;
   // if (key_frame) {
   bool refresh_entropy_probs;
@@ -88,8 +88,8 @@ struct FrameHeader {
   // mv_prob_update
   // }
   // --- Other fields not directly in the header ---
-  std::array<int16_t, 4> quantizer_segment;
-  std::array<int16_t, 4> loop_filter_level_segment;
+  std::array<int16_t, kMaxMacroBlockSegments> quantizer_segment;
+  std::array<int16_t, kMaxMacroBlockSegments> loop_filter_level_segment;
 };
 
 struct MacroBlockPreHeader {
@@ -124,17 +124,20 @@ struct ParserContext {
   // (is_inter_mb && mv_mode == MV_SPLIT) || (!is_inter_mv && intra_y_mode !=
   // B_PRED)
   std::vector<uint8_t> mb_metadata;
-  std::array<uint8_t, 4> intra_16x16_prob;
-  std::array<uint8_t, 3> intra_chroma_prob;
-  std::array<uint8_t, 3> segment_prob;
-  std::array<int8_t, 4> ref_frame_delta_lf;
-  std::array<int8_t, 4> mb_mode_delta_lf;
+  std::array<uint8_t, kNumYModeProb> intra_16x16_prob;
+  std::array<uint8_t, kNumUVModeProb> intra_chroma_prob;
+  std::array<uint8_t, kNumMacroBlockSegmentProb> segment_prob;
+  std::array<int8_t, kNumRefFrames> ref_frame_delta_lf;
+  std::array<int8_t, kNumLfPredictionDelta> mb_mode_delta_lf;
   using CoeffProbs =
-      std::array<std::array<std::array<std::array<Prob, 11>, 3>, 4>, 8>;
+      std::array<std::array<std::array<std::array<Prob, kNumCoeffProb>,
+                                       kNumDctContextType>,
+                            kNumCoeffBand>,
+                 kNumBlockType>;
   CoeffProbs coeff_prob_persistent;
   CoeffProbs coeff_prob_temp;
   std::reference_wrapper<CoeffProbs> coeff_prob;
-  std::array<std::array<uint8_t, 19>, 2> mv_prob;
+  std::array<std::array<uint8_t, kNumMVRefs>, kNumMVDimen> mv_prob;
   std::array<std::array<uint8_t, 10>, 2> mvc_probs;
 
   ParserContext()
@@ -149,62 +152,6 @@ struct ParserContext {
         coeff_prob(std::ref(coeff_prob_persistent)),
         mv_prob(),
         mvc_probs() {}
-};
-
-class BitstreamParser {
- private:
-  std::unique_ptr<BoolDecoder> bd_;
-  FrameTag frame_tag_;
-  FrameHeader frame_header_;
-  ParserContext context_;
-  size_t macroblock_metadata_idx, residual_macroblock_idx;
-
-  FrameTag ReadFrameTag();
-
-  FrameHeader ReadFrameHeader();
-
-  void UpdateSegmentation();
-
-  void MbLfAdjust();
-
-  QuantIndices ReadQuantIndices();
-
-  void TokenProbUpdate();
-
-  void MvProbUpdate();
-
-  std::array<int16_t, 16> ReadResidualBlock(int first_coeff,
-                                            std::array<uint8_t, 4> context);
-
-  uint16_t ReadMvComponent(bool kind);
-
- public:
-  BitstreamParser() = default;
-
-  std::unique_ptr<BoolDecoder> DropStream();
-
-  std::pair<FrameTag, FrameHeader> ReadFrameTagHeader();
-
-  MacroBlockPreHeader ReadMacroBlockPreHeader();
-
-  SubBlockMVMode ReadSubBlockMVMode(uint8_t sub_mv_context);
-
-  MotionVector ReadSubBlockMV();
-
-  InterMBHeader ReadInterMBHeader(const std::array<uint8_t, 4>& cnt);
-
-  SubBlockMode ReadSubBlockBMode(int above_bmode, int left_bmode);
-
-  MacroBlockMode ReadIntraMB_UVMode();
-
-  IntraMBHeader ReadIntraMBHeader();
-
-  ResidualData ReadResidualData(int first_coeff,
-                                std::array<uint8_t, 4> context);
-
-  const FrameTag& frame_tag() { return frame_tag_; }
-
-  const FrameHeader& frame_header() { return frame_header_; }
 };
 
 struct ResidualParam {
@@ -228,6 +175,63 @@ struct ResidualParam {
         u_left(u_left_),
         v_above(v_above_),
         v_left(v_left_) {}
+};
+
+class BitstreamParser {
+ private:
+  std::unique_ptr<BoolDecoder> bd_;
+  FrameTag frame_tag_;
+  FrameHeader frame_header_;
+  ParserContext context_;
+  size_t macroblock_metadata_idx, residual_macroblock_idx;
+
+  FrameTag ReadFrameTag();
+
+  FrameHeader ReadFrameHeader();
+
+  void UpdateSegmentation();
+
+  void MbLfAdjust();
+
+  QuantIndices ReadQuantIndices();
+
+  void TokenProbUpdate();
+
+  void MVProbUpdate();
+
+  std::pair<std::array<int16_t, 16>, bool> ReadResidualBlock(
+      int first_coeff, const std::array<Prob, kNumCoeffProb>& prob);
+
+  int16_t ReadMVComponent(bool kind);
+
+ public:
+  BitstreamParser() = default;
+
+  std::unique_ptr<BoolDecoder> DropStream();
+
+  std::pair<FrameTag, FrameHeader> ReadFrameTagHeader();
+
+  MacroBlockPreHeader ReadMacroBlockPreHeader();
+
+  SubBlockMVMode ReadSubBlockMVMode(uint8_t sub_mv_context);
+
+  MotionVector ReadSubBlockMV();
+
+  InterMBHeader ReadInterMBHeader(const std::array<uint8_t, 4>& cnt);
+
+  SubBlockMode ReadSubBlockBModeKF(int above_bmode, int left_bmode);
+
+  SubBlockMode ReadSubBlockBModeNonKF();
+
+  MacroBlockMode ReadIntraMB_UVMode();
+
+  IntraMBHeader ReadIntraMBHeader();
+
+  ResidualData ReadResidualData(const ResidualParam& residual_ctx);
+
+  const FrameTag& frame_tag() { return frame_tag_; }
+
+  const FrameHeader& frame_header() { return frame_header_; }
 };
 
 }  // namespace vp8
