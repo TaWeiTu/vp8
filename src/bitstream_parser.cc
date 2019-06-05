@@ -7,7 +7,8 @@
 namespace vp8 {
 
 std::unique_ptr<BoolDecoder> BitstreamParser::DropStream() {
-  // TODO: Check validity?
+  // TODO: Check validity in other places?
+  ensure(bool(bd_), "[Error] DropStream: bd_ already dropped.");
   return std::move(bd_);
 }
 
@@ -109,19 +110,15 @@ void BitstreamParser::UpdateSegmentation() {
   frame_header_.update_mb_segmentation_map = bd_->LitU8(1);
   bool update_segment_feature_data = bd_->LitU8(1);
   if (update_segment_feature_data) {
-    bool segment_feature_mode = bd_->LitU8(1);
+    frame_header_.segment_feature_mode = SegmentMode(bd_->LitU8(1));
     for (unsigned i = 0; i < kMaxMacroBlockSegments; i++) {
       bool quantizer_update = bd_->LitU8(1);
       if (quantizer_update) {
         int16_t quantizer_update_value = bd_->Prob7();
         bool quantizer_update_sign = bd_->LitU8(1);
-        // TODO: Fix relative mode
-        if (segment_feature_mode == SEGMENT_MODE_ABSOLUTE) {
-          frame_header_.quantizer_segment.at(i) = 0;
-        }
-        frame_header_.quantizer_segment.at(i) += quantizer_update_sign
-                                                     ? -quantizer_update_value
-                                                     : quantizer_update_value;
+        frame_header_.quantizer_segment.at(i) = quantizer_update_sign
+                                                    ? -quantizer_update_value
+                                                    : quantizer_update_value;
       }
     }
     for (unsigned i = 0; i < kMaxMacroBlockSegments; i++) {
@@ -129,11 +126,7 @@ void BitstreamParser::UpdateSegmentation() {
       if (loop_filter_update) {
         int16_t lf_update_value = bd_->LitU8(6);
         bool lf_update_sign = bd_->LitU8(1);
-        // TODO: Fix relative mode
-        if (segment_feature_mode == SEGMENT_MODE_ABSOLUTE) {
-          frame_header_.loop_filter_level_segment.at(i) = 0;
-        }
-        frame_header_.loop_filter_level_segment.at(i) +=
+        frame_header_.loop_filter_level_segment.at(i) =
             lf_update_sign ? -lf_update_value : lf_update_value;
       }
     }

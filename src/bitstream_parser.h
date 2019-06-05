@@ -44,6 +44,7 @@ struct FrameHeader {
   bool segmentation_enabled;
   // if (segmentation_enabled) {
   // update_segmentation
+  SegmentMode segment_feature_mode;
   bool update_mb_segmentation_map;
   // }
   bool filter_type;
