@@ -7,7 +7,7 @@
 namespace vp8 {
 
 std::unique_ptr<BoolDecoder> BitstreamParser::DropStream() {
-  // TODO: Check validity in other places?
+  // TODO: (Improvement) Check validity in other places?
   ensure(bool(bd_), "[Error] DropStream: bd_ already dropped.");
   return std::move(bd_);
 }
@@ -61,7 +61,7 @@ FrameHeader BitstreamParser::ReadFrameHeader() {
   frame_header.loop_filter_level = bd_->LitU8(6);
   frame_header.sharpness_level = bd_->LitU8(3);
   MbLfAdjust();
-  // TODO: Deal with multiple partitions
+  // TODO: (Improvement) Deal with multiple partitions
   frame_header.nbr_of_dct_partitions = uint8_t(1 << bd_->LitU8(2));
   frame_header.quant_indices = ReadQuantIndices();
   if (frame_tag_.key_frame) {
@@ -218,7 +218,7 @@ void BitstreamParser::TokenProbUpdate() {
   if (!frame_header_.refresh_entropy_probs) {
     context_.coeff_prob = std::ref(context_.coeff_prob_persistent);
   } else {
-    // TODO: Write a safe_copy with bounds checking
+    // TODO: (Improvement) Write a safe_copy with bounds checking
     std::copy(context_.coeff_prob_persistent.begin(),
               context_.coeff_prob_persistent.end(),
               context_.coeff_prob_temp.begin());
