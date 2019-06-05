@@ -7,15 +7,17 @@ void Predict(const FrameTag &tag, const std::array<Frame, 4> &refs,
              const std::array<bool, 4> &ref_frame_bias,
              std::vector<std::vector<InterContext>> &interc,
              std::vector<std::vector<IntraContext>> &intrac,
-             BitstreamParser &ps, Frame &frame) {
+             std::vector<std::vector<uint8_t>> &seg_id, BitstreamParser &ps,
+             Frame &frame) {
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
       MacroBlockPreHeader pre = ps.ReadMacroBlockPreHeader();
+      seg_id.at(r).at(c) = pre.segment_id;
       if (pre.is_inter_mb)
         InterPredict(tag, r, c, refs, ref_frame_bias, pre.ref_frame, interc, ps,
                      frame);
       else
-        IntraPredict(r, c, intrac, ps, frame);
+        IntraPredict(tag, r, c, intrac, ps, frame);
     }
   }
 }
@@ -23,10 +25,8 @@ void Predict(const FrameTag &tag, const std::array<Frame, 4> &refs,
 void AddResidual(const FrameHeader &header,
                  const std::vector<std::vector<InterContext>> &interc,
                  const std::vector<std::vector<IntraContext>> &intrac,
+                 const std::vector<std::vector<uint8_t>> &seg_id,
                  BitstreamParser &ps, Frame &frame) {
-  uint8_t qp = header.quant_indices.y_ac_qi;
-  // if (header.segmentation_enabled) qp = 0;
-
   std::vector<bool> y2_row(frame.vblock, false);
   std::vector<bool> y2_col(frame.hblock, false);
   std::vector<std::vector<bool>> y1_nonzero(
@@ -38,6 +38,12 @@ void AddResidual(const FrameHeader &header,
 
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
+      int16_t qp = header.quant_indices.y_ac_qi;
+      if (header.segmentation_enabled)
+        qp = header.segment_feature_mode == SEGMENT_MODE_ABSOLUTE
+                 ? header.quantizer_segment[seg_id.at(r).at(c)]
+                 : header.quantizer_segment[seg_id.at(r).at(c)] + qp;
+
       uint8_t y2_nonzero = uint8_t(y2_row[r]) + uint8_t(y2_col[c]);
       std::array<bool, 4> y1_above, y1_left;
       for (size_t i = 0; i < 4; ++i) {
@@ -56,9 +62,8 @@ void AddResidual(const FrameHeader &header,
         }
       }
 
-      // ResidualData rd = ps.ReadResidualData(ResidualParam(
-      // y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
-      ResidualData rd;
+      ResidualData rd = ps.ReadResidualData(ResidualParam(
+      y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
 
       bool has_y2 =
           (interc.at(r).at(c).is_inter_mb &&
@@ -143,13 +148,14 @@ void Reconstruct(const FrameHeader &header, const FrameTag &tag,
                  const std::array<Frame, 4> &refs,
                  const std::array<bool, 4> &ref_frame_bias, BitstreamParser &ps,
                  Frame &frame) {
-
   std::vector<std::vector<InterContext>> interc(
       frame.vblock, std::vector<InterContext>(frame.hblock));
   std::vector<std::vector<IntraContext>> intrac(
       frame.vblock << 2, std::vector<IntraContext>(frame.hblock << 2));
-  Predict(tag, refs, ref_frame_bias, interc, intrac, ps, frame);
-  AddResidual(header, interc, intrac, ps, frame);
+  std::vector<std::vector<uint8_t>> seg_id(frame.vblock,
+                                           std::vector<uint8_t>(frame.hblock));
+  Predict(tag, refs, ref_frame_bias, interc, intrac, seg_id, ps, frame);
+  AddResidual(header, interc, intrac, seg_id, ps, frame);
   FrameFilter(header, tag.key_frame, frame);
 }
 

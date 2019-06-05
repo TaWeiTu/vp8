@@ -2,7 +2,7 @@
 
 #include "reconstruct.h"
 
-int main() {
+int main(int argc, const char **argv) {
   // Avoid unused function.
   vp8::FrameHeader header;
   vp8::FrameTag tag;

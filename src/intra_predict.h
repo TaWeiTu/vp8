@@ -19,7 +19,8 @@ struct IntraContext {
 
   IntraContext() : is_intra_mb(false) {}
 
-  explicit IntraContext(bool is_b_pred_, SubBlockMode mode_) : is_intra_mb(true), is_b_pred(is_b_pred_), mode(mode_) {}
+  explicit IntraContext(bool is_b_pred_, SubBlockMode mode_)
+      : is_intra_mb(true), is_b_pred(is_b_pred_), mode(mode_) {}
 };
 
 namespace internal {
@@ -34,7 +35,7 @@ void HPredLuma(size_t r, size_t c, Plane<4> &mb);
 void DCPredLuma(size_t r, size_t c, Plane<4> &mb);
 void TMPredLuma(size_t r, size_t c, Plane<4> &mb);
 
-void BPredLuma(size_t r, size_t c,
+void BPredLuma(size_t r, size_t c, bool is_key_frame,
                std::vector<std::vector<IntraContext>> &context,
                BitstreamParser &ps, Plane<4> &mb);
 void BPredSubBlock(const std::array<int16_t, 8> &above,
@@ -42,7 +43,7 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
                    SubBlockMode mode, SubBlock &sub);
 }  // namespace internal
 
-void IntraPredict(size_t r, size_t c,
+void IntraPredict(const FrameTag &tag, size_t r, size_t c,
                   std::vector<std::vector<IntraContext>> &context,
                   BitstreamParser &ps, Frame &frame);
 

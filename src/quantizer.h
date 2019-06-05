@@ -39,12 +39,12 @@ void Dequantize(std::array<int16_t, 16> &, int16_t, int16_t);
 
 }  // namespace internal
 
-void QuantizeY(std::array<int16_t, 16> &, uint8_t, const QuantIndices &);
-void QuantizeUV(std::array<int16_t, 16> &, uint8_t, const QuantIndices &);
-void QuantizeY2(std::array<int16_t, 16> &, uint8_t, const QuantIndices &);
-void DequantizeY(std::array<int16_t, 16> &, uint8_t, const QuantIndices &);
-void DequantizeUV(std::array<int16_t, 16> &, uint8_t, const QuantIndices &);
-void DequantizeY2(std::array<int16_t, 16> &, uint8_t, const QuantIndices &);
+void QuantizeY(std::array<int16_t, 16> &, int16_t, const QuantIndices &);
+void QuantizeUV(std::array<int16_t, 16> &, int16_t, const QuantIndices &);
+void QuantizeY2(std::array<int16_t, 16> &, int16_t, const QuantIndices &);
+void DequantizeY(std::array<int16_t, 16> &, int16_t, const QuantIndices &);
+void DequantizeUV(std::array<int16_t, 16> &, int16_t, const QuantIndices &);
+void DequantizeY2(std::array<int16_t, 16> &, int16_t, const QuantIndices &);
 
 }  // namespace vp8
 

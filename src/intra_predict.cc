@@ -93,7 +93,7 @@ void TMPredLuma(size_t r, size_t c, Plane<4> &mb) {
   }
 }
 
-void BPredLuma(size_t r, size_t c,
+void BPredLuma(size_t r, size_t c, bool is_key_frame,
                std::vector<std::vector<IntraContext>> &context,
                BitstreamParser &ps, Plane<4> &mb) {
   auto LeftSubBlockMode = [&context, r, c](size_t idx) {
@@ -172,8 +172,10 @@ void BPredLuma(size_t r, size_t c,
                       : c == 0 ? 129
                                : mb.at(r - 1).at(c - 1).at(3).at(3).at(3).at(3);
 
-      SubBlockMode mode = ps.ReadSubBlockBMode(LeftSubBlockMode(i << 2 | j),
-                                               AboveSubBlockMode(i << 2 | j));
+      SubBlockMode mode =
+          is_key_frame ? ps.ReadSubBlockBModeKF(LeftSubBlockMode(i << 2 | j),
+                                                AboveSubBlockMode(i << 2 | j))
+                       : ps.ReadSubBlockBModeNonKF();
       context[r << 2 | i][c << 2 | j] = IntraContext(true, mode);
       BPredSubBlock(above, left, p, mode, mb.at(r).at(c).at(i).at(j));
     }
@@ -337,7 +339,7 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
 
 using namespace internal;
 
-void IntraPredict(size_t r, size_t c,
+void IntraPredict(const FrameTag &tag, size_t r, size_t c,
                   std::vector<std::vector<IntraContext>> &context,
                   BitstreamParser &ps, Frame &frame) {
   IntraMBHeader mh = ps.ReadIntraMBHeader();
@@ -346,7 +348,8 @@ void IntraPredict(size_t r, size_t c,
       VPredLuma(r, c, frame.Y);
       for (size_t i = 0; i < 2; ++i) {
         for (size_t j = 0; j < 2; ++j)
-          context.at(r << 1 | i).at(c << 1 | j) = IntraContext(false, B_VE_PRED);
+          context.at(r << 1 | i).at(c << 1 | j) =
+              IntraContext(false, B_VE_PRED);
       }
       break;
 
@@ -354,7 +357,8 @@ void IntraPredict(size_t r, size_t c,
       HPredLuma(r, c, frame.Y);
       for (size_t i = 0; i < 2; ++i) {
         for (size_t j = 0; j < 2; ++j)
-          context.at(r << 1 | i).at(c << 1 | j) = IntraContext(false, B_HE_PRED);
+          context.at(r << 1 | i).at(c << 1 | j) =
+              IntraContext(false, B_HE_PRED);
       }
       break;
 
@@ -362,7 +366,8 @@ void IntraPredict(size_t r, size_t c,
       DCPredLuma(r, c, frame.Y);
       for (size_t i = 0; i < 2; ++i) {
         for (size_t j = 0; j < 2; ++j)
-          context.at(r << 1 | i).at(c << 1 | j) = IntraContext(false, B_DC_PRED);
+          context.at(r << 1 | i).at(c << 1 | j) =
+              IntraContext(false, B_DC_PRED);
       }
       break;
 
@@ -370,12 +375,13 @@ void IntraPredict(size_t r, size_t c,
       TMPredLuma(r, c, frame.Y);
       for (size_t i = 0; i < 2; ++i) {
         for (size_t j = 0; j < 2; ++j)
-          context.at(r << 1 | i).at(c << 1 | j) = IntraContext(false, B_TM_PRED);
+          context.at(r << 1 | i).at(c << 1 | j) =
+              IntraContext(false, B_TM_PRED);
       }
       break;
 
     case B_PRED:
-      BPredLuma(r, c, context, ps, frame.Y);
+      BPredLuma(r, c, tag.key_frame, context, ps, frame.Y);
       break;
 
     default:
