@@ -118,7 +118,6 @@ struct ResidualData {
 };
 
 struct ParserContext {
-  // TODO
   // Bit packed as following:
   // (prediction_mode << 6) | (ref_frame << 4) |
   // (segment_id << 2) | (mb_skip_coeff << 1) |
