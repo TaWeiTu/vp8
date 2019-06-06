@@ -130,6 +130,10 @@ class MacroBlock {
     subs_.at(r >> 2).at(c >> 2).at(r & 3).at(c & 3) = v;
   }
 
+  void IncrementPixel(size_t r, size_t c, int16_t v) {
+    subs_.at(r >> 2).at(c >> 2).at(r & 3).at(c & 3) += v;
+  }
+
   MotionVector GetMotionVector() const { return mv_; }
 
   void SetMotionVector(int16_t dr, int16_t dc) { mv_ = MotionVector(dr, dc); }
