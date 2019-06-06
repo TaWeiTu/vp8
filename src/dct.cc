@@ -64,7 +64,6 @@ void WHT(std::array<std::array<int16_t, 4>, 4> &subblock) {
   }
 }
 
-
 void IDCT(std::array<std::array<int16_t, 4>, 4> &subblock) {
   static const int cospi8_sqrt2_minus1 = 20091;
   static const int sinpi8_sqrt2 = 35468;
