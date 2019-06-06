@@ -31,11 +31,24 @@ class BoolDecoder {
   // Decode tokens from the tree
   template <class P, class T>
   uint16_t Tree(const P &prob, const T &tree) {
+#ifdef DEBUG
+      std::cerr << "prob.size() = " << prob.size() << std::endl;
+      std::cerr << "tree.size() = " << tree.size() << std::endl;
+#endif
     int16_t res = 0;
     while (true) {
+#ifdef DEBUG
+      std::cerr << "before res = " << res << std::endl;
+#endif
       res = tree.at(size_t(res + Bool(prob.at(size_t(res >> 1)))));
+#ifdef DEBUG
+      std::cerr << "after res = " << res << std::endl;
+#endif
       if (res <= 0) break;
     }
+#ifdef DEBUG
+      std::cerr << "return res = " << res << std::endl;
+#endif
     return uint16_t(-res);
   }
 
