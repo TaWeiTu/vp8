@@ -40,6 +40,7 @@ FrameTag BitstreamParser::ReadFrameTag() {
     frame_tag_.height = vertical_size_code & 0x3FFF;
     frame_tag_.vertical_scale = uint16_t(vertical_size_code >> 14);
   }
+  bd_->Init();
   return frame_tag_;
 }
 

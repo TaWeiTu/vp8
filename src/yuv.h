@@ -13,8 +13,9 @@ class YUV {
  public:
   YUV() = default;
   ~YUV();
-  explicit YUV(const std::string &);
-  void WriteFrame(const Frame &);
+  explicit YUV(const std::string &filename);
+  explicit YUV(const char *filename);
+  void WriteFrame(const Frame &frame);
 
  private:
   std::ofstream fs_;

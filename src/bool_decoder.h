@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <fstream>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -35,6 +36,8 @@ class BoolDecoder {
     }
     return uint16_t(-res);
   }
+
+  void Init();
 
   // Read an unsigned n-bit integer (uncoded) presented in little-endian format.
   uint32_t Raw(size_t n);

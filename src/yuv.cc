@@ -7,6 +7,11 @@ YUV::YUV(const std::string &filename) {
   ensure(!fs_.fail(), ".at(Error) YUV::YUV: Fail to open file.");
 }
 
+YUV::YUV(const char *filename) {
+  fs_.open(filename, std::ios::binary);
+  ensure(!fs_.fail(), ".at(Error) YUV::YUV: Fail to open file.");
+}
+
 void YUV::WriteFrame(const Frame &frame) {
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
