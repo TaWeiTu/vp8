@@ -229,7 +229,9 @@ class BitstreamParser {
 
   SubBlockMode ReadSubBlockBModeNonKF();
 
-  MacroBlockMode ReadIntraMB_UVMode();
+  MacroBlockMode ReadIntraMB_UVModeKF();
+
+  MacroBlockMode ReadIntraMB_UVModeNonKF();
 
   IntraMBHeader ReadIntraMBHeaderKF();
 
