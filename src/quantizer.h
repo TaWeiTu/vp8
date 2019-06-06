@@ -1,22 +1,18 @@
 #ifndef QUANTIZER_H_
 #define QUANTIZER_H_
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
 #include <vector>
 
-namespace vp8 {
+#include "bitstream_parser.h"
+#include "utils.h"
 
-struct QuantizerHeader {
-  size_t q_index;
-  uint8_t delta_update;
-  uint8_t y_dc_delta_q;
-  uint8_t y2_dc_delta_q;
-  uint8_t y2_ac_delta_q;
-  uint8_t uv_dc_delta_q;
-  uint8_t uv_ac_delta_q;
-};
-namespace {
-constexpr std::vector<int16_t> kDClookup = {
+namespace vp8 {
+namespace internal {
+
+const std::array<int16_t, 128> kDClookup = {
     4,   5,   6,   7,   8,   9,   10,  10,  11,  12,  13,  14,  15,  16,  17,
     17,  18,  19,  20,  20,  21,  21,  22,  22,  23,  23,  24,  25,  25,  26,
     27,  28,  29,  30,  31,  32,  33,  34,  35,  36,  37,  37,  38,  39,  40,
@@ -27,7 +23,7 @@ constexpr std::vector<int16_t> kDClookup = {
     106, 108, 110, 112, 114, 116, 118, 122, 124, 126, 128, 130, 132, 134, 136,
     138, 140, 143, 145, 148, 151, 154, 157};
 
-constexpr std::vector<int16_t> kAClookup = {
+const std::array<int16_t, 128> kAClookup = {
     4,   5,   6,   7,   8,   9,   10,  11,  12,  13,  14,  15,  16,  17,  18,
     19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31,  32,  33,
     34,  35,  36,  37,  38,  39,  40,  41,  42,  43,  44,  45,  46,  47,  48,
@@ -38,16 +34,17 @@ constexpr std::vector<int16_t> kAClookup = {
     185, 189, 193, 197, 201, 205, 209, 213, 217, 221, 225, 229, 234, 239, 245,
     249, 254, 259, 264, 269, 274, 279, 284};
 
-void Quantize(std::vector<int16_t> &, int16_t, int16_t);
-void Dequantize(std::vector<int16_t> &, int16_t, int16_t);
+void Quantize(std::array<int16_t, 16> &, int16_t, int16_t);
+void Dequantize(std::array<int16_t, 16> &, int16_t, int16_t);
 
-}  // namespace
-void QuantizeY(std::vector<int16_t> &, uint8_t, const QuantizerHeader &);
-void QuantizeUV(std::vector<int16_t> &, uint8_t, const QuantizerHeader &);
-void QuantizeY2(std::vector<int16_t> &, uint8_t, const QuantizerHeader &);
-void DequantizeY(std::vector<int16_t> &, uint8_t, const QuantizerHeader &);
-void DequantizeUV(std::vector<int16_t> &, uint8_t, const QuantizerHeader &);
-void DequantizeY2(std::vector<int16_t> &, uint8_t, const QuantizerHeader &);
+}  // namespace internal
+
+void QuantizeY(std::array<int16_t, 16> &, int16_t, const QuantIndices &);
+void QuantizeUV(std::array<int16_t, 16> &, int16_t, const QuantIndices &);
+void QuantizeY2(std::array<int16_t, 16> &, int16_t, const QuantIndices &);
+void DequantizeY(std::array<int16_t, 16> &, int16_t, const QuantIndices &);
+void DequantizeUV(std::array<int16_t, 16> &, int16_t, const QuantIndices &);
+void DequantizeY2(std::array<int16_t, 16> &, int16_t, const QuantIndices &);
 
 }  // namespace vp8
 

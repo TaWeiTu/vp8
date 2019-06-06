@@ -1,26 +1,34 @@
 #include "inter_predict.h"
 
-namespace vp8 {
-namespace {
+#include <utility>
 
-MacroBlockHeader SearchMVs(
-    size_t r, size_t c, const FrameHeader &header, const Plane<4> &mb,
-    const std::vector<std::vector<BlockContext>> &context, BitstreamParser &ps,
-    MotionVector &best, MotionVector &nearest, MotionVector &near) {
+namespace vp8 {
+namespace internal {
+
+InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
+                        const std::array<bool, 4> &ref_frame_bias,
+                        uint8_t ref_frame,
+                        const std::vector<std::vector<InterContext>> &context,
+                        BitstreamParser &ps, MotionVector &best,
+                        MotionVector &nearest, MotionVector &near) {
   static std::array<uint8_t, 4> cnt;
   std::fill(cnt.begin(), cnt.end(), 0);
   std::vector<MotionVector> mv;
 
   if (r == 0 || context.at(r - 1).at(c).is_inter_mb) {
     MotionVector v = r ? mb.at(r - 1).at(c).GetMotionVector() : kZero;
-    // if (r > 0) v = Invert(v, mh.at(r - 1).at(c));
+    if (r > 0)
+      v = Invert(v, context.at(r - 1).at(c).ref_frame, ref_frame,
+                 ref_frame_bias);
     if (v != kZero) mv.push_back(v);
     cnt.at(mv.size()) += 2;
   }
 
   if (c == 0 || context.at(r).at(c - 1).is_inter_mb) {
     MotionVector v = c ? mb.at(r).at(c - 1).GetMotionVector() : kZero;
-    // if (c > 0) v = Invert(v, mh.at(r).at(c - 1));
+    if (c > 0)
+      v = Invert(v, context.at(r).at(c - 1).ref_frame, ref_frame,
+                 ref_frame_bias);
     if (v != kZero) {
       if (!mv.empty() && mv.back() != v) mv.push_back(v);
       cnt.at(mv.size()) += 2;
@@ -31,7 +39,9 @@ MacroBlockHeader SearchMVs(
 
   if (r == 0 || c == 0 || context.at(r - 1).at(c - 1).is_inter_mb) {
     MotionVector v = r && c ? mb.at(r - 1).at(c - 1).GetMotionVector() : kZero;
-    // if (r > 0 && c > 0) v = Invert(v, mh.at(r - 1).at(c - 1));
+    if (r > 0 && c > 0)
+      v = Invert(v, context.at(r - 1).at(c - 1).ref_frame, ref_frame,
+                 ref_frame_bias);
     if (v != kZero) {
       if (!mv.empty() && mv.back() != v) mv.push_back(v);
       cnt.at(mv.size()) += 1;
@@ -59,13 +69,21 @@ MacroBlockHeader SearchMVs(
   nearest = mv.at(1);
   near = mv.at(2);
 
-  return ps.ReadMacroBlockHeader(cnt);
+  return ps.ReadInterMBHeader(cnt);
 }
 
 void ClampMV(MotionVector &mv, int16_t left, int16_t right, int16_t up,
              int16_t down) {
   mv.dr = std::clamp(mv.dr, up, down);
   mv.dc = std::clamp(mv.dr, left, right);
+}
+
+MotionVector Invert(const MotionVector &mv, uint8_t ref_frame1,
+                    uint8_t ref_frame2,
+                    const std::array<bool, 4> &ref_frame_bias) {
+  if (ref_frame_bias[ref_frame1] != ref_frame_bias[ref_frame2])
+    return MotionVector(-mv.dr, -mv.dc);
+  return mv;
 }
 
 uint8_t SubBlockContext(const MotionVector &left, const MotionVector &above) {
@@ -102,7 +120,7 @@ void ConfigureChromaMVs(const MacroBlock<4> &luma, bool trim,
   }
 }
 
-void ConfigureSubBlockMVs(const MacroBlockHeader &hd, size_t r, size_t c,
+void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
                           BitstreamParser &ps, Plane<4> &mb) {
   std::vector<std::vector<uint8_t>> part;
   switch (hd.mv_split_mode) {
@@ -126,10 +144,13 @@ void ConfigureSubBlockMVs(const MacroBlockHeader &hd, size_t r, size_t c,
     case MV_16:
       for (uint8_t i = 0; i < 16; ++i) part.push_back({i});
       break;
+
+    default:
+      ensure(false, "[Error] Unknown subblock partition.");
+      break;
   }
 
-  std::function<MotionVector(size_t)> LeftMotionVector = [&mb, r,
-                                                          c](size_t idx) {
+  auto LeftMotionVector = [&mb, r, c](size_t idx) {
     if ((idx & 3) == 0) {
       if (c == 0) return kZero;
       return mb.at(r).at(c - 1).GetSubBlockMV(idx + 3);
@@ -137,8 +158,7 @@ void ConfigureSubBlockMVs(const MacroBlockHeader &hd, size_t r, size_t c,
     return mb.at(r).at(c).GetSubBlockMV(idx - 1);
   };
 
-  std::function<MotionVector(size_t)> AboveMotionVector = [&mb, r,
-                                                           c](size_t idx) {
+  auto AboveMotionVector = [&mb, r, c](size_t idx) {
     if (idx < 4) {
       if (r == 0) return kZero;
       return mb.at(r - 1).at(c).GetSubBlockMV(idx + 12);
@@ -149,7 +169,7 @@ void ConfigureSubBlockMVs(const MacroBlockHeader &hd, size_t r, size_t c,
   for (size_t i = 0; i < part.size(); ++i) {
     uint8_t context = SubBlockContext(LeftMotionVector(part.at(i).at(0)),
                                       AboveMotionVector(part.at(i).at(0)));
-    SubBlockMVMode mode = ps.ReadSubBlockMode(context);
+    SubBlockMVMode mode = ps.ReadSubBlockMVMode(context);
     for (size_t j = 0; j < part.at(i).size(); ++j) {
       size_t ir = part.at(i).at(j) >> 2, ic = part.at(i).at(j) & 3;
       MotionVector mv;
@@ -173,27 +193,34 @@ void ConfigureSubBlockMVs(const MacroBlockHeader &hd, size_t r, size_t c,
         case NEW_4x4:
           mv = ps.ReadSubBlockMV() + mb.at(r).at(c).GetMotionVector();
           break;
+
+        default:
+          ensure(false,
+                 "[Error] ConfigureSubBlockMVs: Unknown subblock motion vector "
+                 "mode.");
+          break;
       }
       mb.at(r).at(c).at(ir).at(ic).SetMotionVector(mv);
     }
   }
 }
 
-void ConfigureMVs(const FrameHeader &header, size_t r, size_t c, bool trim,
-                  std::vector<std::vector<BlockContext>> &context,
+void ConfigureMVs(size_t r, size_t c, bool trim,
+                  const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
+                  std::vector<std::vector<InterContext>> &context,
                   BitstreamParser &ps, Frame &frame) {
   int16_t left = int16_t(-(1 << 7)), right = int16_t(frame.hblock);
   int16_t up = int16_t(-((r + 1) << 7)),
           down = int16_t((frame.vblock - r) << 7);
 
-  MotionVector best, nearest, near;
-  MacroBlockHeader hd =
-      SearchMVs(r, c, header, frame.Y, context, ps, best, nearest, near);
+  MotionVector best, nearest, near, mv;
+  InterMBHeader hd = SearchMVs(r, c, frame.Y, ref_frame_bias, ref_frame,
+                               context, ps, best, nearest, near);
   ClampMV(best, left, right, up, down);
   ClampMV(nearest, left, right, up, down);
   ClampMV(near, left, right, up, down);
 
-  context.at(r).at(c) = BlockContext(true, hd.mv_mode);
+  context.at(r).at(c) = InterContext(hd.mv_mode, ref_frame);
 
   switch (hd.mv_mode) {
     case MV_NEAREST:
@@ -212,22 +239,27 @@ void ConfigureMVs(const FrameHeader &header, size_t r, size_t c, bool trim,
       break;
 
     case MV_NEW:
-      MotionVector mv = hd.mv + best;
+      mv = hd.mv_new + best;
       frame.Y.at(r).at(c).SetSubBlockMVs(mv);
       frame.Y.at(r).at(c).SetMotionVector(mv);
       break;
 
     case MV_SPLIT:
       ConfigureSubBlockMVs(hd, r, c, ps, frame.Y);
-      MotionVector pres = frame.Y.at(r).at(c).GetSubBlockMV(15);
-      frame.Y.at(r).at(c).SetMotionVector(pres);
+      mv = frame.Y.at(r).at(c).GetSubBlockMV(15);
+      frame.Y.at(r).at(c).SetMotionVector(mv);
+      break;
+
+    default:
+      ensure(false, "[Error] Unknown macroblock motion vector mode.");
+      break;
   }
   ConfigureChromaMVs(frame.Y.at(r).at(c), trim, frame.U.at(r).at(c));
   ConfigureChromaMVs(frame.Y.at(r).at(c), trim, frame.V.at(r).at(c));
 }
 
 template <size_t C>
-std::array<std::array<int16_t, 4>, 9> HorSixtap(
+std::array<std::array<int16_t, 4>, 9> HorizontalSixtap(
     const Plane<C> &refer, size_t r, size_t c,
     const std::array<int16_t, 6> &filter) {
   std::array<std::array<int16_t, 4>, 9> res;
@@ -245,8 +277,9 @@ std::array<std::array<int16_t, 4>, 9> HorSixtap(
   return res;
 }
 
-void VerSixtap(const std::array<std::array<int16_t, 4>, 9> &refer, size_t r,
-               size_t c, const std::array<int16_t, 6> &filter, SubBlock &sub) {
+void VerticalSixtap(const std::array<std::array<int16_t, 4>, 9> &refer,
+                    size_t r, size_t c, const std::array<int16_t, 6> &filter,
+                    SubBlock &sub) {
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 4; ++j) {
       int32_t sum = int32_t(refer.at(r + i + 0).at(c + j)) * filter.at(0) +
@@ -265,8 +298,8 @@ void Sixtap(const Plane<C> &refer, size_t r, size_t c, uint8_t mr, uint8_t mc,
             const std::array<std::array<int16_t, 6>, 8> &filter,
             SubBlock &sub) {
   std::array<std::array<int16_t, 4>, 9> tmp =
-      HorSixtap(refer, r - 2, c, filter.at(mr));
-  VerSixtap(tmp, r, c, filter.at(mc), sub);
+      HorizontalSixtap(refer, r - 2, c, filter.at(mr));
+  VerticalSixtap(tmp, r, c, filter.at(mc), sub);
 }
 
 template <size_t C>
@@ -297,38 +330,42 @@ void InterpBlock(const Plane<C> &refer,
   }
 }
 
-// Ugly hacks to allow definitions of template funcitons in the .cc file.
-template std::array<std::array<int16_t, 4>, 9> HorSixtap(
+template std::array<std::array<int16_t, 4>, 9> HorizontalSixtap<4>(
     const Plane<4> &, size_t, size_t, const std::array<int16_t, 6> &);
-template std::array<std::array<int16_t, 4>, 9> HorSixtap(
+template std::array<std::array<int16_t, 4>, 9> HorizontalSixtap<2>(
     const Plane<2> &, size_t, size_t, const std::array<int16_t, 6> &);
 
-template void Sixtap(const Plane<4> &, size_t, size_t, uint8_t, uint8_t,
-                     const std::array<std::array<int16_t, 6>, 8> &, SubBlock &);
-template void Sixtap(const Plane<2> &, size_t, size_t, uint8_t, uint8_t,
-                     const std::array<std::array<int16_t, 6>, 8> &, SubBlock &);
+template void Sixtap<4>(const Plane<4> &, size_t, size_t, uint8_t, uint8_t,
+                        const std::array<std::array<int16_t, 6>, 8> &,
+                        SubBlock &);
+template void Sixtap<2>(const Plane<2> &, size_t, size_t, uint8_t, uint8_t,
+                        const std::array<std::array<int16_t, 6>, 8> &,
+                        SubBlock &);
 
-template void InterpBlock(const Plane<4> &,
-                          const std::array<std::array<int16_t, 6>, 8> &, size_t,
-                          size_t, MacroBlock<4> &);
-template void InterpBlock(const Plane<2> &,
-                          const std::array<std::array<int16_t, 6>, 8> &, size_t,
-                          size_t, MacroBlock<2> &);
+template void InterpBlock<4>(const Plane<4> &,
+                             const std::array<std::array<int16_t, 6>, 8> &,
+                             size_t, size_t, MacroBlock<4> &);
+template void InterpBlock<2>(const Plane<2> &,
+                             const std::array<std::array<int16_t, 6>, 8> &,
+                             size_t, size_t, MacroBlock<2> &);
 
-}  // namespace
+}  // namespace internal
 
-void InterPredict(const FrameHeader &header, const FrameTag &tag, size_t r,
-                  size_t c, const MacroBlockPreHeader &pre, 
-                  std::vector<std::vector<BlockContext>> &context,
-                  BitstreamParser &ps,
-                  Frame &frame) {
-  ConfigureMVs(header, r, c, tag.version == 3, context, ps, frame);
+using namespace internal;
+
+void InterPredict(const FrameTag &tag, size_t r, size_t c,
+                  const std::array<Frame, 4> &refs,
+                  const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
+                  std::vector<std::vector<InterContext>> &context,
+                  BitstreamParser &ps, Frame &frame) {
+  ConfigureMVs(r, c, tag.version == 3, ref_frame_bias, ref_frame, context, ps,
+               frame);
   std::array<std::array<int16_t, 6>, 8> subpixel_filters =
       tag.version == 0 ? kBicubicFilter : kBilinearFilter;
 
-  InterpBlock(header.ref_frame.Y, subpixel_filters, r, c, frame.Y.at(r).at(c));
-  InterpBlock(header.ref_frame.U, subpixel_filters, r, c, frame.U.at(r).at(c));
-  InterpBlock(header.ref_frame.V, subpixel_filters, r, c, frame.V.at(r).at(c));
+  InterpBlock(refs[ref_frame].Y, subpixel_filters, r, c, frame.Y.at(r).at(c));
+  InterpBlock(refs[ref_frame].U, subpixel_filters, r, c, frame.U.at(r).at(c));
+  InterpBlock(refs[ref_frame].V, subpixel_filters, r, c, frame.V.at(r).at(c));
 }
 
 }  // namespace vp8

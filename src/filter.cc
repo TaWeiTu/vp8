@@ -1,9 +1,7 @@
 #include "filter.h"
 
-#include <vector>
-
 namespace vp8 {
-namespace {
+namespace internal {
 
 int16_t minus128(int16_t x) { return int16_t(Clamp128(x - int16_t(128))); }
 
@@ -79,8 +77,9 @@ void LoopFilter::MacroBlockFilter(int16_t hev_threshold, int16_t interior_limit,
     a = (9 * w + 63) >> 7;
     q2_ = plus128(Q2 - a);
     p2_ = plus128(P2 + a);
-  } else
+  } else {
     Adjust(true);
+  }
 }
 
 void LoopFilter::Horizontal(const SubBlock &lsb, const SubBlock &rsb,
@@ -129,12 +128,12 @@ void LoopFilter::FillVertical(SubBlock &usb, SubBlock &dsb, size_t idx) const {
   dsb.at(2).at(idx) = q2_;
   dsb.at(3).at(idx) = q3_;
 }
-}  // namespace
 
 template <size_t C>
-void FrameFilter(FrameHeader &header, uint8_t sharpness_level,
-                 std::vector<std::vector<MacroBlock<C>>> &frame, size_t hblock,
-                 size_t vblock, bool is_key_frame, LoopFilter &filter) {
+void PlaneFilter(const FrameHeader &header, size_t hblock, size_t vblock,
+                 bool is_key_frame, Plane<C> &frame) {
+  uint8_t sharpness_level = header.sharpness_level;
+  LoopFilter filter;
   for (size_t r = 0; r < vblock; r++) {
     for (size_t c = 0; c < hblock; c++) {
       MacroBlock<C> &mb = frame.at(r).at(c);
@@ -233,6 +232,17 @@ void FrameFilter(FrameHeader &header, uint8_t sharpness_level,
       }
     }
   }
+}
+
+}  // namespace internal
+
+using namespace internal;
+
+void FrameFilter(const FrameHeader &header, bool is_key_frame, Frame &frame) {
+  size_t hblock = frame.hblock, vblock = frame.vblock;
+  PlaneFilter(header, hblock, vblock, is_key_frame, frame.Y);
+  PlaneFilter(header, hblock, vblock, is_key_frame, frame.U);
+  PlaneFilter(header, hblock, vblock, is_key_frame, frame.V);
 }
 
 }  // namespace vp8

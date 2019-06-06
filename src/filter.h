@@ -3,11 +3,12 @@
 
 #include <vector>
 
+#include "bitstream_parser.h"
 #include "frame.h"
 #include "utils.h"
 
 namespace vp8 {
-namespace {
+namespace internal {
 
 int16_t minus128(int16_t);
 int16_t plus128(int16_t);
@@ -34,12 +35,12 @@ class LoopFilter {
   int16_t q0_, q1_, q2_, q3_;
 };
 
-}  // namespace
-
 template <size_t C>
-void FrameFilter(FrameHeader &, uint8_t,
-                 std::vector<std::vector<MacroBlock<C>>> &, size_t, size_t,
-                 bool, LoopFilter &);
+void PlaneFilter(const FrameHeader &, size_t, size_t, bool, Plane<C> &);
+
+}  // namespace internal
+
+void FrameFilter(const FrameHeader &, bool, Frame &);
 
 }  // namespace vp8
 

@@ -1,17 +1,13 @@
 #include "bool_decoder.h"
 
+#include <utility>
+
 namespace vp8 {
 
-BoolDecoder::BoolDecoder(const std::string &filename)
-    : fs_(std::make_unique<std::ifstream>()) {
-  fs_->open(filename, std::ios::binary);
-  value_ = uint32_t(ReadByte()) << 8 | ReadByte();
-  range_ = 255;
-  bit_count_ = 0;
-}
+BoolDecoder::BoolDecoder(std::unique_ptr<std::istream> fs)
+    : fs_(std::move(fs)) {}
 
-BoolDecoder::BoolDecoder(std::unique_ptr<std::ifstream> fs)
-    : fs_(std::move(fs)) {
+void BoolDecoder::Init() {
   value_ = uint32_t(ReadByte()) << 8 | ReadByte();
   range_ = 255;
   bit_count_ = 0;
@@ -19,7 +15,8 @@ BoolDecoder::BoolDecoder(std::unique_ptr<std::ifstream> fs)
 
 uint8_t BoolDecoder::ReadByte() {
   uint8_t res;
-  fs_->read(reinterpret_cast<char *>(&res), sizeof(res));
+  fs_->read(reinterpret_cast<char*>(&res), sizeof(res));
+  ensure(!fs_->fail(), "[Error] BoolDecoder::ReadByte(): Unable to read byte.");
   return res;
 }
 
@@ -72,7 +69,10 @@ uint8_t BoolDecoder::Prob7() {
 
 uint32_t BoolDecoder::Raw(size_t n) {
   uint32_t res = 0;
-  for (size_t i = 0; i < n; ++i) res |= uint32_t(ReadByte()) << (i << 3);
+  for (size_t i = 0; i < n; ++i) {
+    uint8_t byte = ReadByte();
+    res |= uint32_t(byte) << (i << 3);
+  }
   return res;
 }
 

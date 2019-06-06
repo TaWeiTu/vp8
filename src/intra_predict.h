@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <vector>
 
 #include "bitstream_parser.h"
@@ -10,7 +11,19 @@
 #include "utils.h"
 
 namespace vp8 {
-namespace {
+
+struct IntraContext {
+  bool is_intra_mb;
+  bool is_b_pred;
+  SubBlockMode mode;
+
+  IntraContext() : is_intra_mb(false) {}
+
+  explicit IntraContext(bool is_b_pred_, SubBlockMode mode_)
+      : is_intra_mb(true), is_b_pred(is_b_pred_), mode(mode_) {}
+};
+
+namespace internal {
 
 void VPredChroma(size_t r, size_t c, Plane<2> &mb);
 void HPredChroma(size_t r, size_t c, Plane<2> &mb);
@@ -22,15 +35,17 @@ void HPredLuma(size_t r, size_t c, Plane<4> &mb);
 void DCPredLuma(size_t r, size_t c, Plane<4> &mb);
 void TMPredLuma(size_t r, size_t c, Plane<4> &mb);
 
-void BPredLuma(size_t r, size_t c,
-               const std::array<SubBlockMode, 16> &pred, Plane<4> &mb);
+void BPredLuma(size_t r, size_t c, bool is_key_frame,
+               std::vector<std::vector<IntraContext>> &context,
+               BitstreamParser &ps, Plane<4> &mb);
 void BPredSubBlock(const std::array<int16_t, 8> &above,
-                   const std::array<int16_t, 4> &left, int16_t p, SubBlockMode mode,
-                   SubBlock &sub);
-}  // namespace
+                   const std::array<int16_t, 4> &left, int16_t p,
+                   SubBlockMode mode, SubBlock &sub);
+}  // namespace internal
 
-void IntraPredict(const FrameHeader &header, size_t r, size_t c, const MacroBlockHeader &mh,
-                  Frame &frame);
+void IntraPredict(const FrameTag &tag, size_t r, size_t c,
+                  std::vector<std::vector<IntraContext>> &context,
+                  BitstreamParser &ps, Frame &frame);
 
 }  // namespace vp8
 

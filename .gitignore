@@ -6,3 +6,5 @@ example/
 .DS_Store
 *.yuv
 *.mp4
+decode
+decode.dSYM

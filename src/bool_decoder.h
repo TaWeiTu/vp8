@@ -3,22 +3,25 @@
 
 #include <cstdint>
 #include <fstream>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "utils.h"
 
 namespace vp8 {
 
 class BoolDecoder {
  public:
   BoolDecoder() = default;
-  explicit BoolDecoder(const std::string &);
-  explicit BoolDecoder(std::unique_ptr<std::ifstream>);
+  explicit BoolDecoder(std::unique_ptr<std::istream>);
 
   // Decode a 1-bit boolean value.
   uint8_t Bool(uint8_t prob);
   // Decode an unsigned n-bit literal.
   uint16_t Lit(size_t n);
+  uint8_t LitU8(size_t n) { return uint8_t(Lit(n)); }
   // Decode a signed n-bit literal.
   int16_t SignedLit(size_t n);
   // Decode a 8-bit probability (being an alias of Lit(8)).
@@ -27,14 +30,20 @@ class BoolDecoder {
   uint8_t Prob7();
   // Decode tokens from the tree
   template <class P, class T>
-  int16_t Tree(const P &prob, const T &tree) {
+  uint16_t Tree(const P &prob, const T &tree) {
+// #ifdef DEBUG
+      // std::cerr << "prob.size() = " << prob.size() << std::endl;
+      // std::cerr << "tree.size() = " << tree.size() << std::endl;
+// #endif
     int16_t res = 0;
     while (true) {
-      res = tree.at(res + Bool(prob.at(res)));
+      res = tree.at(size_t(res + Bool(prob.at(size_t(res >> 1)))));
       if (res <= 0) break;
     }
-    return -res;
+    return uint16_t(-res);
   }
+
+  void Init();
 
   // Read an unsigned n-bit integer (uncoded) presented in little-endian format.
   uint32_t Raw(size_t n);
@@ -43,7 +52,7 @@ class BoolDecoder {
   uint32_t value_;
   uint32_t range_;
   uint8_t bit_count_;
-  std::unique_ptr<std::ifstream> fs_;
+  std::unique_ptr<std::istream> fs_;
 
   uint8_t ReadByte();
 };
