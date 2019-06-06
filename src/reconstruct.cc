@@ -154,6 +154,10 @@ void Reconstruct(const FrameHeader &header, const FrameTag &tag,
       frame.vblock << 2, std::vector<IntraContext>(frame.hblock << 2));
   std::vector<std::vector<uint8_t>> seg_id(frame.vblock,
                                            std::vector<uint8_t>(frame.hblock));
+#ifdef DEBUG
+  std::cerr << "Header: ";
+#endif
+
   Predict(tag, refs, ref_frame_bias, interc, intrac, seg_id, ps, frame);
   AddResidual(header, interc, intrac, seg_id, ps, frame);
   FrameFilter(header, tag.key_frame, frame);

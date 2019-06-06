@@ -27,7 +27,7 @@ FrameTag BitstreamParser::ReadFrameTag() {
   frame_tag_.version = (tag >> 1) & 0x7;
   frame_tag_.show_frame = (tag >> 4) & 0x1;
   frame_tag_.first_part_size = (tag >> 5) & 0x7FFFF;
-  ensure(frame_tag_.version >> 2,
+  ensure(!(frame_tag_.version >> 2),
          "[Error] ReadFrameTag: Experimental streams unsupported.");
   if (frame_tag_.key_frame) {
     uint32_t start_code = bd_->Raw(3);

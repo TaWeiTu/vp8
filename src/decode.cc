@@ -71,7 +71,10 @@ int main(int argc, const char **argv) {
     vp8::FrameTag tag;
     std::tie(tag, header) = ps.ReadFrameTagHeader();
 
-    vp8::Frame frame;
+#ifdef DEBUG
+    std::cerr << "height = " << tag.height << " width = " << tag.width << std::endl;
+#endif
+    vp8::Frame frame(tag.height, tag.width);
 
     InitSignBias(header, ref_frame_bias);
     vp8::Reconstruct(header, tag, ref_frames, ref_frame_bias, ps, frame);

@@ -13,6 +13,9 @@ YUV::YUV(const char *filename) {
 }
 
 void YUV::WriteFrame(const Frame &frame) {
+#ifdef DEBUG
+  std::cerr << "vblock = " << frame.vblock << " hblock = " << frame.hblock << std::endl;
+#endif
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
       for (size_t i = 0; i < 16; ++i) {
