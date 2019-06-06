@@ -19,37 +19,35 @@ void YUV::WriteFrame(const Frame &frame) {
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
       for (size_t i = 0; i < 16; ++i) {
-        for (size_t j = 0; j < 16; j += 2) {
-          int16_t y1 = frame.Y.at(r).at(c).GetPixel(i, j);
-          int16_t y2 = frame.Y.at(r).at(c).GetPixel(i, j + 1);
-          int16_t u = frame.U.at(r).at(c).GetPixel(i >> 1, j >> 1);
-          int16_t v = frame.V.at(r).at(c).GetPixel(i >> 1, j >> 1);
-          ensure(0 <= y1 && y1 <= 255,
-                 ".at(Error) The Y value of the frame is not in range "
-                 ".at(0, 255).");
-          ensure(0 <= y2 && y2 <= 255,
-                 ".at(Error) The Y value of the frame is not in range "
-                 ".at(0, 255).");
-          ensure(0 <= u && u <= 255,
-                 ".at(Error) The U value of the frame is not in range "
-                 ".at(0, 255).");
-          ensure(0 <= v && v <= 255,
-                 ".at(Error) The V value of the frame is not in range "
-                 ".at(0, 255).");
-
-          uint8_t sy1 = uint8_t(y1);
-          uint8_t sy2 = uint8_t(y2);
-          uint8_t su = uint8_t(u);
-          uint8_t sv = uint8_t(v);
-
-          fs_.write(reinterpret_cast<char *>(&sy1), sizeof(sy1));
-          fs_.write(reinterpret_cast<char *>(&su), sizeof(su));
-          fs_.write(reinterpret_cast<char *>(&sy2), sizeof(sy2));
-          fs_.write(reinterpret_cast<char *>(&sv), sizeof(sv));
+        for (size_t j = 0; j < 16; ++j) {
+          uint8_t y = uint8_t(frame.Y.at(r).at(c).GetPixel(i, j));
+          fs_.write(reinterpret_cast<char *>(&y), sizeof(y));
         }
       }
     }
   }
+  for (size_t r = 0; r < frame.vblock; ++r) {
+    for (size_t c = 0; c < frame.hblock; ++c) {
+      for (size_t i = 0; i < 8; ++i) {
+        for (size_t j = 0; j < 8; ++j) {
+          uint8_t u = uint8_t(frame.U.at(r).at(c).GetPixel(i, j));
+          fs_.write(reinterpret_cast<char *>(&u), sizeof(u));
+        }
+      }
+    }
+  }
+  for (size_t r = 0; r < frame.vblock; ++r) {
+    for (size_t c = 0; c < frame.hblock; ++c) {
+      for (size_t i = 0; i < 8; ++i) {
+        for (size_t j = 0; j < 8; ++j) {
+          uint8_t v = uint8_t(frame.V.at(r).at(c).GetPixel(i, j));
+          fs_.write(reinterpret_cast<char *>(&v), sizeof(v));
+        }
+      }
+    }
+  }
+  if (fs_.is_open()) fs_.close();
+  exit(1);
 }
 
 YUV::~YUV() {

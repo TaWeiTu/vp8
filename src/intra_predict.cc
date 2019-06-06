@@ -97,25 +97,31 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame,
                std::vector<std::vector<IntraContext>> &context,
                BitstreamParser &ps, Plane<4> &mb) {
   auto LeftSubBlockMode = [&context, r, c](size_t idx) {
+#ifdef DEBUG
+    std::cerr << "LeftSubBlockMode r = " << r << " " << c << " " << idx << std::endl;
+#endif
     if ((idx & 3) == 0) {
       if (c == 0) return B_DC_PRED;
       ensure(context.at(r << 2 | (idx >> 2))
-                 .at((c - 1) << 2 | (idx & 3))
+                 .at((c - 1) << 2 | 3)
                  .is_intra_mb,
-             "[Read the spec] Really?");
-      return context.at(r << 2 | (idx >> 2)).at((c - 1) << 2 | (idx & 3)).mode;
+             "[Read the spec] LeftSubBlockMode::Really?");
+      return context.at(r << 2 | (idx >> 2)).at((c - 1) << 2 | 3).mode;
     }
     return context.at(r << 2 | (idx >> 2)).at(c << 2 | ((idx & 3) - 1)).mode;
   };
 
   auto AboveSubBlockMode = [&context, r, c](size_t idx) {
+#ifdef DEBUG
+    std::cerr << "AboveSubBlockMode r = " << r << " " << c << " " << idx << std::endl;
+#endif
     if (idx < 4) {
       if (r == 0) return B_DC_PRED;
-      ensure(context.at((r - 1) << 2 | (idx >> 2))
+      ensure(context.at((r - 1) << 2 | 3)
                  .at(c << 2 | (idx & 3))
                  .is_intra_mb,
-             "[Read the spec] Really?");
-      return context.at((r - 1) << 2 | (idx >> 2)).at(c << 2 | (idx & 3)).mode;
+             "[Read the spec] AboveSubBlockMode::Really?");
+      return context.at((r - 1) << 2 | 3).at(c << 2 | (idx & 3)).mode;
     }
     return context.at(r << 2 | ((idx >> 2) - 1)).at(c << 2 | (idx & 3)).mode;
   };
@@ -172,11 +178,17 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame,
                       : c == 0 ? 129
                                : mb.at(r - 1).at(c - 1).at(3).at(3).at(3).at(3);
 
+#ifdef DEBUG
+      std::cerr << "reading subblock mode of above and left" << std::endl;
+#endif
       SubBlockMode mode =
           is_key_frame ? ps.ReadSubBlockBModeKF(LeftSubBlockMode(i << 2 | j),
                                                 AboveSubBlockMode(i << 2 | j))
                        : ps.ReadSubBlockBModeNonKF();
-      context[r << 2 | i][c << 2 | j] = IntraContext(true, mode);
+#ifdef DEBUG
+      std::cerr << "done reading subblock mode of above and left" << std::endl;
+#endif
+      context.at(r << 2 | i).at(c << 2 | j) = IntraContext(true, mode);
       BPredSubBlock(above, left, p, mode, mb.at(r).at(c).at(i).at(j));
     }
   }
@@ -185,10 +197,16 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame,
 void BPredSubBlock(const std::array<int16_t, 8> &above,
                    const std::array<int16_t, 4> &left, int16_t p,
                    SubBlockMode mode, SubBlock &sub) {
+#ifdef DEBUG
+  std::cerr << "[BPredSubBlock] Start" << std::endl;
+#endif
   const std::array<int16_t, 9> edge = {
       left.at(3),  left.at(2),  left.at(1),  left.at(0),  p,
       above.at(3), above.at(2), above.at(1), above.at(0),
   };
+#ifdef DEBUG
+  std::cerr << "mode = " << mode << std::endl;
+#endif
   switch (mode) {
     case B_VE_PRED: {
       for (size_t i = 0; i < 4; ++i) {
@@ -236,7 +254,7 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
         int16_t y = above.at(d + 1);
         int16_t z = d + 2 < 8 ? above.at(d + 2) : above.at(7);
         int16_t avg = (x + y + y + z + 2) >> 2;
-        for (size_t i = 0; int(d) - int(i) >= 0; ++i) {
+        for (size_t i = 0; i < 4 && int(d) - int(i) >= 0; ++i) {
           if (int(d) - int(i) < 4) sub.at(i).at(d - i) = avg;
         }
       }
@@ -333,6 +351,9 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
       ensure(false, "[Error] BPredSubBlock: Unknown subblock mode.");
       break;
   }
+#ifdef DEBUG
+  std::cerr << "[BPredSubBlock] Done" << std::endl;
+#endif
 }
 
 }  // namespace internal
@@ -342,40 +363,43 @@ using namespace internal;
 void IntraPredict(const FrameTag &tag, size_t r, size_t c,
                   std::vector<std::vector<IntraContext>> &context,
                   BitstreamParser &ps, Frame &frame) {
+#ifdef DEBUG
+  std::cerr << "[IntraPredict] Start" << std::endl;
+#endif
   IntraMBHeader mh = ps.ReadIntraMBHeader();
   switch (mh.intra_y_mode) {
     case V_PRED:
       VPredLuma(r, c, frame.Y);
-      for (size_t i = 0; i < 2; ++i) {
-        for (size_t j = 0; j < 2; ++j)
-          context.at(r << 1 | i).at(c << 1 | j) =
+      for (size_t i = 0; i < 4; ++i) {
+        for (size_t j = 0; j < 4; ++j)
+          context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_VE_PRED);
       }
       break;
 
     case H_PRED:
       HPredLuma(r, c, frame.Y);
-      for (size_t i = 0; i < 2; ++i) {
-        for (size_t j = 0; j < 2; ++j)
-          context.at(r << 1 | i).at(c << 1 | j) =
+      for (size_t i = 0; i < 4; ++i) {
+        for (size_t j = 0; j < 4; ++j)
+          context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_HE_PRED);
       }
       break;
 
     case DC_PRED:
       DCPredLuma(r, c, frame.Y);
-      for (size_t i = 0; i < 2; ++i) {
-        for (size_t j = 0; j < 2; ++j)
-          context.at(r << 1 | i).at(c << 1 | j) =
+      for (size_t i = 0; i < 4; ++i) {
+        for (size_t j = 0; j < 4; ++j)
+          context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_DC_PRED);
       }
       break;
 
     case TM_PRED:
       TMPredLuma(r, c, frame.Y);
-      for (size_t i = 0; i < 2; ++i) {
-        for (size_t j = 0; j < 2; ++j)
-          context.at(r << 1 | i).at(c << 1 | j) =
+      for (size_t i = 0; i < 4; ++i) {
+        for (size_t j = 0; j < 4; ++j)
+          context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_TM_PRED);
       }
       break;
@@ -414,6 +438,9 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
       ensure(false, "[Error] IntraPredict: Unknown UV mode.");
       break;
   }
+#ifdef DEBUG
+  std::cerr << "[IntraPredict] Done" << std::endl;
+#endif
 }
 
 }  // namespace vp8

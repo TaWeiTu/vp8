@@ -9,10 +9,16 @@ void Predict(const FrameTag &tag, const std::array<Frame, 4> &refs,
              std::vector<std::vector<IntraContext>> &intrac,
              std::vector<std::vector<uint8_t>> &seg_id, BitstreamParser &ps,
              Frame &frame) {
+#ifdef DEBUG
+  std::cerr << "Start prediction" << std::endl;
+#endif
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
       MacroBlockPreHeader pre = ps.ReadMacroBlockPreHeader();
       seg_id.at(r).at(c) = pre.segment_id;
+// #ifdef DEBUG
+      // std::cerr << std::boolalpha << pre.is_inter_mb << " ";
+// #endif
       if (pre.is_inter_mb)
         InterPredict(tag, r, c, refs, ref_frame_bias, pre.ref_frame, interc, ps,
                      frame);
@@ -20,6 +26,9 @@ void Predict(const FrameTag &tag, const std::array<Frame, 4> &refs,
         IntraPredict(tag, r, c, intrac, ps, frame);
     }
   }
+#ifdef DEBUG
+  std::cerr << "Done prediction" << std::endl;
+#endif
 }
 
 void AddResidual(const FrameHeader &header,
@@ -27,6 +36,9 @@ void AddResidual(const FrameHeader &header,
                  const std::vector<std::vector<IntraContext>> &intrac,
                  const std::vector<std::vector<uint8_t>> &seg_id,
                  BitstreamParser &ps, Frame &frame) {
+#ifdef DEBUG
+  std::cerr << "[AddResidual] Start" << std::endl;
+#endif
   std::vector<bool> y2_row(frame.vblock, false);
   std::vector<bool> y2_col(frame.hblock, false);
   std::vector<std::vector<bool>> y1_nonzero(
@@ -100,8 +112,8 @@ void AddResidual(const FrameHeader &header,
         if (has_y2) y.at(0).at(0) = y2.at((p - 1) >> 2).at((p - 1) & 3);
         for (size_t i = 0; i < 4; ++i) {
           for (size_t j = 0; j < 4; ++j)
-            frame.Y.at(r).at(c).SetPixel(r << 4 | ((p - 1) & 12) | i,
-                                         c << 4 | ((p - 1) & 3) << 2 | j,
+            frame.Y.at(r).at(c).SetPixel(((p - 1) & 12) | i,
+                                         ((p - 1) & 3) << 2 | j,
                                          y.at(i).at(j));
         }
       }
@@ -120,8 +132,8 @@ void AddResidual(const FrameHeader &header,
               nonzero;
           for (size_t i = 0; i < 4; ++i) {
             for (size_t j = 0; j < 4; ++j)
-              frame.U.at(r).at(c).SetPixel(r << 2 | ((p - 17) & 2) | i,
-                                           c << 2 | ((p - 17) & 1 << 1) | j,
+              frame.U.at(r).at(c).SetPixel(((p - 17) & 2) | i,
+                                           ((p - 17) & 1 << 1) | j,
                                            uv.at(i).at(j));
           }
         } else {
@@ -129,8 +141,8 @@ void AddResidual(const FrameHeader &header,
               nonzero;
           for (size_t i = 0; i < 4; ++i) {
             for (size_t j = 0; j < 4; ++j)
-              frame.V.at(r).at(c).SetPixel(r << 2 | ((p - 21) & 2) | i,
-                                           c << 2 | ((p - 21) & 1 << 1) | j,
+              frame.V.at(r).at(c).SetPixel(((p - 21) & 2) | i,
+                                           ((p - 21) & 1 << 1) | j,
                                            uv.at(i).at(j));
           }
         }
@@ -138,6 +150,9 @@ void AddResidual(const FrameHeader &header,
       }
     }
   }
+#ifdef DEBUG
+  std::cerr << "[AddResidual] Done" << std::endl;
+#endif
 }
 
 }  // namespace internal
@@ -154,10 +169,6 @@ void Reconstruct(const FrameHeader &header, const FrameTag &tag,
       frame.vblock << 2, std::vector<IntraContext>(frame.hblock << 2));
   std::vector<std::vector<uint8_t>> seg_id(frame.vblock,
                                            std::vector<uint8_t>(frame.hblock));
-#ifdef DEBUG
-  std::cerr << "Header: ";
-#endif
-
   Predict(tag, refs, ref_frame_bias, interc, intrac, seg_id, ps, frame);
   AddResidual(header, interc, intrac, seg_id, ps, frame);
   FrameFilter(header, tag.key_frame, frame);
