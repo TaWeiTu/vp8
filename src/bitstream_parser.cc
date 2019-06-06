@@ -23,7 +23,7 @@ std::pair<FrameTag, FrameHeader> BitstreamParser::ReadFrameTagHeader() {
 
 FrameTag BitstreamParser::ReadFrameTag() {
   uint32_t tag = bd_->Raw(3);
-  frame_tag_.key_frame = tag & 0x1;
+  frame_tag_.key_frame = !(tag & 0x1);
   frame_tag_.version = (tag >> 1) & 0x7;
   frame_tag_.show_frame = (tag >> 4) & 0x1;
   frame_tag_.first_part_size = (tag >> 5) & 0x7FFFF;
@@ -31,7 +31,7 @@ FrameTag BitstreamParser::ReadFrameTag() {
          "[Error] ReadFrameTag: Experimental streams unsupported.");
   if (frame_tag_.key_frame) {
     uint32_t start_code = bd_->Raw(3);
-    ensure(start_code == 0x9D012A,
+    ensure(start_code == 0x2A019D,
            "[Error] ReadFrameTag: Incorrect start_code.");
     uint32_t horizontal_size_code = bd_->Raw(2);
     frame_tag_.width = horizontal_size_code & 0x3FFF;
