@@ -39,60 +39,60 @@ FrameTag BitstreamParser::ReadFrameTag() {
     uint32_t vertical_size_code = bd_->Raw(2);
     frame_tag_.height = vertical_size_code & 0x3FFF;
     frame_tag_.vertical_scale = uint16_t(vertical_size_code >> 14);
+		std::cerr << frame_tag_.width << ' ' << frame_tag_.height << std::endl;
   }
   bd_->Init();
   return frame_tag_;
 }
 
 FrameHeader BitstreamParser::ReadFrameHeader() {
-  FrameHeader frame_header{};
   if (frame_tag_.key_frame) {
     context_ = ParserContext();
-    frame_header.color_space = bd_->LitU8(1);
-    frame_header.clamping_type = bd_->LitU8(1);
-    ensure(!frame_header.color_space && !frame_header.clamping_type,
+    frame_header_.color_space = bd_->LitU8(1);
+    frame_header_.clamping_type = bd_->LitU8(1);
+    ensure(!frame_header_.color_space && !frame_header_.clamping_type,
            "[Error] ReadFrameHeader: Unsupported color_space / clamping_type");
   }
   uint32_t macroblock_cnt = (uint32_t(frame_tag_.width + 15) / 16) *
                             (uint32_t(frame_tag_.height + 15) / 16);
   context_.mb_metadata.resize(macroblock_cnt);
   fill(context_.mb_metadata.begin(), context_.mb_metadata.end(), 0);
-  frame_header.segmentation_enabled = bd_->LitU8(1);
-  if (frame_header.segmentation_enabled) {
+  frame_header_.segmentation_enabled = bd_->LitU8(1);
+  if (frame_header_.segmentation_enabled) {
     UpdateSegmentation();
   }
-  frame_header.filter_type = bd_->LitU8(1);
-  frame_header.loop_filter_level = bd_->LitU8(6);
-  frame_header.sharpness_level = bd_->LitU8(3);
+  frame_header_.filter_type = bd_->LitU8(1);
+  frame_header_.loop_filter_level = bd_->LitU8(6);
+  frame_header_.sharpness_level = bd_->LitU8(3);
   MbLfAdjust();
   // TODO: (Improvement) Deal with multiple partitions
-  frame_header.nbr_of_dct_partitions = uint8_t(1 << bd_->LitU8(2));
-  frame_header.quant_indices = ReadQuantIndices();
+  frame_header_.nbr_of_dct_partitions = uint8_t(1 << bd_->LitU8(2));
+  frame_header_.quant_indices = ReadQuantIndices();
   if (frame_tag_.key_frame) {
-    frame_header.refresh_entropy_probs = bd_->LitU8(1);
+    frame_header_.refresh_entropy_probs = bd_->LitU8(1);
   } else {
-    frame_header.refresh_golden_frame = bd_->LitU8(1);
-    frame_header.refresh_alternate_frame = bd_->LitU8(1);
-    if (!frame_header.refresh_golden_frame) {
-      frame_header.copy_buffer_to_golden = bd_->LitU8(2);
+    frame_header_.refresh_golden_frame = bd_->LitU8(1);
+    frame_header_.refresh_alternate_frame = bd_->LitU8(1);
+    if (!frame_header_.refresh_golden_frame) {
+      frame_header_.copy_buffer_to_golden = bd_->LitU8(2);
     }
-    if (!frame_header.refresh_alternate_frame) {
-      frame_header.copy_buffer_to_alternate = bd_->LitU8(2);
+    if (!frame_header_.refresh_alternate_frame) {
+      frame_header_.copy_buffer_to_alternate = bd_->LitU8(2);
     }
-    frame_header.sign_bias_golden = bd_->LitU8(1);
-    frame_header.sign_bias_alternate = bd_->LitU8(1);
-    frame_header.refresh_entropy_probs = bd_->LitU8(1);
-    frame_header.refresh_last = bd_->LitU8(1);
+    frame_header_.sign_bias_golden = bd_->LitU8(1);
+    frame_header_.sign_bias_alternate = bd_->LitU8(1);
+    frame_header_.refresh_entropy_probs = bd_->LitU8(1);
+    frame_header_.refresh_last = bd_->LitU8(1);
   }
   TokenProbUpdate();
-  frame_header.mb_no_skip_coeff = bd_->LitU8(1);
-  if (frame_header.mb_no_skip_coeff) {
-    frame_header.prob_skip_false = bd_->Prob8();
+  frame_header_.mb_no_skip_coeff = bd_->LitU8(1);
+  if (frame_header_.mb_no_skip_coeff) {
+    frame_header_.prob_skip_false = bd_->Prob8();
   }
   if (!frame_tag_.key_frame) {
-    frame_header.prob_intra = bd_->Prob8();
-    frame_header.prob_last = bd_->Prob8();
-    frame_header.prob_gf = bd_->Prob8();
+    frame_header_.prob_intra = bd_->Prob8();
+    frame_header_.prob_last = bd_->Prob8();
+    frame_header_.prob_gf = bd_->Prob8();
     bool intra_16x16_prob_update_flag = bd_->LitU8(1);
     if (intra_16x16_prob_update_flag) {
       for (unsigned i = 0; i < kNumYModeProb; i++) {
@@ -107,7 +107,7 @@ FrameHeader BitstreamParser::ReadFrameHeader() {
     }
     MVProbUpdate();
   }
-  return frame_header;
+  return frame_header_;
 }
 
 void BitstreamParser::UpdateSegmentation() {
