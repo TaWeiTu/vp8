@@ -9,7 +9,8 @@
 
 namespace vp8 {
 
-std::pair<ParserContext, std::unique_ptr<BoolDecoder>> BitstreamParser::DropStream() {
+std::pair<ParserContext, std::unique_ptr<BoolDecoder>>
+BitstreamParser::DropStream() {
   // TODO: (Improvement) Check validity in other places?
   ensure(bool(bd_), "[Error] DropStream: bd_ already dropped.");
   return make_pair(context_, std::move(bd_));
@@ -334,7 +335,21 @@ MacroBlockMode BitstreamParser::ReadIntraMB_UVMode() {
   return MacroBlockMode(bd_->Tree(context_.intra_chroma_prob, kUVModeTree));
 }
 
-IntraMBHeader BitstreamParser::ReadIntraMBHeader() {
+IntraMBHeader BitstreamParser::ReadIntraMBHeaderKF() {
+  IntraMBHeader result{};
+  result.intra_y_mode =
+      MacroBlockMode(bd_->Tree(kKeyFrameYModeProb, kKeyFrameYModeTree));
+  // The rest is up to the caller to call ReadSubBlockBMode() &
+  // ReadMB_UVMode().
+  context_.mb_metadata.at(macroblock_metadata_idx) |=
+      (result.intra_y_mode != B_PRED);
+  context_.mb_metadata.at(macroblock_metadata_idx) |=
+      (result.intra_y_mode << 6);
+  macroblock_metadata_idx++;
+  return result;
+}
+
+IntraMBHeader BitstreamParser::ReadIntraMBHeaderNonKF() {
   IntraMBHeader result{};
   result.intra_y_mode =
       MacroBlockMode(bd_->Tree(context_.intra_16x16_prob, kYModeTree));

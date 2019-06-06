@@ -231,7 +231,9 @@ class BitstreamParser {
 
   MacroBlockMode ReadIntraMB_UVMode();
 
-  IntraMBHeader ReadIntraMBHeader();
+  IntraMBHeader ReadIntraMBHeaderKF();
+
+  IntraMBHeader ReadIntraMBHeaderNonKF();
 
   ResidualData ReadResidualData(const ResidualParam& residual_ctx);
 

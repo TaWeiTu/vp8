@@ -489,6 +489,8 @@ constexpr std::array<
 
 constexpr std::array<Prob, kNumYModes - 1> kYModeProb = {112, 86, 140, 37};
 
+constexpr std::array<Prob, kNumYModes - 1> kKeyFrameYModeProb = {145, 156, 163, 128};
+
 constexpr std::array<Prob, kNumUVModes - 1> kUVModeProb = {162, 101, 204};
 
 constexpr std::array<Prob, kNumIntraBModes - 1> kBModeProb = {
