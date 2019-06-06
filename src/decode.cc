@@ -60,6 +60,9 @@ int main(int argc, const char **argv) {
   vp8::YUV yuv(argv[2]);
 
   for (size_t frame_cnt = 0; frame_cnt < num_frames; frame_cnt++) {
+    bd->Raw(4);
+    bd->Raw(4);
+    bd->Raw(4);
     // Decoding loop: reconstruct the frame and update the golden/altref frame
     // (if necessary).
     std::cerr << "[Info] Start decoding frame number " << frame_cnt << std::endl;
