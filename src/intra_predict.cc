@@ -93,14 +93,11 @@ void TMPredLuma(size_t r, size_t c, Plane<4> &mb) {
   }
 }
 
-void BPredLuma(size_t r, size_t c, bool is_key_frame,
+void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
                std::vector<std::vector<IntraContext>> &context,
                BitstreamParser &ps, Plane<4> &mb) {
+
   auto LeftSubBlockMode = [&context, r, c](size_t idx) {
-    // #ifdef DEBUG
-    // std::cerr << "LeftSubBlockMode r = " << r << " " << c << " " << idx <<
-    // std::endl;
-    // #endif
     if ((idx & 3) == 0) {
       if (c == 0) return B_DC_PRED;
       ensure(context.at(r << 2 | (idx >> 2)).at((c - 1) << 2 | 3).is_intra_mb,
@@ -111,10 +108,6 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame,
   };
 
   auto AboveSubBlockMode = [&context, r, c](size_t idx) {
-    // #ifdef DEBUG
-    // std::cerr << "AboveSubBlockMode r = " << r << " " << c << " " << idx <<
-    // std::endl;
-    // #endif
     if (idx < 4) {
       if (r == 0) return B_DC_PRED;
       ensure(context.at((r - 1) << 2 | 3).at(c << 2 | (idx & 3)).is_intra_mb,
@@ -191,19 +184,22 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame,
 #endif
       context.at(r << 2 | i).at(c << 2 | j) = IntraContext(true, mode);
       BPredSubBlock(above, left, p, mode, mb.at(r).at(c).at(i).at(j));
-// #ifdef DEBUG
-      // for (size_t x = 0; x < 4; ++x) {
-        // for (size_t y = 0; y < 4; ++y) {
-          // std::cerr << mb.at(r).at(c).at(i).at(j).at(x).at(y) << ' ';
-        // }
-        // std::cerr << std::endl;
-      // }
-      // for (size_t i = 0; i < 8; ++i) std::cerr << above.at(i) << ' ';
-      // std::cerr << std::endl;
-      // for (size_t i = 0; i < 4; ++i) std::cerr << left.at(i) << ' ';
-      // std::cerr << std::endl;
-      // exit(0);
-// #endif
+      ApplySBResidual(rv.y.at(i << 2 | j), mb.at(r).at(c).at(i).at(j));
+#ifdef DEBUG
+      static int cnt = 0;
+      if (cnt == 16) exit(0);
+      cnt += 1;
+      for (size_t x = 0; x < 4; ++x) {
+        for (size_t y = 0; y < 4; ++y) {
+          std::cerr << mb.at(r).at(c).at(i).at(j).at(x).at(y) << ' ';
+        }
+        std::cerr << std::endl;
+      }
+      for (size_t i = 0; i < 8; ++i) std::cerr << above.at(i) << ' ';
+      std::cerr << std::endl;
+      for (size_t i = 0; i < 4; ++i) std::cerr << left.at(i) << ' ';
+      std::cerr << std::endl;
+#endif
     }
   }
 }
@@ -374,12 +370,13 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
 
 using namespace internal;
 
-void IntraPredict(const FrameTag &tag, size_t r, size_t c,
+void IntraPredict(const FrameTag &tag, size_t r, size_t c, const ResidualValue &rv,
                   std::vector<std::vector<IntraContext>> &context,
                   BitstreamParser &ps, Frame &frame) {
   // #ifdef DEBUG
   // std::cerr << "[IntraPredict] Start" << std::endl;
   // #endif
+
   IntraMBHeader mh =
       tag.key_frame ? ps.ReadIntraMBHeaderKF() : ps.ReadIntraMBHeaderNonKF();
 #ifdef DEBUG
@@ -393,6 +390,7 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
           context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_VE_PRED);
       }
+      ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
       break;
 
     case H_PRED:
@@ -402,6 +400,7 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
           context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_HE_PRED);
       }
+      ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
       break;
 
     case DC_PRED:
@@ -411,6 +410,7 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
           context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_DC_PRED);
       }
+      ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
       break;
 
     case TM_PRED:
@@ -420,17 +420,19 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
           context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_TM_PRED);
       }
+      ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
       break;
 
     case B_PRED:
-      BPredLuma(r, c, tag.key_frame, context, ps, frame.Y);
+      BPredLuma(r, c, tag.key_frame, rv, context, ps, frame.Y);
       break;
 
     default:
       ensure(false, "[Error] IntraPredict: Unknown Y mode.");
       break;
   }
-  MacroBlockMode intra_uv_mode = ps.ReadIntraMB_UVMode();
+  MacroBlockMode intra_uv_mode =
+      tag.key_frame ? ps.ReadIntraMB_UVModeKF() : ps.ReadIntraMB_UVModeNonKF();
   switch (intra_uv_mode) {
     case V_PRED:
       VPredChroma(r, c, frame.U);
@@ -456,6 +458,8 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
       ensure(false, "[Error] IntraPredict: Unknown UV mode.");
       break;
   }
+    ApplyMBResidual(rv.u, frame.U.at(r).at(c));
+    ApplyMBResidual(rv.v, frame.V.at(r).at(c));
   // #ifdef DEBUG
   // std::cerr << "[IntraPredict] Done" << std::endl;
   // #endif

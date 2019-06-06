@@ -2,8 +2,8 @@
 
 namespace vp8 {
 
-ResidualValue DequantizeResidualData(ResidualData& rd, int16_t qp,
-                                     const QuantIndices& quant) {
+ResidualValue DequantizeResidualData(ResidualData &rd, int16_t qp,
+                                     const QuantIndices &quant) {
   ResidualValue rv;
   if (rd.has_y2) {
     DequantizeY2(rd.dct_coeff.at(0), qp, quant);
@@ -44,6 +44,35 @@ void InverseTransformResidual(ResidualValue &rv, bool has_y2) {
   }
   for (size_t p = 0; p < 4; ++p) IDCT(rv.u.at(p));
   for (size_t p = 0; p < 4; ++p) IDCT(rv.v.at(p));
+}
+
+template <size_t C>
+void ApplyMBResidual(
+    const std::array<std::array<std::array<int16_t, 4>, 4>, C * C> &residual,
+    MacroBlock<C> &mb) {
+  for (size_t r = 0; r < C; ++r) {
+    for (size_t c = 0; c < C; ++c) {
+      for (size_t i = 0; i < 4; ++i) {
+        for (size_t j = 0; j < 4; ++j)
+          mb.at(r).at(c).at(i).at(j) += residual.at(r * C + c).at(i).at(j);
+      }
+    }
+  }
+}
+
+template void ApplyMBResidual<4>(
+    const std::array<std::array<std::array<int16_t, 4>, 4>, 16> &residual,
+    MacroBlock<4> &mb);
+
+template void ApplyMBResidual<2>(
+    const std::array<std::array<std::array<int16_t, 4>, 4>, 4> &residual,
+    MacroBlock<2> &mb);
+
+void ApplySBResidual(const std::array<std::array<int16_t, 4>, 4> &residual,
+                     SubBlock &sub) {
+  for (size_t i = 0; i < 4; ++i) {
+    for (size_t j = 0; j < 4; ++j) sub.at(i).at(j) += residual.at(i).at(j);
+  }
 }
 
 }  // namespace vp8

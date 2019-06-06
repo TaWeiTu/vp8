@@ -18,6 +18,14 @@ ResidualValue DequantizeResidualData(ResidualData &rd, int16_t qp,
 
 void InverseTransformResidual(ResidualValue &rv, bool has_y2);
 
+template <size_t C>
+void ApplyMBResidual(
+    const std::array<std::array<std::array<int16_t, 4>, 4>, C * C> &residual,
+    MacroBlock<C> &mb);
+
+void ApplySBResidual(const std::array<std::array<int16_t, 4>, 4> &residual,
+                     SubBlock &sub);
+
 }  // namespace vp8
 
 #endif  // RESIDUAL_H_
