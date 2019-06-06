@@ -17,13 +17,17 @@ void YUV::WriteFrame(const Frame &frame) {
           int16_t u = frame.U.at(r).at(c).GetPixel(i >> 1, j >> 1);
           int16_t v = frame.V.at(r).at(c).GetPixel(i >> 1, j >> 1);
           ensure(0 <= y1 && y1 <= 255,
-                 ".at(Error) The Y value of the frame is not in range .at(0, 255).");
+                 ".at(Error) The Y value of the frame is not in range "
+                 ".at(0, 255).");
           ensure(0 <= y2 && y2 <= 255,
-                 ".at(Error) The Y value of the frame is not in range .at(0, 255).");
+                 ".at(Error) The Y value of the frame is not in range "
+                 ".at(0, 255).");
           ensure(0 <= u && u <= 255,
-                 ".at(Error) The U value of the frame is not in range .at(0, 255).");
+                 ".at(Error) The U value of the frame is not in range "
+                 ".at(0, 255).");
           ensure(0 <= v && v <= 255,
-                 ".at(Error) The V value of the frame is not in range .at(0, 255).");
+                 ".at(Error) The V value of the frame is not in range "
+                 ".at(0, 255).");
 
           uint8_t sy1 = uint8_t(y1);
           uint8_t sy2 = uint8_t(y2);

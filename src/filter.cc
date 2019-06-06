@@ -77,8 +77,9 @@ void LoopFilter::MacroBlockFilter(int16_t hev_threshold, int16_t interior_limit,
     a = (9 * w + 63) >> 7;
     q2_ = plus128(Q2 - a);
     p2_ = plus128(P2 + a);
-  } else
+  } else {
     Adjust(true);
+  }
 }
 
 void LoopFilter::Horizontal(const SubBlock &lsb, const SubBlock &rsb,

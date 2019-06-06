@@ -19,7 +19,7 @@ class BoolDecoder {
   uint8_t Bool(uint8_t prob);
   // Decode an unsigned n-bit literal.
   uint16_t Lit(size_t n);
-	uint8_t LitU8(size_t n) { return uint8_t(Lit(n)); }
+  uint8_t LitU8(size_t n) { return uint8_t(Lit(n)); }
   // Decode a signed n-bit literal.
   int16_t SignedLit(size_t n);
   // Decode a 8-bit probability (being an alias of Lit(8)).

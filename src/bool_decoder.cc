@@ -1,5 +1,7 @@
 #include "bool_decoder.h"
 
+#include <utility>
+
 namespace vp8 {
 
 BoolDecoder::BoolDecoder(const std::string &filename)

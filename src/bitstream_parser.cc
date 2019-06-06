@@ -1,6 +1,9 @@
-#include <cassert>
-
 #include "bitstream_parser.h"
+
+#include <algorithm>
+#include <cassert>
+#include <utility>
+
 #include "frame.h"
 #include "utils.h"
 

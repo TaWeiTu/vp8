@@ -1,5 +1,7 @@
 #include "inter_predict.h"
 
+#include <utility>
+
 namespace vp8 {
 namespace internal {
 

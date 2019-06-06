@@ -4,6 +4,8 @@
 #include <array>
 #include <cstdint>
 #include <memory>
+#include <utility>
+#include <vector>
 
 #include "bitstream_const.h"
 #include "bool_decoder.h"

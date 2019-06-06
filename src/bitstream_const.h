@@ -162,11 +162,8 @@ const std::array<std::array<Prob, kMVPCount>, kNumMVDimen> kMVUpdateProbs = {
 const std::array<std::array<Prob, kMVPCount>, kNumMVDimen> kDefaultMVContext = {
     {{162, 128, 225, 146, 172, 147, 214, 39, 156, 128, 129, 132, 75, 145, 178,
       206, 239, 254, 254},
-
      {164, 128, 204, 170, 119, 235, 140, 230, 228, 128, 130, 130, 74, 148, 180,
-      203, 236, 254, 254
-
-     }}};
+      203, 236, 254, 254}}};
 
 constexpr std::array<Prob, kNumMVPartitions - 1> kMVPartitionProbs = {110, 111,
                                                                       150};
@@ -499,7 +496,6 @@ constexpr std::array<Prob, kNumIntraBModes - 1> kBModeProb = {
 
 constexpr std::array<unsigned, 16> kCoeffBands = {0, 1, 2, 3, 6, 4, 5, 6,
                                                   6, 6, 6, 6, 6, 6, 6, 7};
-
 }  // namespace vp8
 
 #endif  // BITSTREAM_CONST_H_

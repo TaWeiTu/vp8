@@ -43,6 +43,6 @@ class IteratorArray {
   size_t size() const { return std::distance(it_begin_, it_end_); }
 };
 
-}  //namespace vp8
+}  // namespace vp8
 
 #endif  // UTILS_H_
