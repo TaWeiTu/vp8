@@ -117,6 +117,7 @@ struct ResidualData {
   std::array<std::array<int16_t, 16>, 25> dct_coeff;
   uint8_t segment_id;
   int8_t loop_filter_level;
+  bool has_y2;
 };
 
 struct ParserContext {
