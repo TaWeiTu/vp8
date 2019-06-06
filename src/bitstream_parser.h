@@ -205,9 +205,10 @@ class BitstreamParser {
   int16_t ReadMVComponent(bool kind);
 
  public:
-  BitstreamParser() = default;
+  BitstreamParser(std::unique_ptr<BoolDecoder> bd, ParserContext ctx)
+      : bd_(std::move(bd)), context_(ctx) {}
 
-  std::unique_ptr<BoolDecoder> DropStream();
+  std::pair<ParserContext, std::unique_ptr<BoolDecoder>> DropStream();
 
   std::pair<FrameTag, FrameHeader> ReadFrameTagHeader();
 

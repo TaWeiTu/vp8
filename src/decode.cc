@@ -1,4 +1,5 @@
 #include <array>
+#include <cassert>
 
 #include "bitstream_const.h"
 #include "reconstruct.h"
@@ -32,18 +33,43 @@ void RefreshRefFrames(const vp8::FrameHeader &header,
 }
 
 int main(int argc, const char **argv) {
+  assert(argc > 1);
+
+  auto fs = std::make_unique<std::ifstream>(argv[1], std::ios::binary);
+  auto bd = std::make_unique<vp8::BoolDecoder>(std::move(fs));
+
+  const uint32_t dkif = uint32_t('D') | (uint32_t('K') << 8) |
+                        (uint32_t('I') << 16) | (uint32_t('M') << 24);
+  const uint32_t vp80 = uint32_t('V') | (uint32_t('P') << 8) |
+                        (uint32_t('8') << 16) | (uint32_t('0') << 24);
+  assert(bd->Raw(4) == dkif);
+  assert(bd->Raw(2) == 0);   // Version
+  assert(bd->Raw(2) == 32);  // Header length
+  assert(bd->Raw(4) == vp80);
+  auto width = bd->Raw(2), height = bd->Raw(2), frame_rate = bd->Raw(4),
+       time_scale = bd->Raw(4), num_frames = bd->Raw(4);
+  bd->Raw(4);  // Reserved bytes
+
   // Avoid unused function.
-  std::array<vp8::Frame, 4> ref_frames;
-  std::array<bool, 4> ref_frame_bias;
+  std::array<vp8::Frame, 4> ref_frames{};
+  std::array<bool, 4> ref_frame_bias{};
 
-  // Decoding loop: reconstruct the frame and update the golden/altref frame (if
-  // necessary).
-  vp8::FrameHeader header;
-  vp8::FrameTag tag;
-  vp8::BitstreamParser ps;
-  vp8::Frame frame;
+  vp8::ParserContext ctx{};
 
-  InitSignBias(header, ref_frame_bias);
-  vp8::Reconstruct(header, tag, ref_frames, ref_frame_bias, ps, frame);
-  RefreshRefFrames(header, ref_frames, frame);
+  for (size_t frame_cnt = 0; frame_cnt < num_frames; frame_cnt++) {
+    // Decoding loop: reconstruct the frame and update the golden/altref frame
+    // (if necessary).
+    vp8::BitstreamParser ps(std::move(bd), ctx);
+    vp8::FrameHeader header;
+    vp8::FrameTag tag;
+    std::tie(tag, header) = ps.ReadFrameTagHeader();
+
+    vp8::Frame frame;
+
+    InitSignBias(header, ref_frame_bias);
+    vp8::Reconstruct(header, tag, ref_frames, ref_frame_bias, ps, frame);
+    RefreshRefFrames(header, ref_frames, frame);
+
+    std::tie(ctx, bd) = ps.DropStream();
+  }
 }

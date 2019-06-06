@@ -12,8 +12,7 @@ namespace vp8 {
 class BoolDecoder {
  public:
   BoolDecoder() = default;
-  explicit BoolDecoder(const std::string &);
-  explicit BoolDecoder(std::unique_ptr<std::ifstream>);
+  explicit BoolDecoder(std::unique_ptr<std::istream>);
 
   // Decode a 1-bit boolean value.
   uint8_t Bool(uint8_t prob);
@@ -44,7 +43,7 @@ class BoolDecoder {
   uint32_t value_;
   uint32_t range_;
   uint8_t bit_count_;
-  std::unique_ptr<std::ifstream> fs_;
+  std::unique_ptr<std::istream> fs_;
 
   uint8_t ReadByte();
 };

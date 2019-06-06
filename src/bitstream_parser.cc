@@ -9,10 +9,10 @@
 
 namespace vp8 {
 
-std::unique_ptr<BoolDecoder> BitstreamParser::DropStream() {
+std::pair<ParserContext, std::unique_ptr<BoolDecoder>> BitstreamParser::DropStream() {
   // TODO: (Improvement) Check validity in other places?
   ensure(bool(bd_), "[Error] DropStream: bd_ already dropped.");
-  return std::move(bd_);
+  return make_pair(context_, std::move(bd_));
 }
 
 std::pair<FrameTag, FrameHeader> BitstreamParser::ReadFrameTagHeader() {
