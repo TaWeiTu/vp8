@@ -206,7 +206,12 @@ class BitstreamParser {
 
  public:
   BitstreamParser(std::unique_ptr<BoolDecoder> bd, ParserContext ctx)
-      : bd_(std::move(bd)), context_(ctx) {}
+      : bd_(std::move(bd)),
+        frame_tag_(),
+        frame_header_(),
+        context_(ctx),
+        macroblock_metadata_idx(),
+        residual_macroblock_idx() {}
 
   std::pair<ParserContext, std::unique_ptr<BoolDecoder>> DropStream();
 
