@@ -127,26 +127,26 @@ void AddResidual(const FrameHeader &header,
             nonzero |= uv.at(i).at(j) != 0;
           }
         }
+        IDCT(uv);
         if (p <= 20) {
           u_nonzero.at(r << 1 | ((p - 17) >> 1)).at(c << 1 | ((p - 17) & 1)) =
               nonzero;
           for (size_t i = 0; i < 4; ++i) {
             for (size_t j = 0; j < 4; ++j)
-              frame.U.at(r).at(c).SetPixel(((p - 17) & 2) | i,
-                                           ((p - 17) & 1 << 1) | j,
+              frame.U.at(r).at(c).SetPixel(((p - 17) & 2 << 1) | i,
+                                           ((p - 17) & 1 << 2) | j,
                                            uv.at(i).at(j));
           }
         } else {
           v_nonzero.at(r << 1 | ((p - 21) >> 1)).at(c << 1 | ((p - 21) & 1)) =
               nonzero;
-          for (size_t i = 0; i < 4; ++i) {
-            for (size_t j = 0; j < 4; ++j)
-              frame.V.at(r).at(c).SetPixel(((p - 21) & 2) | i,
-                                           ((p - 21) & 1 << 1) | j,
+          for (size_t i = 0; i < 2; ++i) {
+            for (size_t j = 0; j < 2; ++j)
+              frame.V.at(r).at(c).SetPixel(((p - 21) & 2 << 1) | i,
+                                           ((p - 21) & 1 << 2) | j,
                                            uv.at(i).at(j));
           }
         }
-        IDCT(uv);
       }
     }
   }
