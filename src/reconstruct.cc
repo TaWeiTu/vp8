@@ -48,7 +48,7 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
              const std::array<bool, 4> &ref_frame_bias,
              std::vector<std::vector<InterContext>> &interc,
              std::vector<std::vector<IntraContext>> &intrac,
-             std::vector<std::vector<uint8_t>> &seg_id, BitstreamParser &ps,
+             BitstreamParser &ps,
              Frame &frame) {
   std::vector<bool> y2_row(frame.vblock, false);
   std::vector<bool> y2_col(frame.hblock, false);
@@ -98,7 +98,7 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
       InverseTransformResidual(rv, rd.has_y2);
       
       if (pre.is_inter_mb)
-        InterPredict(tag, r, c, refs, ref_frame_bias, pre.ref_frame, interc, ps,
+        InterPredict(tag, r, c, rv, refs, ref_frame_bias, pre.ref_frame, interc, ps,
                      frame);
       else
         IntraPredict(tag, r, c, rv, intrac, ps, frame);
@@ -123,7 +123,7 @@ void Reconstruct(const FrameHeader &header, const FrameTag &tag,
       frame.vblock << 2, std::vector<IntraContext>(frame.hblock << 2));
   std::vector<std::vector<uint8_t>> seg_id(frame.vblock,
                                            std::vector<uint8_t>(frame.hblock));
-  Predict(header, tag, refs, ref_frame_bias, interc, intrac, seg_id, ps, frame);
+  Predict(header, tag, refs, ref_frame_bias, interc, intrac, ps, frame);
 #ifdef DEBUG
   for (size_t i = 0; i < 16; ++i) {
     for (size_t j = 0; j < 16; ++j)

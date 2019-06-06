@@ -303,9 +303,11 @@ void Sixtap(const Plane<C> &refer, size_t r, size_t c, uint8_t mr, uint8_t mc,
 }
 
 template <size_t C>
-void InterpBlock(const Plane<C> &refer,
-                 const std::array<std::array<int16_t, 6>, 8> &filter, size_t r,
-                 size_t c, MacroBlock<C> &mb) {
+void InterpBlock(
+    const Plane<C> &refer,
+    const std::array<std::array<std::array<int16_t, 4>, 4>, C * C> &residual,
+    const std::array<std::array<int16_t, 6>, 8> &filter, size_t r, size_t c,
+    MacroBlock<C> &mb) {
   size_t offset = C / 2 + 2;
   for (size_t i = 0; i < C; ++i) {
     for (size_t j = 0; j < C; ++j) {
@@ -325,10 +327,10 @@ void InterpBlock(const Plane<C> &refer,
              "[Error] InterpBlock: the motion vectors is out of bound.");
       size_t tr = size_t(int32_t(r << offset | (i << 2)) + (mv.dr >> 3));
       size_t tc = size_t(int32_t(c << offset | (j << 2)) + (mv.dc >> 3));
-      if (mr | mc) Sixtap(refer, tr, tc, mr, mc, filter, mb.at(r).at(c));
+      if (mr | mc) Sixtap(refer, tr, tc, mr, mc, filter, mb.at(i).at(j));
+      ApplySBResidual(residual.at(i * C + j), mb.at(i).at(j));
     }
-  }
-}
+  } }
 
 template std::array<std::array<int16_t, 4>, 9> HorizontalSixtap<4>(
     const Plane<4> &, size_t, size_t, const std::array<int16_t, 6> &);
@@ -342,19 +344,23 @@ template void Sixtap<2>(const Plane<2> &, size_t, size_t, uint8_t, uint8_t,
                         const std::array<std::array<int16_t, 6>, 8> &,
                         SubBlock &);
 
-template void InterpBlock<4>(const Plane<4> &,
-                             const std::array<std::array<int16_t, 6>, 8> &,
-                             size_t, size_t, MacroBlock<4> &);
-template void InterpBlock<2>(const Plane<2> &,
-                             const std::array<std::array<int16_t, 6>, 8> &,
-                             size_t, size_t, MacroBlock<2> &);
+template void InterpBlock<4>(
+    const Plane<4> &refer,
+    const std::array<std::array<std::array<int16_t, 4>, 4>, 16> &residual,
+    const std::array<std::array<int16_t, 6>, 8> &filter, size_t r, size_t c,
+    MacroBlock<4> &mb);
+template void InterpBlock<2>(
+    const Plane<2> &refer,
+    const std::array<std::array<std::array<int16_t, 4>, 4>, 4> &residual,
+    const std::array<std::array<int16_t, 6>, 8> &filter, size_t r, size_t c,
+    MacroBlock<2> &mb);
 
 }  // namespace internal
 
 using namespace internal;
 
 void InterPredict(const FrameTag &tag, size_t r, size_t c,
-                  const std::array<Frame, 4> &refs,
+                  const ResidualValue &rv, const std::array<Frame, 4> &refs,
                   const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
                   std::vector<std::vector<InterContext>> &context,
                   BitstreamParser &ps, Frame &frame) {
@@ -363,9 +369,12 @@ void InterPredict(const FrameTag &tag, size_t r, size_t c,
   std::array<std::array<int16_t, 6>, 8> subpixel_filters =
       tag.version == 0 ? kBicubicFilter : kBilinearFilter;
 
-  InterpBlock(refs[ref_frame].Y, subpixel_filters, r, c, frame.Y.at(r).at(c));
-  InterpBlock(refs[ref_frame].U, subpixel_filters, r, c, frame.U.at(r).at(c));
-  InterpBlock(refs[ref_frame].V, subpixel_filters, r, c, frame.V.at(r).at(c));
+  InterpBlock(refs[ref_frame].Y, rv.y, subpixel_filters, r, c,
+              frame.Y.at(r).at(c));
+  InterpBlock(refs[ref_frame].U, rv.u, subpixel_filters, r, c,
+              frame.U.at(r).at(c));
+  InterpBlock(refs[ref_frame].V, rv.v, subpixel_filters, r, c,
+              frame.V.at(r).at(c));
 }
 
 }  // namespace vp8
