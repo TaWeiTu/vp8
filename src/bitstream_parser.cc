@@ -174,7 +174,7 @@ void BitstreamParser::MbLfAdjust() {
 
 QuantIndices BitstreamParser::ReadQuantIndices() {
   QuantIndices result{};
-  result.y_ac_qi = bd_->Prob7();
+  result.y_ac_qi = bd_->LitU8(7);
   bool y_dc_delta_present = bd_->LitU8(1);
   if (y_dc_delta_present) {
     result.y_dc_delta_q = bd_->LitU8(4);
