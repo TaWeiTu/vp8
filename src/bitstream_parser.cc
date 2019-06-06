@@ -331,7 +331,7 @@ SubBlockMode BitstreamParser::ReadSubBlockBModeNonKF() {
 }
 
 MacroBlockMode BitstreamParser::ReadIntraMB_UVMode() {
-  return MacroBlockMode(bd_->Tree(context_.intra_chroma_prob, kUVModeProb));
+  return MacroBlockMode(bd_->Tree(context_.intra_chroma_prob, kUVModeTree));
 }
 
 IntraMBHeader BitstreamParser::ReadIntraMBHeader() {
