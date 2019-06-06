@@ -16,6 +16,7 @@ void BoolDecoder::Init() {
 uint8_t BoolDecoder::ReadByte() {
   uint8_t res;
   fs_->read(reinterpret_cast<char*>(&res), sizeof(res));
+  ensure(!fs_->fail(), "[Error] BoolDecoder::ReadByte(): Unable to read byte.");
   return res;
 }
 

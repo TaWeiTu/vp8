@@ -62,6 +62,7 @@ int main(int argc, const char **argv) {
   for (size_t frame_cnt = 0; frame_cnt < num_frames; frame_cnt++) {
     // Decoding loop: reconstruct the frame and update the golden/altref frame
     // (if necessary).
+    std::cerr << "[Info] Start decoding frame number " << frame_cnt << std::endl;
     vp8::BitstreamParser ps(std::move(bd), ctx);
     vp8::FrameHeader header;
     vp8::FrameTag tag;
@@ -76,6 +77,7 @@ int main(int argc, const char **argv) {
     yuv.WriteFrame(frame);
 
     std::tie(ctx, bd) = ps.DropStream();
+    std::cerr << "[Info] Done decoding frame number " << frame_cnt << std::endl;
   }
   return 0;
 }

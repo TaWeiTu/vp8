@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 
+#include "utils.h"
+
 namespace vp8 {
 
 class BoolDecoder {
