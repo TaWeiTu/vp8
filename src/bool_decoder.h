@@ -33,7 +33,7 @@ class BoolDecoder {
   uint16_t Tree(const P &prob, const T &tree) {
     int16_t res = 0;
     while (true) {
-      res = tree.at(size_t(res + Bool(prob.at(size_t(res)))));
+      res = tree.at(size_t(res + Bool(prob.at(size_t(res >> 1)))));
       if (res <= 0) break;
     }
     return uint16_t(-res);
