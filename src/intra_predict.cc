@@ -185,21 +185,21 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
       context.at(r << 2 | i).at(c << 2 | j) = IntraContext(true, mode);
       BPredSubBlock(above, left, p, mode, mb.at(r).at(c).at(i).at(j));
       ApplySBResidual(rv.y.at(i << 2 | j), mb.at(r).at(c).at(i).at(j));
-#ifdef DEBUG
-      static int cnt = 0;
-      if (cnt == 16) exit(0);
-      cnt += 1;
-      for (size_t x = 0; x < 4; ++x) {
-        for (size_t y = 0; y < 4; ++y) {
-          std::cerr << mb.at(r).at(c).at(i).at(j).at(x).at(y) << ' ';
-        }
-        std::cerr << std::endl;
-      }
-      for (size_t i = 0; i < 8; ++i) std::cerr << above.at(i) << ' ';
-      std::cerr << std::endl;
-      for (size_t i = 0; i < 4; ++i) std::cerr << left.at(i) << ' ';
-      std::cerr << std::endl;
-#endif
+// #ifdef DEBUG
+      // static int cnt = 0;
+      // if (cnt == 16) exit(0);
+      // cnt += 1;
+      // for (size_t x = 0; x < 4; ++x) {
+        // for (size_t y = 0; y < 4; ++y) {
+          // std::cerr << mb.at(r).at(c).at(i).at(j).at(x).at(y) << ' ';
+        // }
+        // std::cerr << std::endl;
+      // }
+      // for (size_t i = 0; i < 8; ++i) std::cerr << above.at(i) << ' ';
+      // std::cerr << std::endl;
+      // for (size_t i = 0; i < 4; ++i) std::cerr << left.at(i) << ' ';
+      // std::cerr << std::endl;
+// #endif
     }
   }
 }
@@ -444,11 +444,8 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c, const ResidualValue &
       ensure(false, "[Error] IntraPredict: Unknown UV mode.");
       break;
   }
-    ApplyMBResidual(rv.u, frame.U.at(r).at(c));
-    ApplyMBResidual(rv.v, frame.V.at(r).at(c));
-  // #ifdef DEBUG
-  // std::cerr << "[IntraPredict] Done" << std::endl;
-  // #endif
+  ApplyMBResidual(rv.u, frame.U.at(r).at(c));
+  ApplyMBResidual(rv.v, frame.V.at(r).at(c));
 }
 
 }  // namespace vp8

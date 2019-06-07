@@ -49,7 +49,8 @@ class SpanReader {
   const T *begin_, *end_, *cursor_;
 
  public:
-  SpanReader(const T *begin, const T *end) : begin_(begin), end_(end), cursor_(begin) {}
+  SpanReader(const T *begin, const T *end)
+      : begin_(begin), end_(end), cursor_(begin) {}
 
   SpanReader() : SpanReader(nullptr, nullptr) {}
 

@@ -65,6 +65,14 @@ void WHT(std::array<std::array<int16_t, 4>, 4> &subblock) {
 }
 
 void IDCT(std::array<std::array<int16_t, 4>, 4> &subblock) {
+// #ifdef DEBUG
+  // std::cerr << "before:" << std::endl;
+  // for (size_t i = 0; i < 4; ++i) {
+    // for (size_t j = 0; j < 4; ++j)
+      // std::cerr << subblock.at(i).at(j) << ' ';
+    // std::cerr << std::endl;
+  // }
+// #endif
   static const int cospi8_sqrt2_minus1 = 20091;
   static const int sinpi8_sqrt2 = 35468;
   for (size_t i = 0; i < 4; i++) {
@@ -104,6 +112,14 @@ void IDCT(std::array<std::array<int16_t, 4>, 4> &subblock) {
     subblock.at(i).at(1) = int16_t((b + c + 4) >> 3);
     subblock.at(i).at(2) = int16_t((b - c + 4) >> 3);
   }
+// #ifdef DEBUG
+  // std::cerr << "after:" << std::endl;
+  // for (size_t i = 0; i < 4; ++i) {
+    // for (size_t j = 0; j < 4; ++j)
+      // std::cerr << subblock.at(i).at(j) << ' ';
+    // std::cerr << std::endl;
+  // }
+// #endif
 }
 
 void IWHT(std::array<std::array<int16_t, 4>, 4> &subblock) {
