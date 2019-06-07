@@ -10,6 +10,7 @@
 #include "bitstream_const.h"
 #include "bool_decoder.h"
 #include "frame.h"
+#include "utils.h"
 
 namespace vp8 {
 
@@ -18,7 +19,7 @@ struct FrameTag {
   bool key_frame;
   uint8_t version;
   bool show_frame;
-  uint32_t first_part_size;
+  // first_part_size
   // }
   // if (key_frame) {
   // start_code
@@ -53,7 +54,7 @@ struct FrameHeader {
   uint8_t loop_filter_level;
   uint8_t sharpness_level;
   // mb_lf_adjustments
-  uint8_t nbr_of_dct_partitions;
+  // nbr_of_dct_partitions
   QuantIndices quant_indices;
   // if (key_frame) {
   bool refresh_entropy_probs;
@@ -180,11 +181,16 @@ struct ResidualParam {
 
 class BitstreamParser {
  private:
-  std::unique_ptr<BoolDecoder> bd_;
+  SpanReader<uint8_t> buffer_;
+  BoolDecoder bd_;
   FrameTag frame_tag_;
   FrameHeader frame_header_;
-  ParserContext context_;
-  size_t macroblock_metadata_idx, residual_macroblock_idx;
+  std::reference_wrapper<ParserContext> context_;
+  size_t macroblock_metadata_idx_, residual_macroblock_idx_;
+  uint8_t nbr_of_dct_partitions_, cur_partition_;
+  uint16_t mb_cur_row_, mb_cur_col_, mb_num_rows_, mb_num_cols_;
+  uint32_t first_part_size_;
+  std::array<BoolDecoder, 8> residual_bd_;
 
   FrameTag ReadFrameTag();
 
@@ -206,15 +212,21 @@ class BitstreamParser {
   int16_t ReadMVComponent(bool kind);
 
  public:
-  BitstreamParser(std::unique_ptr<BoolDecoder> bd, ParserContext ctx)
-      : bd_(std::move(bd)),
+  BitstreamParser(SpanReader<uint8_t> buffer, ParserContext& ctx)
+      : buffer_(buffer),
+        bd_(),
         frame_tag_(),
         frame_header_(),
-        context_(ctx),
-        macroblock_metadata_idx(),
-        residual_macroblock_idx() {}
-
-  std::pair<ParserContext, std::unique_ptr<BoolDecoder>> DropStream();
+        context_(std::ref(ctx)),
+        macroblock_metadata_idx_(),
+        residual_macroblock_idx_(),
+        nbr_of_dct_partitions_(),
+        cur_partition_(),
+        mb_cur_row_(),
+        mb_cur_col_(),
+        mb_num_rows_(),
+        mb_num_cols_(),
+        first_part_size_() {}
 
   std::pair<FrameTag, FrameHeader> ReadFrameTagHeader();
 
