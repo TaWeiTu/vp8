@@ -430,7 +430,7 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
       ensure(false, "[Error] IntraPredict: Unknown Y mode.");
       break;
   }
-  MacroBlockMode intra_uv_mode = ps.ReadIntraMB_UVMode();
+  MacroBlockMode intra_uv_mode = ps.ReadIntraMB_UVModeKF();
   switch (intra_uv_mode) {
     case V_PRED:
       VPredChroma(r, c, frame.U);
