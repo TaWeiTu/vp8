@@ -207,9 +207,6 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
 void BPredSubBlock(const std::array<int16_t, 8> &above,
                    const std::array<int16_t, 4> &left, int16_t p,
                    SubBlockMode mode, SubBlock &sub) {
-  // #ifdef DEBUG
-  // std::cerr << "[BPredSubBlock] Start" << std::endl;
-  // #endif
   const std::array<int16_t, 9> edge = {
       left.at(3),  left.at(2),  left.at(1),  left.at(0),  p,
       above.at(3), above.at(2), above.at(1), above.at(0),
@@ -242,9 +239,6 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
     case B_DC_PRED: {
       int16_t v = 4;
       for (size_t i = 0; i < 4; ++i) v += above.at(i) + left.at(i);
-#ifdef DEBUG
-      std::cerr << "v = " << v << std::endl;
-#endif
       v >>= 3;
       sub.FillWith(v);
       break;
@@ -361,9 +355,6 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
       ensure(false, "[Error] BPredSubBlock: Unknown subblock mode.");
       break;
   }
-  // #ifdef DEBUG
-  // std::cerr << "[BPredSubBlock] Done" << std::endl;
-  // #endif
 }
 
 }  // namespace internal
@@ -373,10 +364,6 @@ using namespace internal;
 void IntraPredict(const FrameTag &tag, size_t r, size_t c, const ResidualValue &rv,
                   std::vector<std::vector<IntraContext>> &context,
                   BitstreamParser &ps, Frame &frame) {
-  // #ifdef DEBUG
-  // std::cerr << "[IntraPredict] Start" << std::endl;
-  // #endif
-
   IntraMBHeader mh =
       tag.key_frame ? ps.ReadIntraMBHeaderKF() : ps.ReadIntraMBHeaderNonKF();
 #ifdef DEBUG

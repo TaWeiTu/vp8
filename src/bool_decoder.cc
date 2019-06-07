@@ -4,20 +4,10 @@
 
 namespace vp8 {
 
-BoolDecoder::BoolDecoder(std::unique_ptr<std::istream> fs)
-    : fs_(std::move(fs)) {}
-
 void BoolDecoder::Init() {
-  value_ = uint32_t(ReadByte()) << 8 | ReadByte();
+  value_ = uint32_t(sp_.ReadByte()) << 8 | sp_.ReadByte();
   range_ = 255;
   bit_count_ = 0;
-}
-
-uint8_t BoolDecoder::ReadByte() {
-  uint8_t res;
-  fs_->read(reinterpret_cast<char*>(&res), sizeof(res));
-  ensure(!fs_->fail(), "[Error] BoolDecoder::ReadByte(): Unable to read byte.");
-  return res;
 }
 
 uint8_t BoolDecoder::Bool(uint8_t prob) {
@@ -37,7 +27,7 @@ uint8_t BoolDecoder::Bool(uint8_t prob) {
     range_ <<= 1;
     if (++bit_count_ == 8) {
       bit_count_ = 0;
-      value_ |= ReadByte();
+      value_ |= sp_.ReadByte();
     }
   }
   return res;
@@ -70,7 +60,7 @@ uint8_t BoolDecoder::Prob7() {
 uint32_t BoolDecoder::Raw(size_t n) {
   uint32_t res = 0;
   for (size_t i = 0; i < n; ++i) {
-    uint8_t byte = ReadByte();
+    uint8_t byte = sp_.ReadByte();
     res |= uint32_t(byte) << (i << 3);
   }
   return res;

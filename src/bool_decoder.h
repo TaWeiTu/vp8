@@ -15,7 +15,8 @@ namespace vp8 {
 class BoolDecoder {
  public:
   BoolDecoder() = default;
-  explicit BoolDecoder(std::unique_ptr<std::istream>);
+  explicit BoolDecoder(SpanReader<uint8_t> sp) : sp_(sp) {}
+  explicit BoolDecoder(SpanReader<uint8_t> &&sp) : sp_(std::move(sp)) {}
 
   // Decode a 1-bit boolean value.
   uint8_t Bool(uint8_t prob);
@@ -31,10 +32,6 @@ class BoolDecoder {
   // Decode tokens from the tree
   template <class P, class T>
   uint16_t Tree(const P &prob, const T &tree) {
-// #ifdef DEBUG
-      // std::cerr << "prob.size() = " << prob.size() << std::endl;
-      // std::cerr << "tree.size() = " << tree.size() << std::endl;
-// #endif
     int16_t res = 0;
     while (true) {
       res = tree.at(size_t(res + Bool(prob.at(size_t(res >> 1)))));
@@ -43,6 +40,7 @@ class BoolDecoder {
     return uint16_t(-res);
   }
 
+  // Prepare the Boolean decoder to decode probability encoded data.
   void Init();
 
   // Read an unsigned n-bit integer (uncoded) presented in little-endian format.
@@ -52,9 +50,10 @@ class BoolDecoder {
   uint32_t value_;
   uint32_t range_;
   uint8_t bit_count_;
-  std::unique_ptr<std::istream> fs_;
+  SpanReader<uint8_t> sp_;
+  // std::unique_ptr<std::istream> fs_;
 
-  uint8_t ReadByte();
+  // uint8_t ReadByte();
 };
 
 }  // namespace vp8
