@@ -15,8 +15,7 @@ namespace vp8 {
 class BoolDecoder {
  public:
   BoolDecoder() = default;
-  explicit BoolDecoder(SpanReader<uint8_t> sp) : sp_(sp) {}
-  explicit BoolDecoder(SpanReader<uint8_t> &&sp) : sp_(std::move(sp)) {}
+  explicit BoolDecoder(SpanReader<uint8_t> sp) : sp_(sp) { Init(); }
 
   // Decode a 1-bit boolean value.
   uint8_t Bool(uint8_t prob);
@@ -43,17 +42,11 @@ class BoolDecoder {
   // Prepare the Boolean decoder to decode probability encoded data.
   void Init();
 
-  // Read an unsigned n-bit integer (uncoded) presented in little-endian format.
-  uint32_t Raw(size_t n);
-
  private:
   uint32_t value_;
   uint32_t range_;
   uint8_t bit_count_;
   SpanReader<uint8_t> sp_;
-  // std::unique_ptr<std::istream> fs_;
-
-  // uint8_t ReadByte();
 };
 
 }  // namespace vp8

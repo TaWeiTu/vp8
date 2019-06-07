@@ -57,13 +57,4 @@ uint8_t BoolDecoder::Prob7() {
   return res ? uint8_t(res << 1) : 1;
 }
 
-uint32_t BoolDecoder::Raw(size_t n) {
-  uint32_t res = 0;
-  for (size_t i = 0; i < n; ++i) {
-    uint8_t byte = sp_.ReadByte();
-    res |= uint32_t(byte) << (i << 3);
-  }
-  return res;
-}
-
 }  // namespace vp8
