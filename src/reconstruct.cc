@@ -11,8 +11,7 @@ void UpdateNonzero(const ResidualValue &rv, bool has_y2, size_t r, size_t c,
   if (has_y2) {
     bool nonzero = false;
     for (size_t i = 0; i < 4; ++i) {
-      for (size_t j = 0; j < 4; ++j)
-        nonzero |= rv.y2.at(i).at(j) != 0;
+      for (size_t j = 0; j < 4; ++j) nonzero |= rv.y2.at(i).at(j) != 0;
     }
     y2_row.at(r) = nonzero;
     y2_col.at(c) = nonzero;
@@ -20,24 +19,21 @@ void UpdateNonzero(const ResidualValue &rv, bool has_y2, size_t r, size_t c,
   for (size_t p = 0; p < 16; ++p) {
     bool nonzero = false;
     for (size_t i = 0; i < 4; ++i) {
-      for (size_t j = 0; j < 4; ++j)
-        nonzero |= rv.y.at(p).at(i).at(j) != 0;
+      for (size_t j = 0; j < 4; ++j) nonzero |= rv.y.at(p).at(i).at(j) != 0;
     }
     y1_nonzero.at(r << 2 | (p >> 2)).at(c << 2 | (p & 3)) = nonzero;
   }
   for (size_t p = 0; p < 4; ++p) {
     bool nonzero = false;
     for (size_t i = 0; i < 4; ++i) {
-      for (size_t j = 0; j < 4; ++j)
-        nonzero |= rv.u.at(p).at(i).at(j) != 0;
+      for (size_t j = 0; j < 4; ++j) nonzero |= rv.u.at(p).at(i).at(j) != 0;
     }
     u_nonzero.at(r << 1 | (p >> 1)).at(c << 1 | (p & 1)) = nonzero;
   }
   for (size_t p = 0; p < 4; ++p) {
     bool nonzero = false;
     for (size_t i = 0; i < 4; ++i) {
-      for (size_t j = 0; j < 4; ++j)
-        nonzero |= rv.v.at(p).at(i).at(j) != 0;
+      for (size_t j = 0; j < 4; ++j) nonzero |= rv.v.at(p).at(i).at(j) != 0;
     }
     v_nonzero.at(r << 1 | (p >> 1)).at(c << 1 | (p & 1)) = nonzero;
   }
@@ -48,8 +44,7 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
              const std::array<bool, 4> &ref_frame_bias,
              std::vector<std::vector<InterContext>> &interc,
              std::vector<std::vector<IntraContext>> &intrac,
-             BitstreamParser &ps,
-             Frame &frame) {
+             BitstreamParser &ps, Frame &frame) {
   std::vector<bool> y2_row(frame.vblock, false);
   std::vector<bool> y2_col(frame.hblock, false);
   std::vector<std::vector<bool>> y1_nonzero(
@@ -89,19 +84,34 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
           v_above.at(i) = v_nonzero.at(r << 1 | i).at((c - 1) << 1);
         }
       }
-      ResidualData rd = ps.ReadResidualData(ResidualParam(
-          y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
 
-      ResidualValue rv = DequantizeResidualData(rd, qp, header.quant_indices);
-      UpdateNonzero(rv, rd.has_y2, r, c, y2_row, y2_col, y1_nonzero, u_nonzero,
-                    v_nonzero);
-      InverseTransformResidual(rv, rd.has_y2);
-      
-      if (pre.is_inter_mb)
-        InterPredict(tag, r, c, rv, refs, ref_frame_bias, pre.ref_frame, interc, ps,
+      if (pre.is_inter_mb) {
+        InterPredict(tag, r, c, refs, ref_frame_bias, pre.ref_frame, interc, ps,
                      frame);
-      else
-        IntraPredict(tag, r, c, rv, intrac, ps, frame);
+
+        ResidualData rd = ps.ReadResidualData(ResidualParam(
+            y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
+
+        ResidualValue rv = DequantizeResidualData(rd, qp, header.quant_indices);
+        UpdateNonzero(rv, rd.has_y2, r, c, y2_row, y2_col, y1_nonzero,
+                      u_nonzero, v_nonzero);
+        InverseTransformResidual(rv, rd.has_y2);
+        ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
+        ApplyMBResidual(rv.u, frame.U.at(r).at(c));
+        ApplyMBResidual(rv.v, frame.V.at(r).at(c));
+      } else {
+        IntraMBHeader mh = tag.key_frame ? ps.ReadIntraMBHeaderKF()
+                                         : ps.ReadIntraMBHeaderNonKF();
+
+        ResidualData rd = ps.ReadResidualData(ResidualParam(
+            y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
+
+        ResidualValue rv = DequantizeResidualData(rd, qp, header.quant_indices);
+        UpdateNonzero(rv, rd.has_y2, r, c, y2_row, y2_col, y1_nonzero,
+                      u_nonzero, v_nonzero);
+        InverseTransformResidual(rv, rd.has_y2);
+        IntraPredict(tag, r, c, rv, mh, intrac, ps, frame);
+      }
     }
   }
 #ifdef DEBUG

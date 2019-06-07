@@ -112,16 +112,14 @@ void Sixtap(const Plane<C> &refer, size_t r, size_t c, uint8_t mr, uint8_t mc,
 
 // For each of the macroblock in the current plane, predict the value of it.
 template <size_t C>
-void InterpBlock(
-    const Plane<C> &refer,
-    const std::array<std::array<std::array<int16_t, 4>, 4>, C * C> &residual,
-    const std::array<std::array<int16_t, 6>, 8> &filter, size_t r, size_t c,
-    MacroBlock<C> &mb);
+void InterpBlock(const Plane<C> &refer,
+                 const std::array<std::array<int16_t, 6>, 8> &filter, size_t r,
+                 size_t c, MacroBlock<C> &mb);
 
 }  // namespace internal
 
 void InterPredict(const FrameTag &tag, size_t r, size_t c,
-                  const ResidualValue &rv, const std::array<Frame, 4> &refs,
+                  const std::array<Frame, 4> &refs,
                   const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
                   std::vector<std::vector<InterContext>> &context,
                   BitstreamParser &ps, Frame &frame);
