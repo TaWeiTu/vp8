@@ -428,7 +428,7 @@ ResidualData BitstreamParser::ReadResidualData(
   auto first_coeff = (macroblock_metadata & 0x2) ? 1 : 0;
   result.has_y2 = first_coeff;
   residual_macroblock_idx_++;
-  if (macroblock_metadata & 0x2) {
+  if (!(macroblock_metadata & 0x2)) {
     std::array<bool, 25> non_zero{};
     if (macroblock_metadata & 0x1) {
       auto &prob = context_.get()
