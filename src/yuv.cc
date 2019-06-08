@@ -4,15 +4,16 @@ namespace vp8 {
 
 YUV::YUV(const std::string &filename) {
   fs_.open(filename, std::ios::binary);
-  ensure(!fs_.fail(), ".at(Error) YUV::YUV: Fail to open file.");
+  ensure(!fs_.fail(), "[Error] YUV::YUV: Fail to open file.");
 }
 
 YUV::YUV(const char *filename) {
   fs_.open(filename, std::ios::binary);
-  ensure(!fs_.fail(), ".at(Error) YUV::YUV: Fail to open file.");
+  ensure(!fs_.fail(), "[Error] YUV::YUV: Fail to open file.");
 }
 
 void YUV::WriteFrame(const Frame &frame) {
+  // ffplay -video_size 176x144 -framerate 1 -pixel_format yuv420p output.yuv
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
       for (size_t i = 0; i < 16; ++i) {

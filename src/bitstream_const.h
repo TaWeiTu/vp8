@@ -145,6 +145,11 @@ constexpr std::array<TreeIndex, 2 * (kNumDctTokens - 1)> kCoeffTree = {
     14,        16,        -DCT_CAT1, -DCT_CAT2, 18,     20,
     -DCT_CAT3, -DCT_CAT4, -DCT_CAT5, -DCT_CAT6};
 
+constexpr std::array<TreeIndex, 2 * (kNumDctTokens - 2)> kCoeffTreeEOB = {
+    -DCT_0, 2,      -DCT_1,    4,         6,         10,        -DCT_2,
+    8,      -DCT_3, -DCT_4,    12,        14,        -DCT_CAT1, -DCT_CAT2,
+    16,     18,     -DCT_CAT3, -DCT_CAT4, -DCT_CAT5, -DCT_CAT6};
+
 static const std::array<std::array<Prob, 4>, 6> kModeProb = {
     {{7, 1, 1, 143},
      {14, 18, 14, 107},
@@ -494,7 +499,8 @@ constexpr std::array<Prob, kNumYModes - 1> kKeyFrameYModeProb = {145, 156, 163,
 
 constexpr std::array<Prob, kNumUVModes - 1> kUVModeProb = {162, 101, 204};
 
-constexpr std::array<Prob, kNumUVModes - 1> kKeyFrameUVModeProb = {142, 114, 183};
+constexpr std::array<Prob, kNumUVModes - 1> kKeyFrameUVModeProb = {142, 114,
+                                                                   183};
 
 constexpr std::array<Prob, kNumIntraBModes - 1> kBModeProb = {
     120, 90, 79, 133, 87, 85, 80, 111, 151};
