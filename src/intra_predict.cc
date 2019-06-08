@@ -197,7 +197,7 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
       ApplySBResidual(rv.y.at(i << 2 | j), mb.at(r).at(c).at(i).at(j));
 #ifdef DEBUG
       static int cnt = 0;
-      if (cnt == 16) exit(0);
+      // if (cnt == 16) exit(0);
       cnt += 1;
       std::cerr << "after residual:" << std::endl;
       for (size_t x = 0; x < 4; ++x) {

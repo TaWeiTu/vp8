@@ -72,17 +72,17 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
       std::array<bool, 2> u_above{}, u_left{}, v_above{}, v_left{};
 
       for (size_t i = 0; i < 4; ++i) {
-        if (r > 0) y1_above.at(i) = y1_nonzero.at((r - 1) << 2).at(c << 2 | i);
-        if (c > 0) y1_left.at(i) = y1_nonzero.at(r << 2 | i).at((c - 1) << 2);
+        if (r > 0) y1_above.at(i) = y1_nonzero.at((r - 1) << 2 | 3).at(c << 2 | i);
+        if (c > 0) y1_left.at(i) = y1_nonzero.at(r << 2 | i).at((c - 1) << 2 | 3);
       }
       for (size_t i = 0; i < 2; ++i) {
         if (r > 0) {
-          u_above.at(i) = u_nonzero.at((r - 1) << 1).at(c << 1 | i);
-          v_above.at(i) = v_nonzero.at((r - 1) << 1).at(c << 1 | i);
+          u_above.at(i) = u_nonzero.at((r - 1) << 1 | 1).at(c << 1 | i);
+          v_above.at(i) = v_nonzero.at((r - 1) << 1 | 1).at(c << 1 | i);
         }
         if (c > 0) {
-          u_left.at(i) = u_nonzero.at(r << 1 | i).at((c - 1) << 1);
-          v_left.at(i) = v_nonzero.at(r << 1 | i).at((c - 1) << 1);
+          u_left.at(i) = u_nonzero.at(r << 1 | i).at((c - 1) << 1 | 1);
+          v_left.at(i) = v_nonzero.at(r << 1 | i).at((c - 1) << 1 | 1);
         }
       }
 
