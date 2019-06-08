@@ -207,7 +207,7 @@ class BitstreamParser {
   void MVProbUpdate();
 
   std::pair<std::array<int16_t, 16>, bool> ReadResidualBlock(
-      int first_coeff, const std::array<Prob, kNumCoeffProb>& prob);
+      unsigned block_type, unsigned zero_cnt);
 
   int16_t ReadMVComponent(bool kind);
 
