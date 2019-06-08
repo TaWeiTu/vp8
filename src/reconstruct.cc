@@ -4,38 +4,38 @@ namespace vp8 {
 namespace internal {
 
 void UpdateNonzero(const ResidualValue &rv, bool has_y2, size_t r, size_t c,
-                   std::vector<bool> &y2_row, std::vector<bool> &y2_col,
-                   std::vector<std::vector<bool>> &y1_nonzero,
-                   std::vector<std::vector<bool>> &u_nonzero,
-                   std::vector<std::vector<bool>> &v_nonzero) {
+                   std::vector<uint8_t> &y2_row, std::vector<uint8_t> &y2_col,
+                   std::vector<std::vector<uint8_t>> &y1_nonzero,
+                   std::vector<std::vector<uint8_t>> &u_nonzero,
+                   std::vector<std::vector<uint8_t>> &v_nonzero) {
   if (has_y2) {
-    bool nonzero = false;
+    uint8_t nonzero = false;
     for (size_t i = 0; i < 4; ++i) {
-      for (size_t j = 0; j < 4; ++j) nonzero |= rv.y2.at(i).at(j) != 0;
+      for (size_t j = 0; j < 4; ++j) nonzero += rv.y2.at(i).at(j) != 0;
     }
-    y2_row.at(r) = nonzero;
-    y2_col.at(c) = nonzero;
+    y2_row.at(r) = uint8_t(nonzero > 0);
+    y2_col.at(c) = uint8_t(nonzero > 0);
   }
   for (size_t p = 0; p < 16; ++p) {
-    bool nonzero = false;
+    uint8_t nonzero = false;
     for (size_t i = 0; i < 4; ++i) {
-      for (size_t j = 0; j < 4; ++j) nonzero |= rv.y.at(p).at(i).at(j) != 0;
+      for (size_t j = 0; j < 4; ++j) nonzero += rv.y.at(p).at(i).at(j) != 0;
     }
-    y1_nonzero.at(r << 2 | (p >> 2)).at(c << 2 | (p & 3)) = nonzero;
+    y1_nonzero.at(r << 2 | (p >> 2)).at(c << 2 | (p & 3)) = uint8_t(nonzero > 0);
   }
   for (size_t p = 0; p < 4; ++p) {
-    bool nonzero = false;
+    uint8_t nonzero = false;
     for (size_t i = 0; i < 4; ++i) {
-      for (size_t j = 0; j < 4; ++j) nonzero |= rv.u.at(p).at(i).at(j) != 0;
+      for (size_t j = 0; j < 4; ++j) nonzero += rv.u.at(p).at(i).at(j) != 0;
     }
-    u_nonzero.at(r << 1 | (p >> 1)).at(c << 1 | (p & 1)) = nonzero;
+    u_nonzero.at(r << 1 | (p >> 1)).at(c << 1 | (p & 1)) = uint8_t(nonzero > 0);
   }
   for (size_t p = 0; p < 4; ++p) {
-    bool nonzero = false;
+    uint8_t nonzero = false;
     for (size_t i = 0; i < 4; ++i) {
-      for (size_t j = 0; j < 4; ++j) nonzero |= rv.v.at(p).at(i).at(j) != 0;
+      for (size_t j = 0; j < 4; ++j) nonzero += rv.v.at(p).at(i).at(j) != 0;
     }
-    v_nonzero.at(r << 1 | (p >> 1)).at(c << 1 | (p & 1)) = nonzero;
+    v_nonzero.at(r << 1 | (p >> 1)).at(c << 1 | (p & 1)) = uint8_t(nonzero > 0);
   }
 }
 
@@ -45,14 +45,14 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
              std::vector<std::vector<InterContext>> &interc,
              std::vector<std::vector<IntraContext>> &intrac,
              BitstreamParser &ps, Frame &frame) {
-  std::vector<bool> y2_row(frame.vblock, false);
-  std::vector<bool> y2_col(frame.hblock, false);
-  std::vector<std::vector<bool>> y1_nonzero(
-      frame.vblock << 2, std::vector<bool>(frame.hblock << 2, false));
-  std::vector<std::vector<bool>> u_nonzero(
-      frame.vblock << 1, std::vector<bool>(frame.hblock << 1, false));
-  std::vector<std::vector<bool>> v_nonzero(
-      frame.vblock << 1, std::vector<bool>(frame.hblock << 1, false));
+  std::vector<uint8_t> y2_row(frame.vblock, false);
+  std::vector<uint8_t> y2_col(frame.hblock, false);
+  std::vector<std::vector<uint8_t>> y1_nonzero(
+      frame.vblock << 2, std::vector<uint8_t>(frame.hblock << 2, 0));
+  std::vector<std::vector<uint8_t>> u_nonzero(
+      frame.vblock << 1, std::vector<uint8_t>(frame.hblock << 1, 0));
+  std::vector<std::vector<uint8_t>> v_nonzero(
+      frame.vblock << 1, std::vector<uint8_t>(frame.hblock << 1, 0));
 
 #ifdef DEBUG
   std::cerr << "Start prediction" << std::endl;
@@ -67,9 +67,9 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
                  ? header.quantizer_segment[pre.segment_id]
                  : header.quantizer_segment[pre.segment_id] + qp;
 
-      uint8_t y2_nonzero = uint8_t(y2_row[r]) + uint8_t(y2_col[c]);
-      std::array<bool, 4> y1_above{}, y1_left{};
-      std::array<bool, 2> u_above{}, u_left{}, v_above{}, v_left{};
+      uint8_t y2_nonzero = y2_row[r] + y2_col[c];
+      std::array<uint8_t, 4> y1_above{}, y1_left{};
+      std::array<uint8_t, 2> u_above{}, u_left{}, v_above{}, v_left{};
 
       for (size_t i = 0; i < 4; ++i) {
         if (r > 0) y1_above.at(i) = y1_nonzero.at((r - 1) << 2 | 3).at(c << 2 | i);

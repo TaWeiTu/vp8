@@ -69,7 +69,7 @@ class SubBlock {
   void SetMotionVector(const MotionVector& v) { mv_ = v; }
 
  private:
-  std::array<std::array<int16_t, 4>, 4> pixels_;
+  std::array<std::array<int16_t, 4>, 4> pixels_{};
   MotionVector mv_;
 };
 
@@ -105,7 +105,7 @@ class MacroBlock {
   }
 
   std::array<int16_t, C * 4> GetRow(size_t i) const {
-    std::array<int16_t, C * 4> res;
+    std::array<int16_t, C * 4> res{};
     for (size_t c = 0; c < C; ++c) {
       std::array<int16_t, 4> row = subs_.at(i >> 2).at(c).GetRow(i & 3);
       std::copy(row.begin(), row.end(), res.begin() + (c << 2));
@@ -114,7 +114,7 @@ class MacroBlock {
   }
 
   std::array<int16_t, C * 4> GetCol(size_t i) const {
-    std::array<int16_t, C * 4> res;
+    std::array<int16_t, C * 4> res{};
     for (size_t c = 0; c < C; ++c) {
       std::array<int16_t, 4> col = subs_.at(c).at(i >> 2).GetCol(i & 3);
       std::copy(col.begin(), col.end(), res.begin() + (c << 2));

@@ -119,10 +119,10 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
 
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 4; ++j) {
-      std::array<int16_t, 8> above;
-      std::array<int16_t, 4> left;
-      std::array<int16_t, 4> row_above;
-      std::array<int16_t, 4> row_right;
+      std::array<int16_t, 8> above{};
+      std::array<int16_t, 4> left{};
+      std::array<int16_t, 4> row_above{};
+      std::array<int16_t, 4> row_right{};
 
       if (i == 0)
         row_above = r == 0 ? std::array<int16_t, 4>{127, 127, 127, 127}
