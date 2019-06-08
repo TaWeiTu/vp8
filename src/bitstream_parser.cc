@@ -438,7 +438,7 @@ ResidualData BitstreamParser::ReadResidualData(
     for (unsigned i = 1; i <= 16; i++) {
       unsigned above_nonzero =
           (i <= 4) ? residual_ctx.y1_above.at(i - 1) : non_zero.at(i - 4);
-      unsigned left_nonzero = ((i - 1) & 4)
+      unsigned left_nonzero = ((i - 1) & 3)
                                   ? non_zero.at(i - 1)
                                   : residual_ctx.y1_left.at((i - 1) >> 2);
       std::tie(result.dct_coeff.at(i), non_zero.at(i)) =
@@ -447,7 +447,7 @@ ResidualData BitstreamParser::ReadResidualData(
     for (unsigned i = 17; i <= 20; i++) {
       unsigned above_nonzero =
           (i <= 18) ? residual_ctx.u_above.at(i - 17) : non_zero.at(i - 2);
-      unsigned left_nonzero = ((i - 17) & 2)
+      unsigned left_nonzero = ((i - 17) & 1)
                                   ? non_zero.at(i - 1)
                                   : residual_ctx.y1_left.at((i - 17) >> 1);
       std::tie(result.dct_coeff.at(i), non_zero.at(i)) =
@@ -456,7 +456,7 @@ ResidualData BitstreamParser::ReadResidualData(
     for (unsigned i = 21; i <= 24; i++) {
       unsigned above_nonzero =
           (i <= 22) ? residual_ctx.u_above.at(i - 21) : non_zero.at(i - 2);
-      unsigned left_nonzero = ((i - 21) & 2)
+      unsigned left_nonzero = ((i - 21) & 1)
                                   ? non_zero.at(i - 1)
                                   : residual_ctx.y1_left.at((i - 21) >> 1);
       std::tie(result.dct_coeff.at(i), non_zero.at(i)) =
