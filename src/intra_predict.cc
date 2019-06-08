@@ -176,16 +176,17 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
           is_key_frame ? ps.ReadSubBlockBModeKF(AboveSubBlockMode(i << 2 | j),
                                                 LeftSubBlockMode(i << 2 | j))
                        : ps.ReadSubBlockBModeNonKF();
-// #ifdef DEBUG
-// std::cerr << "done reading subblock mode of above and left" << std::endl;
-// #endif
-#ifdef DEBUG
-      std::cerr << "subblock mode = " << mode << std::endl;
-#endif
       context.at(r << 2 | i).at(c << 2 | j) = IntraContext(true, mode);
       BPredSubBlock(above, left, p, mode, mb.at(r).at(c).at(i).at(j));
 #ifdef DEBUG
-      std::cerr << "before residual" << std::endl;
+      std::cerr << "left:" << std::endl;
+      for (size_t i = 0; i < 4; ++i) std::cerr << left.at(i) << ' ';
+      std::cerr << std::endl;
+      std::cerr << "above:" << std::endl;
+      for (size_t i = 0; i < 8; ++i) std::cerr << above.at(i) << ' ';
+      std::cerr << std::endl;
+      std::cerr << "subblock mode = " << mode << std::endl;
+      std::cerr << "before residual:" << std::endl;
       for (size_t x = 0; x < 4; ++x) {
         for (size_t y = 0; y < 4; ++y) {
           std::cerr << mb.at(r).at(c).at(i).at(j).at(x).at(y) << ' ';
@@ -198,17 +199,13 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
       static int cnt = 0;
       if (cnt == 16) exit(0);
       cnt += 1;
-      std::cerr << "after residual" << std::endl;
+      std::cerr << "after residual:" << std::endl;
       for (size_t x = 0; x < 4; ++x) {
         for (size_t y = 0; y < 4; ++y) {
           std::cerr << mb.at(r).at(c).at(i).at(j).at(x).at(y) << ' ';
         }
         std::cerr << std::endl;
       }
-      for (size_t i = 0; i < 8; ++i) std::cerr << above.at(i) << ' ';
-      std::cerr << std::endl;
-      for (size_t i = 0; i < 4; ++i) std::cerr << left.at(i) << ' ';
-      std::cerr << std::endl;
 #endif
     }
   }
@@ -238,7 +235,7 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
       for (size_t i = 0; i < 4; ++i) {
         int16_t x = i == 0 ? p : left.at(i - 1);
         int16_t y = left.at(i);
-        int16_t z = i == 3 ? above.at(3) : above.at(i + 1);
+        int16_t z = i == 3 ? left.at(3) : left.at(i + 1);
         int16_t avg = (x + y + y + z + 2) >> 2;
         sub.at(i).at(0) = sub.at(i).at(1) = sub.at(i).at(2) = sub.at(i).at(3) =
             avg;

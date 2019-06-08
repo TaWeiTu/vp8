@@ -14,14 +14,14 @@ std::ostream &operator<<(std::ostream &s, const std::array<int16_t, 16> &coeff) 
 
 ResidualValue DequantizeResidualData(ResidualData &rd, int16_t qp,
                                      const QuantIndices &quant) {
-#ifdef DEBUG
-  std::cerr << "DequantizeResidualData" << std::endl;
-#endif
+// #ifdef DEBUG
+  // std::cerr << "DequantizeResidualData" << std::endl;
+// #endif
   ResidualValue rv;
   if (rd.has_y2) {
-#ifdef DEBUG
-    std::cerr << "has_y2: " << rd.dct_coeff.at(0) << std::endl;
-#endif
+// #ifdef DEBUG
+    // std::cerr << "has_y2: " << rd.dct_coeff.at(0) << std::endl;
+// #endif
     DequantizeY2(rd.dct_coeff.at(0), qp, quant);
     for (size_t i = 0; i < 4; ++i) {
       for (size_t j = 0; j < 4; ++j)
@@ -29,9 +29,9 @@ ResidualValue DequantizeResidualData(ResidualData &rd, int16_t qp,
     }
   }
   for (size_t p = 1; p <= 16; ++p) {
-#ifdef DEBUG
-    std::cerr << "y: " << rd.dct_coeff.at(p) << std::endl;
-#endif
+// #ifdef DEBUG
+    // std::cerr << "y: " << rd.dct_coeff.at(p) << std::endl;
+// #endif
     DequantizeY(rd.dct_coeff.at(p), qp, quant);
     for (size_t i = 0; i < 4; ++i) {
       for (size_t j = 0; j < 4; ++j)
@@ -39,9 +39,9 @@ ResidualValue DequantizeResidualData(ResidualData &rd, int16_t qp,
     }
   }
   for (size_t p = 17; p <= 20; ++p) {
-#ifdef DEBUG
-    std::cerr << "u: " << rd.dct_coeff.at(p) << std::endl;
-#endif
+// #ifdef DEBUG
+    // std::cerr << "u: " << rd.dct_coeff.at(p) << std::endl;
+// #endif
     DequantizeUV(rd.dct_coeff.at(p), qp, quant);
     for (size_t i = 0; i < 4; ++i) {
       for (size_t j = 0; j < 4; ++j)
@@ -49,9 +49,9 @@ ResidualValue DequantizeResidualData(ResidualData &rd, int16_t qp,
     }
   }
   for (size_t p = 21; p <= 24; ++p) {
-#ifdef DEBUG
-    std::cerr << "v: " << rd.dct_coeff.at(p) << std::endl;
-#endif
+// #ifdef DEBUG
+    // std::cerr << "v: " << rd.dct_coeff.at(p) << std::endl;
+// #endif
     DequantizeUV(rd.dct_coeff.at(p), qp, quant);
     for (size_t i = 0; i < 4; ++i) {
       for (size_t j = 0; j < 4; ++j)
@@ -95,19 +95,19 @@ template void ApplyMBResidual<2>(
 
 void ApplySBResidual(const std::array<std::array<int16_t, 4>, 4> &residual,
                      SubBlock &sub) {
-#ifdef DEBUG
-  std::cerr << "ApplySBResidual: " << std::endl;
-#endif
+// #ifdef DEBUG
+  // std::cerr << "ApplySBResidual: " << std::endl;
+// #endif
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 4; ++j) {
       sub.at(i).at(j) += residual.at(i).at(j);
-#ifdef DEBUG
-      std::cerr << residual.at(i).at(j) << ' ';
-#endif
+// #ifdef DEBUG
+      // std::cerr << residual.at(i).at(j) << ' ';
+// #endif
     }
-#ifdef DEBUG
-    std::cerr << std::endl;
-#endif
+// #ifdef DEBUG
+    // std::cerr << std::endl;
+// #endif
   }
 }
 
