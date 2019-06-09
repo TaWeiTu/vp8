@@ -407,7 +407,6 @@ int16_t BitstreamParser::ReadMVComponent(bool kind) {
 
 ResidualData BitstreamParser::ReadResidualData(
     const ResidualParam &residual_ctx) {
-  mb_cur_col_++;
   if (mb_cur_col_ == mb_num_cols_) {
     mb_cur_row_++;
     mb_cur_col_ = 0;
@@ -531,6 +530,7 @@ std::pair<std::array<int16_t, 16>, bool> BitstreamParser::ReadResidualBlock(
       ctx3 = 0;
     }
   }
+  mb_cur_col_++;
   return make_pair(result, non_zero);
 }
 
