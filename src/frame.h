@@ -91,16 +91,18 @@ class MacroBlock {
   void FillRow(const std::array<int16_t, C * 4>& row) {
     for (size_t i = 0; i < C; ++i) {
       for (size_t j = 0; j < C; ++j)
-        subs_.at(i).at(j).FillRow(std::array<int16_t, 4>{
-            row.at(j << 2), row.at(j << 2 | 1), row.at(j << 2 | 2), row.at(j << 2 | 3)});
+        subs_.at(i).at(j).FillRow(
+            std::array<int16_t, 4>{row.at(j << 2), row.at(j << 2 | 1),
+                                   row.at(j << 2 | 2), row.at(j << 2 | 3)});
     }
   }
 
   void FillCol(const std::array<int16_t, C * 4>& col) {
     for (size_t i = 0; i < C; ++i) {
       for (size_t j = 0; j < C; ++j)
-        subs_.at(i).at(j).FillCol(std::array<int16_t, 4>{
-            col.at(i << 2), col.at(i << 2 | 1), col.at(i << 2 | 2), col.at(i << 2 | 3)});
+        subs_.at(i).at(j).FillCol(
+            std::array<int16_t, 4>{col.at(i << 2), col.at(i << 2 | 1),
+                                   col.at(i << 2 | 2), col.at(i << 2 | 3)});
     }
   }
 

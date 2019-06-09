@@ -171,45 +171,13 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
                       : c == 0 ? 129
                                : mb.at(r - 1).at(c - 1).at(3).at(3).at(3).at(3);
 
-      // #ifdef DEBUG
-      // std::cerr << "reading subblock mode of above and left" << std::endl;
-      // #endif
       SubBlockMode mode =
           is_key_frame ? ps.ReadSubBlockBModeKF(AboveSubBlockMode(i << 2 | j),
                                                 LeftSubBlockMode(i << 2 | j))
                        : ps.ReadSubBlockBModeNonKF();
       context.at(r << 2 | i).at(c << 2 | j) = IntraContext(true, mode);
       BPredSubBlock(above, left, p, mode, mb.at(r).at(c).at(i).at(j));
-#ifdef DEBUg
-      std::cerr << "p = " << p << std::endl;
-      std::cerr << "left:" << std::endl;
-      for (size_t i = 0; i < 4; ++i) std::cerr << left.at(i) << ' ';
-      std::cerr << std::endl;
-      std::cerr << "above:" << std::endl;
-      for (size_t i = 0; i < 8; ++i) std::cerr << above.at(i) << ' ';
-      std::cerr << std::endl;
-      std::cerr << "subblock mode = " << mode << std::endl;
-      std::cerr << "before residual:" << std::endl;
-      for (size_t x = 0; x < 4; ++x) {
-        for (size_t y = 0; y < 4; ++y) {
-          std::cerr << mb.at(r).at(c).at(i).at(j).at(x).at(y) << ' ';
-        }
-        std::cerr << std::endl;
-      }
-#endif
       ApplySBResidual(rv.y.at(i << 2 | j), mb.at(r).at(c).at(i).at(j));
-#ifdef DEBUg
-      static int cnt = 0;
-      // if (cnt == 16) exit(0);
-      cnt += 1;
-      std::cerr << "after residual:" << std::endl;
-      for (size_t x = 0; x < 4; ++x) {
-        for (size_t y = 0; y < 4; ++y) {
-          std::cerr << mb.at(r).at(c).at(i).at(j).at(x).at(y) << ' ';
-        }
-        std::cerr << std::endl;
-      }
-#endif
     }
   }
 }

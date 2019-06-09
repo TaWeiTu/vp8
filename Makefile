@@ -3,7 +3,7 @@ DBGFLAGS := -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -DDEBUG -fsanitize=undefi
 CFLAGS := -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-switch-enum -Wno-undefined-func-template -std=c++17 -O3 -march=native
 CHECK := cppcheck --enable=all --inconclusive --check-config --suppress=missingIncludeSystem
 
-CFLAGS := $(DBGFLAGS)
+# CFLAGS := $(DBGFLAGS)
 
 all: decode
 	

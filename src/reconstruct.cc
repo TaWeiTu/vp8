@@ -21,7 +21,8 @@ void UpdateNonzero(const ResidualValue &rv, bool has_y2, size_t r, size_t c,
     for (size_t i = 0; i < 4; ++i) {
       for (size_t j = 0; j < 4; ++j) nonzero += rv.y.at(p).at(i).at(j) != 0;
     }
-    y1_nonzero.at(r << 2 | (p >> 2)).at(c << 2 | (p & 3)) = uint8_t(nonzero > 0);
+    y1_nonzero.at(r << 2 | (p >> 2)).at(c << 2 | (p & 3)) =
+        uint8_t(nonzero > 0);
   }
   for (size_t p = 0; p < 4; ++p) {
     uint8_t nonzero = false;
@@ -72,8 +73,10 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
       std::array<uint8_t, 2> u_above{}, u_left{}, v_above{}, v_left{};
 
       for (size_t i = 0; i < 4; ++i) {
-        if (r > 0) y1_above.at(i) = y1_nonzero.at((r - 1) << 2 | 3).at(c << 2 | i);
-        if (c > 0) y1_left.at(i) = y1_nonzero.at(r << 2 | i).at((c - 1) << 2 | 3);
+        if (r > 0)
+          y1_above.at(i) = y1_nonzero.at((r - 1) << 2 | 3).at(c << 2 | i);
+        if (c > 0)
+          y1_left.at(i) = y1_nonzero.at(r << 2 | i).at((c - 1) << 2 | 3);
       }
       for (size_t i = 0; i < 2; ++i) {
         if (r > 0) {
@@ -105,7 +108,7 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
                                          : ps.ReadIntraMBHeaderNonKF();
 
         ResidualData rd = ps.ReadResidualData(ResidualParam(
-            y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left)); 
+            y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
         ResidualValue rv = DequantizeResidualData(rd, qp, header.quant_indices);
         UpdateNonzero(rv, rd.has_y2, r, c, y2_row, y2_col, y1_nonzero,
                       u_nonzero, v_nonzero);
@@ -131,27 +134,6 @@ void Reconstruct(const FrameHeader &header, const FrameTag &tag,
   std::vector<std::vector<uint8_t>> seg_id(frame.vblock,
                                            std::vector<uint8_t>(frame.hblock));
   Predict(header, tag, refs, ref_frame_bias, interc, intrac, ps, frame);
-#ifdef DEBUG
-  for (size_t r = 0; r < frame.vblock; ++r) {
-    for (size_t c = 0; c < frame.hblock; ++c) {
-      for (size_t i = 0; i < 16; ++i) {
-        for (size_t j = 0; j < 16; ++j)
-          std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-        std::cerr << std::endl;
-      }
-      for (size_t i = 0; i < 8; ++i) {
-        for (size_t j = 0; j < 8; ++j)
-          std::cerr << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
-        std::cerr << std::endl;
-      }
-      for (size_t i = 0; i < 8; ++i) {
-        for (size_t j = 0; j < 8; ++j)
-          std::cerr << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
-        std::cerr << std::endl;
-      }
-    }
-  }
-#endif
   FrameFilter(header, tag.key_frame, frame);
 }
 

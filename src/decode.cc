@@ -74,8 +74,10 @@ int main(int argc, const char **argv) {
     read_bytes(4);
     // Decoding loop: reconstruct the frame and update the golden/altref frame
     // (if necessary).
+#ifdef DEBUG
     std::cerr << "[Info] Start decoding frame number " << frame_cnt
               << std::endl;
+#endif
     buffer.resize(frame_size);
     // TODO: (Improvement) This part is a bit ugly.
     fs.read(reinterpret_cast<char *>(buffer.data()), frame_size);
@@ -97,7 +99,9 @@ int main(int argc, const char **argv) {
 
     yuv.WriteFrame(frame);
 
+#ifdef DEBUG
     std::cerr << "[Info] Done decoding frame number " << frame_cnt << std::endl;
+#endif
   }
   return 0;
 }
