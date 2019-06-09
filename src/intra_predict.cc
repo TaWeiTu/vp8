@@ -37,14 +37,12 @@ void DCPredChroma(size_t r, size_t c, Plane<2> &mb) {
 }
 
 void TMPredChroma(size_t r, size_t c, Plane<2> &mb) {
-  // int16_t p = (r == 0 || c == 0 ? 128 : mb.at(r - 1).at(c - 1).GetPixel(7,
-  // 7));
   int16_t p =
       (r == 0 ? 127 : c == 0 ? 129 : mb.at(r - 1).at(c - 1).GetPixel(7, 7));
   for (size_t i = 0; i < 8; ++i) {
     for (size_t j = 0; j < 8; ++j) {
       int16_t x = (c == 0 ? 129 : mb.at(r).at(c - 1).GetPixel(i, 7));
-      int16_t y = (r == 0 ? 127 : mb.at(r - 1).at(c).GetPixel(7, i));
+      int16_t y = (r == 0 ? 127 : mb.at(r - 1).at(c).GetPixel(7, j));
       mb.at(r).at(c).SetPixel(i, j, Clamp255(int16_t(x + y - p)));
     }
   }
@@ -72,11 +70,11 @@ void DCPredLuma(size_t r, size_t c, Plane<4> &mb) {
 
   int32_t sum = 0, shf = 3;
   if (r > 0) {
-    for (size_t i = 0; i < 8; ++i) sum += mb.at(r - 1).at(c).GetPixel(15, i);
+    for (size_t i = 0; i < 16; ++i) sum += mb.at(r - 1).at(c).GetPixel(15, i);
     shf++;
   }
   if (c > 0) {
-    for (size_t i = 0; i < 8; ++i) sum += mb.at(r).at(c - 1).GetPixel(i, 15);
+    for (size_t i = 0; i < 16; ++i) sum += mb.at(r).at(c - 1).GetPixel(i, 15);
     shf++;
   }
 
@@ -90,7 +88,7 @@ void TMPredLuma(size_t r, size_t c, Plane<4> &mb) {
   for (size_t i = 0; i < 16; ++i) {
     for (size_t j = 0; j < 16; ++j) {
       int16_t x = (c == 0 ? 129 : mb.at(r).at(c - 1).GetPixel(i, 15));
-      int16_t y = (r == 0 ? 127 : mb.at(r - 1).at(c).GetPixel(15, i));
+      int16_t y = (r == 0 ? 127 : mb.at(r - 1).at(c).GetPixel(15, j));
       mb.at(r).at(c).SetPixel(i, j, Clamp255(int16_t(x + y - p)));
     }
   }
@@ -182,7 +180,7 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
                        : ps.ReadSubBlockBModeNonKF();
       context.at(r << 2 | i).at(c << 2 | j) = IntraContext(true, mode);
       BPredSubBlock(above, left, p, mode, mb.at(r).at(c).at(i).at(j));
-#ifdef DEBUG
+#ifdef DEBUg
       std::cerr << "p = " << p << std::endl;
       std::cerr << "left:" << std::endl;
       for (size_t i = 0; i < 4; ++i) std::cerr << left.at(i) << ' ';
@@ -200,7 +198,7 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
       }
 #endif
       ApplySBResidual(rv.y.at(i << 2 | j), mb.at(r).at(c).at(i).at(j));
-#ifdef DEBUG
+#ifdef DEBUg
       static int cnt = 0;
       // if (cnt == 16) exit(0);
       cnt += 1;

@@ -105,8 +105,7 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
                                          : ps.ReadIntraMBHeaderNonKF();
 
         ResidualData rd = ps.ReadResidualData(ResidualParam(
-            y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
-
+            y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left)); 
         ResidualValue rv = DequantizeResidualData(rd, qp, header.quant_indices);
         UpdateNonzero(rv, rd.has_y2, r, c, y2_row, y2_col, y1_nonzero,
                       u_nonzero, v_nonzero);
@@ -132,6 +131,27 @@ void Reconstruct(const FrameHeader &header, const FrameTag &tag,
   std::vector<std::vector<uint8_t>> seg_id(frame.vblock,
                                            std::vector<uint8_t>(frame.hblock));
   Predict(header, tag, refs, ref_frame_bias, interc, intrac, ps, frame);
+#ifdef DEBUG
+  for (size_t r = 0; r < frame.vblock; ++r) {
+    for (size_t c = 0; c < frame.hblock; ++c) {
+      for (size_t i = 0; i < 16; ++i) {
+        for (size_t j = 0; j < 16; ++j)
+          std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+        std::cerr << std::endl;
+      }
+      for (size_t i = 0; i < 8; ++i) {
+        for (size_t j = 0; j < 8; ++j)
+          std::cerr << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
+        std::cerr << std::endl;
+      }
+      for (size_t i = 0; i < 8; ++i) {
+        for (size_t j = 0; j < 8; ++j)
+          std::cerr << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
+        std::cerr << std::endl;
+      }
+    }
+  }
+#endif
   FrameFilter(header, tag.key_frame, frame);
 }
 
