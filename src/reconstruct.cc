@@ -62,11 +62,14 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
       MacroBlockPreHeader pre = ps.ReadMacroBlockPreHeader();
+// #ifdef DEBUG
+      // std::cerr << "ReadMacroBlockPreHeader()" << std::endl;
+// #endif
       int16_t qp = header.quant_indices.y_ac_qi;
       if (header.segmentation_enabled)
         qp = header.segment_feature_mode == SEGMENT_MODE_ABSOLUTE
-                 ? header.quantizer_segment[pre.segment_id]
-                 : header.quantizer_segment[pre.segment_id] + qp;
+                 ? header.quantizer_segment.at(pre.segment_id)
+                 : header.quantizer_segment.at(pre.segment_id) + qp;
 
       uint8_t y2_nonzero = y2_row.at(r) + y2_col.at(c);
       std::array<uint8_t, 4> y1_above{}, y1_left{};
@@ -133,7 +136,29 @@ void Reconstruct(const FrameHeader &header, const FrameTag &tag,
       frame.vblock << 2, std::vector<IntraContext>(frame.hblock << 2));
   std::vector<std::vector<uint8_t>> seg_id(frame.vblock,
                                            std::vector<uint8_t>(frame.hblock));
+
   Predict(header, tag, refs, ref_frame_bias, interc, intrac, ps, frame);
+// #ifdef DEBUG
+  // for (size_t r = 0; r < frame.vblock; ++r) {
+    // for (size_t c = 0; c < frame.hblock; ++c) {
+      // for (size_t i = 0; i < 16; ++i) {
+        // for (size_t j = 0; j < 16; ++j)
+          // std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+        // std::cerr << std::endl;
+      // }
+      // for (size_t i = 0; i < 8; ++i) {
+        // for (size_t j = 0; j < 8; ++j)
+          // std::cerr << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
+        // std::cerr << std::endl;
+      // }
+      // for (size_t i = 0; i < 8; ++i) {
+        // for (size_t j = 0; j < 8; ++j)
+          // std::cerr << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
+        // std::cerr << std::endl;
+      // }
+    // }
+  // }
+// #endif
   FrameFilter(header, tag.key_frame, frame);
 }
 

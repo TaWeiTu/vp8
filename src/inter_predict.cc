@@ -358,6 +358,10 @@ void InterPredict(const FrameTag &tag, size_t r, size_t c,
                   const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
                   std::vector<std::vector<InterContext>> &context,
                   BitstreamParser &ps, Frame &frame) {
+
+#ifdef DEBUG
+  std::cerr << "Inter-Predict" << std::endl;
+#endif
   ConfigureMVs(r, c, tag.version == 3, ref_frame_bias, ref_frame, context, ps,
                frame);
   std::array<std::array<int16_t, 6>, 8> subpixel_filters =

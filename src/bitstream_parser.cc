@@ -265,7 +265,6 @@ void BitstreamParser::MVProbUpdate() {
 MacroBlockPreHeader BitstreamParser::ReadMacroBlockPreHeader() {
   MacroBlockPreHeader result{};
   if (frame_header_.update_mb_segmentation_map) {
-    assert(0);
     result.segment_id =
         uint8_t(bd_.Tree(context_.get().segment_prob, kMbSegmentTree));
     context_.get().mb_metadata.at(macroblock_metadata_idx_) |= result.segment_id
