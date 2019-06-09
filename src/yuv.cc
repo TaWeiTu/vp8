@@ -21,15 +21,18 @@ void YUV::WriteFrame(const Frame &frame) {
       fs_.write(reinterpret_cast<char *>(&y), sizeof(y));
     }
   }
-  for (size_t r = 0; r < frame.vsize / 2; ++r) {
-    for (size_t c = 0; c < frame.hsize / 2; ++c) {
-      uint8_t u = uint8_t(frame.U.at(r >> 4).at(c >> 4).GetPixel(r & 7, c & 7));
+  // TODO: What if the dimensions are odd numbers?
+  for (size_t r = 0; r < frame.vsize; r += 2) {
+    for (size_t c = 0; c < frame.hsize; c += 2) {
+      uint8_t u = uint8_t(
+          frame.U.at(r >> 4).at(c >> 4).GetPixel((r >> 1) & 7, (c >> 1) & 7));
       fs_.write(reinterpret_cast<char *>(&u), sizeof(u));
     }
   }
-  for (size_t r = 0; r < frame.vsize / 2; ++r) {
-    for (size_t c = 0; c < frame.hsize / 2; ++c) {
-      uint8_t v = uint8_t(frame.V.at(r >> 4).at(c >> 4).GetPixel(r & 7, c & 7));
+  for (size_t r = 0; r < frame.vsize; r += 2) {
+    for (size_t c = 0; c < frame.hsize; c += 2) {
+      uint8_t v = uint8_t(
+          frame.V.at(r >> 4).at(c >> 4).GetPixel((r >> 1) & 7, (c >> 1) & 7));
       fs_.write(reinterpret_cast<char *>(&v), sizeof(v));
     }
   }
