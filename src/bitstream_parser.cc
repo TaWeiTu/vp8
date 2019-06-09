@@ -407,6 +407,7 @@ int16_t BitstreamParser::ReadMVComponent(bool kind) {
 
 ResidualData BitstreamParser::ReadResidualData(
     const ResidualParam &residual_ctx) {
+  mb_cur_col_++;
   if (mb_cur_col_ == mb_num_cols_) {
     mb_cur_row_++;
     mb_cur_col_ = 0;
@@ -449,16 +450,16 @@ ResidualData BitstreamParser::ReadResidualData(
           (i <= 18) ? residual_ctx.u_above.at(i - 17) : non_zero.at(i - 2);
       unsigned left_nonzero = ((i - 17) & 1)
                                   ? non_zero.at(i - 1)
-                                  : residual_ctx.y1_left.at((i - 17) >> 1);
+                                  : residual_ctx.u_left.at((i - 17) >> 1);
       std::tie(result.dct_coeff.at(i), non_zero.at(i)) =
           ReadResidualBlock(2, above_nonzero + left_nonzero);
     }
     for (unsigned i = 21; i <= 24; i++) {
       unsigned above_nonzero =
-          (i <= 22) ? residual_ctx.u_above.at(i - 21) : non_zero.at(i - 2);
+          (i <= 22) ? residual_ctx.v_above.at(i - 21) : non_zero.at(i - 2);
       unsigned left_nonzero = ((i - 21) & 1)
                                   ? non_zero.at(i - 1)
-                                  : residual_ctx.y1_left.at((i - 21) >> 1);
+                                  : residual_ctx.v_left.at((i - 21) >> 1);
       std::tie(result.dct_coeff.at(i), non_zero.at(i)) =
           ReadResidualBlock(2, above_nonzero + left_nonzero);
     }
