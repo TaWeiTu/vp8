@@ -96,7 +96,6 @@ void TMPredLuma(size_t r, size_t c, Plane<4> &mb) {
 void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
                std::vector<std::vector<IntraContext>> &context,
                BitstreamParser &ps, Plane<4> &mb) {
-
   auto LeftSubBlockMode = [&context, r, c](size_t idx) {
     if ((idx & 3) == 0) {
       if (c == 0) return B_DC_PRED;
@@ -131,12 +130,14 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
         row_above = mb.at(r).at(c).at(i - 1).at(j).GetRow(3);
 
       if (j == 3) {
-        if (r == 0)
+        if (r == 0) {
           row_right = std::array<int16_t, 4>{127, 127, 127, 127};
-        else if (c + 1 == mb.at(r).size())
-          row_right = mb.at(r - 1).at(c).at(3).at(3).GetRow(3);
-        else
+        } else if (c + 1 == mb.at(r).size()) {
+          int16_t x = mb.at(r - 1).at(c).at(3).at(3).at(3).at(3);
+          row_right = std::array<int16_t, 4>{x, x, x, x};
+        } else {
           row_right = mb.at(r - 1).at(c + 1).at(3).at(0).GetRow(3);
+        }
       } else {
         if (i == 0)
           row_right = r == 0 ? std::array<int16_t, 4>{127, 127, 127, 127}
@@ -273,13 +274,20 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
     }
 
     case B_RD_PRED: {
-      for (size_t d = 0; d < 7; ++d) {
-        int16_t x = edge.at(d);
-        int16_t y = edge.at(d + 1);
-        int16_t z = edge.at(d + 2);
-        int16_t avg = (x + y + y + z + 2) >> 2;
-        for (size_t i = 0; i + d < 4; ++i) sub.at(i).at(d + i) = avg;
-      }
+      sub.at(3).at(0) =
+          (edge.at(0) + edge.at(1) + edge.at(1) + edge.at(2) + 2) >> 2;
+      sub.at(3).at(1) = sub.at(2).at(0) =
+          (edge.at(1) + edge.at(2) + edge.at(2) + edge.at(3) + 2) >> 2;
+      sub.at(3).at(2) = sub.at(2).at(1) = sub.at(1).at(0) =
+          (edge.at(2) + edge.at(3) + edge.at(3) + edge.at(4) + 2) >> 2;
+      sub.at(3).at(3) = sub.at(2).at(2) = sub.at(1).at(1) = sub.at(0).at(0) =
+          (edge.at(3) + edge.at(4) + edge.at(4) + edge.at(5) + 2) >> 2;
+      sub.at(2).at(3) = sub.at(1).at(2) = sub.at(0).at(1) =
+          (edge.at(4) + edge.at(5) + edge.at(5) + edge.at(6) + 2) >> 2;
+      sub.at(1).at(3) = sub.at(0).at(2) =
+          (edge.at(5) + edge.at(6) + edge.at(6) + edge.at(7) + 2) >> 2;
+      sub.at(0).at(3) =
+          (edge.at(6) + edge.at(7) + edge.at(7) + edge.at(8) + 2) >> 2;
       break;
     }
 
@@ -368,13 +376,10 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
 
 using namespace internal;
 
-void IntraPredict(const FrameTag &tag, size_t r, size_t c, const ResidualValue &rv,
-                  const IntraMBHeader &mh,
+void IntraPredict(const FrameTag &tag, size_t r, size_t c,
+                  const ResidualValue &rv, const IntraMBHeader &mh,
                   std::vector<std::vector<IntraContext>> &context,
                   BitstreamParser &ps, Frame &frame) {
-#ifdef DEBUG
-  std::cerr << "ymode = " << mh.intra_y_mode << std::endl;
-#endif
   switch (mh.intra_y_mode) {
     case V_PRED:
       VPredLuma(r, c, frame.Y);

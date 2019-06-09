@@ -67,7 +67,7 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
                  ? header.quantizer_segment[pre.segment_id]
                  : header.quantizer_segment[pre.segment_id] + qp;
 
-      uint8_t y2_nonzero = y2_row[r] + y2_col[c];
+      uint8_t y2_nonzero = y2_row.at(r) + y2_col.at(c);
       std::array<uint8_t, 4> y1_above{}, y1_left{};
       std::array<uint8_t, 2> u_above{}, u_left{}, v_above{}, v_left{};
 
@@ -115,9 +115,6 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
       }
     }
   }
-#ifdef DEBUG
-  std::cerr << "Done prediction" << std::endl;
-#endif
 }
 
 }  // namespace internal
@@ -135,20 +132,6 @@ void Reconstruct(const FrameHeader &header, const FrameTag &tag,
   std::vector<std::vector<uint8_t>> seg_id(frame.vblock,
                                            std::vector<uint8_t>(frame.hblock));
   Predict(header, tag, refs, ref_frame_bias, interc, intrac, ps, frame);
-#ifdef DEBUG
-  for (size_t i = 0; i < 16; ++i) {
-    for (size_t j = 0; j < 16; ++j)
-      std::cerr << frame.Y.at(0).at(0).GetPixel(i, j) << ' ';
-    std::cerr << std::endl;
-  }
-#endif
-#ifdef DEBUG
-  for (size_t i = 0; i < 16; ++i) {
-    for (size_t j = 0; j < 16; ++j)
-      std::cerr << frame.Y.at(0).at(0).GetPixel(i, j) << ' ';
-    std::cerr << std::endl;
-  }
-#endif
   FrameFilter(header, tag.key_frame, frame);
 }
 
