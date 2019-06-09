@@ -164,7 +164,7 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
         p = r == 0 ? 127 : mb.at(r - 1).at(c).at(3).at(j - 1).at(3).at(3);
       else
         p = r == 0 && c == 0
-                ? 128
+                ? 127
                 : r == 0
                       ? 127
                       : c == 0 ? 129
@@ -180,6 +180,7 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
       context.at(r << 2 | i).at(c << 2 | j) = IntraContext(true, mode);
       BPredSubBlock(above, left, p, mode, mb.at(r).at(c).at(i).at(j));
 #ifdef DEBUG
+      std::cerr << "p = " << p << std::endl;
       std::cerr << "left:" << std::endl;
       for (size_t i = 0; i < 4; ++i) std::cerr << left.at(i) << ' ';
       std::cerr << std::endl;
