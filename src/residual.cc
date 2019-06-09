@@ -79,7 +79,7 @@ void ApplyMBResidual(
     for (size_t c = 0; c < C; ++c) {
       for (size_t i = 0; i < 4; ++i) {
         for (size_t j = 0; j < 4; ++j)
-          mb.at(r).at(c).at(i).at(j) += residual.at(r * C + c).at(i).at(j);
+          mb.at(r).at(c).at(i).at(j) = Clamp255(mb.at(r).at(c).at(i).at(j) + residual.at(r * C + c).at(i).at(j));
       }
     }
   }
@@ -100,7 +100,7 @@ void ApplySBResidual(const std::array<std::array<int16_t, 4>, 4> &residual,
 // #endif
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 4; ++j) {
-      sub.at(i).at(j) += residual.at(i).at(j);
+      sub.at(i).at(j) = Clamp255(sub.at(i).at(j) + residual.at(i).at(j));
 // #ifdef DEBUG
       // std::cerr << residual.at(i).at(j) << ' ';
 // #endif

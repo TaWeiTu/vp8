@@ -11,7 +11,7 @@ void VPredChroma(size_t r, size_t c, Plane<2> &mb) {
 }
 void HPredChroma(size_t r, size_t c, Plane<2> &mb) {
   if (c == 0)
-    mb.at(r).at(c).FillWith(127);
+    mb.at(r).at(c).FillWith(129);
   else
     mb.at(r).at(c).FillCol(mb.at(r).at(c - 1).GetCol(7));
 }
@@ -37,7 +37,10 @@ void DCPredChroma(size_t r, size_t c, Plane<2> &mb) {
 }
 
 void TMPredChroma(size_t r, size_t c, Plane<2> &mb) {
-  int16_t p = (r == 0 || c == 0 ? 128 : mb.at(r - 1).at(c - 1).GetPixel(7, 7));
+  // int16_t p = (r == 0 || c == 0 ? 128 : mb.at(r - 1).at(c - 1).GetPixel(7,
+  // 7));
+  int16_t p =
+      (r == 0 ? 127 : c == 0 ? 129 : mb.at(r - 1).at(c - 1).GetPixel(7, 7));
   for (size_t i = 0; i < 8; ++i) {
     for (size_t j = 0; j < 8; ++j) {
       int16_t x = (c == 0 ? 129 : mb.at(r).at(c - 1).GetPixel(i, 7));
@@ -56,7 +59,7 @@ void VPredLuma(size_t r, size_t c, Plane<4> &mb) {
 
 void HPredLuma(size_t r, size_t c, Plane<4> &mb) {
   if (c == 0)
-    mb.at(r).at(c).FillWith(127);
+    mb.at(r).at(c).FillWith(129);
   else
     mb.at(r).at(c).FillCol(mb.at(r).at(c - 1).GetCol(15));
 }
@@ -83,7 +86,7 @@ void DCPredLuma(size_t r, size_t c, Plane<4> &mb) {
 
 void TMPredLuma(size_t r, size_t c, Plane<4> &mb) {
   int16_t p =
-      (r == 0 || c == 0 ? 128 : mb.at(r - 1).at(c - 1).GetPixel(15, 15));
+      (r == 0 ? 127 : c == 0 ? 129 : mb.at(r - 1).at(c - 1).GetPixel(15, 15));
   for (size_t i = 0; i < 16; ++i) {
     for (size_t j = 0; j < 16; ++j) {
       int16_t x = (c == 0 ? 129 : mb.at(r).at(c - 1).GetPixel(i, 15));
