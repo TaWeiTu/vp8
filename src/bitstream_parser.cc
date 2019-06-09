@@ -273,7 +273,6 @@ MacroBlockPreHeader BitstreamParser::ReadMacroBlockPreHeader() {
   }
   if (frame_header_.mb_no_skip_coeff) {
     result.mb_skip_coeff = bd_.Bool(frame_header_.prob_skip_false);
-    assert(result.mb_skip_coeff == 0);
     context_.get().mb_metadata.at(macroblock_metadata_idx_) |=
         result.mb_skip_coeff << 1;
   }
