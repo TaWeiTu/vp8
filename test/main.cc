@@ -7,6 +7,6 @@ int main() {
   std::cout << "[Info] Start testing." << std::endl;
   vp8_test::TestDct();
   vp8_test::TestWht();
-  vp8_test::TestYuv();
+  // vp8_test::TestYuv();
   std::cout << "[Info] All tests completed." << std::endl;
 }

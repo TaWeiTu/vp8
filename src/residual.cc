@@ -2,16 +2,6 @@
 
 namespace vp8 {
 
-#ifdef DEBUG
-
-std::ostream &operator<<(std::ostream &s,
-                         const std::array<int16_t, 16> &coeff) {
-  for (size_t i = 0; i < 16; ++i) s << coeff.at(i) << ' ';
-  return s;
-}
-
-#endif
-
 ResidualValue DequantizeResidualData(ResidualData &rd, int16_t qp,
                                      const QuantIndices &quant) {
   ResidualValue rv;
