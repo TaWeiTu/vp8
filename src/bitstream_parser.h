@@ -94,8 +94,6 @@ struct FrameHeader {
   // --- Other fields not directly in the header ---
   std::array<int16_t, kMaxMacroBlockSegments> quantizer_segment;
   std::array<int16_t, kMaxMacroBlockSegments> loop_filter_level_segment;
-  std::array<int8_t, kNumRefFrames> ref_frame_delta_lf;
-  std::array<int8_t, kNumLfPredictionDelta> mb_mode_delta_lf;
 };
 
 struct MacroBlockPreHeader {
