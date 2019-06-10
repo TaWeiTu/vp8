@@ -51,6 +51,8 @@ FrameHeader BitstreamParser::ReadFrameHeader() {
   mb_num_rows_ = (frame_tag_.height + 15) / 16;
   context_.get().mb_metadata.resize(uint32_t(mb_num_cols_) * mb_num_rows_);
   fill(context_.get().mb_metadata.begin(), context_.get().mb_metadata.end(), 0);
+  context_.get().segment_id.resize(uint32_t(mb_num_cols_) * mb_num_rows_);
+  fill(context_.get().segment_id.begin(), context_.get().segment_id.end(), 0);
   frame_header_.segmentation_enabled = bd_.LitU8(1);
   if (frame_header_.segmentation_enabled) {
     UpdateSegmentation();
@@ -119,15 +121,15 @@ void BitstreamParser::UpdateSegmentation() {
   frame_header_.update_mb_segmentation_map = bd_.LitU8(1);
   bool update_segment_feature_data = bd_.LitU8(1);
   if (update_segment_feature_data) {
-    frame_header_.segment_feature_mode = SegmentMode(bd_.LitU8(1));
+    context_.get().segment_feature_mode = SegmentMode(bd_.LitU8(1));
     for (unsigned i = 0; i < kMaxMacroBlockSegments; i++) {
       bool quantizer_update = bd_.LitU8(1);
       if (quantizer_update) {
         int16_t quantizer_update_value = bd_.Prob7();
         bool quantizer_update_sign = bd_.LitU8(1);
-        frame_header_.quantizer_segment.at(i) = quantizer_update_sign
-                                                    ? -quantizer_update_value
-                                                    : quantizer_update_value;
+        context_.get().quantizer_segment.at(i) = quantizer_update_sign
+                                                     ? -quantizer_update_value
+                                                     : quantizer_update_value;
       }
     }
     for (unsigned i = 0; i < kMaxMacroBlockSegments; i++) {
@@ -135,7 +137,7 @@ void BitstreamParser::UpdateSegmentation() {
       if (loop_filter_update) {
         int16_t lf_update_value = bd_.LitU8(6);
         bool lf_update_sign = bd_.LitU8(1);
-        frame_header_.loop_filter_level_segment.at(i) =
+        context_.get().loop_filter_level_segment.at(i) =
             lf_update_sign ? -lf_update_value : lf_update_value;
       }
     }
@@ -150,6 +152,14 @@ void BitstreamParser::UpdateSegmentation() {
       }
     }
   }
+  // TODO: This is fucking slow.
+  frame_header_.segment_feature_mode = context_.get().segment_feature_mode;
+  std::copy(context_.get().quantizer_segment.begin(),
+            context_.get().quantizer_segment.end(),
+            frame_header_.quantizer_segment.begin());
+  std::copy(context_.get().loop_filter_level_segment.begin(),
+            context_.get().loop_filter_level_segment.end(),
+            frame_header_.loop_filter_level_segment.begin());
 }
 
 void BitstreamParser::MbLfAdjust() {
@@ -267,9 +277,12 @@ MacroBlockPreHeader BitstreamParser::ReadMacroBlockPreHeader() {
   if (frame_header_.update_mb_segmentation_map) {
     result.segment_id =
         uint8_t(bd_.Tree(context_.get().segment_prob, kMbSegmentTree));
-    context_.get().mb_metadata.at(macroblock_metadata_idx_) |= result.segment_id
-                                                               << 2;
+    context_.get().segment_id.at(macroblock_metadata_idx_) = result.segment_id;
+  } else {
+    result.segment_id = context_.get().segment_id.at(macroblock_metadata_idx_);
   }
+  context_.get().mb_metadata.at(macroblock_metadata_idx_) |= result.segment_id
+                                                             << 2;
   if (frame_header_.mb_no_skip_coeff) {
     result.mb_skip_coeff = bd_.Bool(frame_header_.prob_skip_false);
     context_.get().mb_metadata.at(macroblock_metadata_idx_) |=

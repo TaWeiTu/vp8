@@ -128,6 +128,7 @@ struct ParserContext {
   // (is_inter_mb && mv_mode == MV_SPLIT) || (!is_inter_mv && intra_y_mode !=
   // B_PRED)
   std::vector<uint8_t> mb_metadata;
+  std::vector<uint8_t> segment_id;
   std::array<uint8_t, kNumYModeProb> intra_16x16_prob;
   std::array<uint8_t, kNumUVModeProb> intra_chroma_prob;
   std::array<uint8_t, kNumMacroBlockSegmentProb> segment_prob;
@@ -142,9 +143,13 @@ struct ParserContext {
   CoeffProbs coeff_prob_temp;
   std::reference_wrapper<CoeffProbs> coeff_prob;
   std::array<std::array<uint8_t, kMVPCount>, kNumMVDimen> mv_prob;
+  SegmentMode segment_feature_mode;
+  std::array<int16_t, kMaxMacroBlockSegments> quantizer_segment;
+  std::array<int16_t, kMaxMacroBlockSegments> loop_filter_level_segment;
 
   ParserContext()
       : mb_metadata(),
+        segment_id(),
         intra_16x16_prob(kYModeProb),
         intra_chroma_prob(kUVModeProb),
         segment_prob(),        // Set to 255 if not updated
@@ -153,7 +158,10 @@ struct ParserContext {
         coeff_prob_persistent(kDefaultCoeffProbs),
         coeff_prob_temp(),  // Temporary buffer; normal to be zero
         coeff_prob(std::ref(coeff_prob_persistent)),
-        mv_prob(kDefaultMVContext) {}
+        mv_prob(kDefaultMVContext),
+        segment_feature_mode(),
+        quantizer_segment(),
+        loop_filter_level_segment() {}
 };
 
 struct ResidualParam {
@@ -167,9 +175,9 @@ struct ResidualParam {
 
   ResidualParam() = default;
   ResidualParam(uint8_t y2_nonzero_, std::array<uint8_t, 4> y1_above_,
-                std::array<uint8_t, 4> y1_left_, std::array<uint8_t, 2> u_above_,
-                std::array<uint8_t, 2> u_left_, std::array<uint8_t, 2> v_above_,
-                std::array<uint8_t, 2> v_left_)
+                std::array<uint8_t, 4> y1_left_,
+                std::array<uint8_t, 2> u_above_, std::array<uint8_t, 2> u_left_,
+                std::array<uint8_t, 2> v_above_, std::array<uint8_t, 2> v_left_)
       : y2_nonzero(y2_nonzero_),
         y1_above(y1_above_),
         y1_left(y1_left_),
