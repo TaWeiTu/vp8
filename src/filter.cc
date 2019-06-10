@@ -131,13 +131,23 @@ void LoopFilter::FillVertical(SubBlock &usb, SubBlock &dsb, size_t idx) const {
 
 template <size_t C>
 void PlaneFilter(const FrameHeader &header, size_t hblock, size_t vblock,
-                 bool is_key_frame, Plane<C> &frame) {
+                 bool is_key_frame,
+                 const std::vector<std::vector<uint8_t>> &lf,
+                 Plane<C> &frame) {
   uint8_t sharpness_level = header.sharpness_level;
   LoopFilter filter;
   for (size_t r = 0; r < vblock; r++) {
     for (size_t c = 0; c < hblock; c++) {
       MacroBlock<C> &mb = frame.at(r).at(c);
-      uint8_t loop_filter_level = header.loop_filter_level;
+      uint8_t loop_filter_level = lf.at(r).at(c);
+      // if (header.segmentation_enabled) {
+        // uint8_t id = segment_id.at(r).at(c);
+        // loop_filter_level =
+            // header.segment_feature_mode == SEGMENT_MODE_ABSOLUTE
+                // ? uint8_t(header.loop_filter_level_segment.at(id))
+                // : uint8_t(header.loop_filter_level_segment.at(id) +
+                          // loop_filter_level);
+      // }
       bool filter_type = header.filter_type;
 
       if (loop_filter_level == 0) continue;
@@ -238,11 +248,13 @@ void PlaneFilter(const FrameHeader &header, size_t hblock, size_t vblock,
 
 using namespace internal;
 
-void FrameFilter(const FrameHeader &header, bool is_key_frame, Frame &frame) {
+void FrameFilter(const FrameHeader &header, bool is_key_frame,
+                 const std::vector<std::vector<uint8_t>> &lf,
+                 Frame &frame) {
   size_t hblock = frame.hblock, vblock = frame.vblock;
-  PlaneFilter(header, hblock, vblock, is_key_frame, frame.Y);
-  PlaneFilter(header, hblock, vblock, is_key_frame, frame.U);
-  PlaneFilter(header, hblock, vblock, is_key_frame, frame.V);
+  PlaneFilter(header, hblock, vblock, is_key_frame, lf, frame.Y);
+  PlaneFilter(header, hblock, vblock, is_key_frame, lf, frame.U);
+  PlaneFilter(header, hblock, vblock, is_key_frame, lf, frame.V);
 }
 
 }  // namespace vp8

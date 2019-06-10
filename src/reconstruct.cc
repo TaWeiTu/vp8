@@ -45,7 +45,8 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
              const std::array<bool, 4> &ref_frame_bias,
              std::vector<std::vector<InterContext>> &interc,
              std::vector<std::vector<IntraContext>> &intrac,
-             BitstreamParser &ps, Frame &frame) {
+             std::vector<std::vector<uint8_t>> &lf, BitstreamParser &ps,
+             Frame &frame) {
   std::vector<uint8_t> y2_row(frame.vblock, false);
   std::vector<uint8_t> y2_col(frame.hblock, false);
   std::vector<std::vector<uint8_t>> y1_nonzero(
@@ -62,9 +63,10 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
       MacroBlockPreHeader pre = ps.ReadMacroBlockPreHeader();
-// #ifdef DEBUG
+      // segment_id.at(r).at(c) = pre.segment_id;
+      // #ifdef DEBUG
       // std::cerr << "ReadMacroBlockPreHeader()" << std::endl;
-// #endif
+      // #endif
       int16_t qp = header.quant_indices.y_ac_qi;
       if (header.segmentation_enabled)
         qp = header.segment_feature_mode == SEGMENT_MODE_ABSOLUTE
@@ -99,6 +101,7 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
         ResidualData rd = ps.ReadResidualData(ResidualParam(
             y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
 
+        lf.at(r).at(c) = rd.loop_filter_level;
         ResidualValue rv = DequantizeResidualData(rd, qp, header.quant_indices);
         UpdateNonzero(rv, rd.has_y2, r, c, y2_row, y2_col, y1_nonzero,
                       u_nonzero, v_nonzero);
@@ -112,6 +115,7 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
 
         ResidualData rd = ps.ReadResidualData(ResidualParam(
             y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
+        lf.at(r).at(c) = rd.loop_filter_level;
         ResidualValue rv = DequantizeResidualData(rd, qp, header.quant_indices);
         UpdateNonzero(rv, rd.has_y2, r, c, y2_row, y2_col, y1_nonzero,
                       u_nonzero, v_nonzero);
@@ -134,11 +138,12 @@ void Reconstruct(const FrameHeader &header, const FrameTag &tag,
       frame.vblock, std::vector<InterContext>(frame.hblock));
   std::vector<std::vector<IntraContext>> intrac(
       frame.vblock << 2, std::vector<IntraContext>(frame.hblock << 2));
-  std::vector<std::vector<uint8_t>> seg_id(frame.vblock,
-                                           std::vector<uint8_t>(frame.hblock));
+  std::vector<std::vector<uint8_t>> lf(
+      frame.vblock, std::vector<uint8_t>(frame.hblock));
 
-  Predict(header, tag, refs, ref_frame_bias, interc, intrac, ps, frame);
-  FrameFilter(header, tag.key_frame, frame);
+  Predict(header, tag, refs, ref_frame_bias, interc, intrac, lf, ps,
+          frame);
+  FrameFilter(header, tag.key_frame, lf, frame);
 }
 
 }  // namespace vp8

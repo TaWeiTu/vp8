@@ -27,7 +27,7 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
              const std::array<bool, 4> &ref_frame_bias,
              std::vector<std::vector<InterContext>> &interc,
              std::vector<std::vector<IntraContext>> &intrac,
-             BitstreamParser &ps,
+             std::vector<std::vector<uint8_t>> &segment_id, BitstreamParser &ps,
              Frame &frame);
 
 }  // namespace internal

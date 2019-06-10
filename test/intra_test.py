@@ -16,6 +16,7 @@ with open(prefix + 'test_case_14xx_descriptions.tsv') as f:
 for file, frame, height, width in test:
     if file == 'vp80-03-segmentation-1401.ivf':
         continue
+    print(file)
     os.system('%s %s tmp_test.yuv' % (binary, prefix + file))
     hashvalue = []
     with open(prefix + file + '.md5') as f:

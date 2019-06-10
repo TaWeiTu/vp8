@@ -36,11 +36,11 @@ class LoopFilter {
 };
 
 template <size_t C>
-void PlaneFilter(const FrameHeader &, size_t, size_t, bool, Plane<C> &);
+void PlaneFilter(const FrameHeader &, size_t, size_t, bool, const std::vector<std::vector<uint8_t>> &, Plane<C> &);
 
 }  // namespace internal
 
-void FrameFilter(const FrameHeader &, bool, Frame &);
+void FrameFilter(const FrameHeader &, bool, const std::vector<std::vector<uint8_t>> &, Frame &);
 
 }  // namespace vp8
 
