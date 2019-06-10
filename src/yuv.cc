@@ -37,7 +37,6 @@ void YUV::WriteFrame(const Frame &frame) {
     }
   }
   if (fs_.is_open()) fs_.close();
-  exit(0);
 }
 
 YUV::~YUV() {

@@ -505,21 +505,21 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
   ApplyMBResidual(rv.v, frame.V.at(r).at(c));
 
 #ifdef DEBUG
-  // for (size_t i = 0; i < 16; ++i) {
-    // for (size_t j = 0; j < 16; ++j)
-      // std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-    // std::cerr << std::endl;
-  // }
-  // for (size_t i = 0; i < 8; ++i) {
-    // for (size_t j = 0; j < 8; ++j)
-      // std::cerr << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
-    // std::cerr << std::endl;
-  // }
-  // for (size_t i = 0; i < 8; ++i) {
-    // for (size_t j = 0; j < 8; ++j)
-      // std::cerr << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
-    // std::cerr << std::endl;
-  // }
+  for (size_t i = 0; i < 16; ++i) {
+    for (size_t j = 0; j < 16; ++j)
+      std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+    std::cerr << std::endl;
+  }
+  for (size_t i = 0; i < 8; ++i) {
+    for (size_t j = 0; j < 8; ++j)
+      std::cerr << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
+    std::cerr << std::endl;
+  }
+  for (size_t i = 0; i < 8; ++i) {
+    for (size_t j = 0; j < 8; ++j)
+      std::cerr << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
+    std::cerr << std::endl;
+  }
 #endif
 }
 

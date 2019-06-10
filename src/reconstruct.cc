@@ -138,27 +138,6 @@ void Reconstruct(const FrameHeader &header, const FrameTag &tag,
                                            std::vector<uint8_t>(frame.hblock));
 
   Predict(header, tag, refs, ref_frame_bias, interc, intrac, ps, frame);
-// #ifdef DEBUG
-  // for (size_t r = 0; r < frame.vblock; ++r) {
-    // for (size_t c = 0; c < frame.hblock; ++c) {
-      // for (size_t i = 0; i < 16; ++i) {
-        // for (size_t j = 0; j < 16; ++j)
-          // std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-        // std::cerr << std::endl;
-      // }
-      // for (size_t i = 0; i < 8; ++i) {
-        // for (size_t j = 0; j < 8; ++j)
-          // std::cerr << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
-        // std::cerr << std::endl;
-      // }
-      // for (size_t i = 0; i < 8; ++i) {
-        // for (size_t j = 0; j < 8; ++j)
-          // std::cerr << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
-        // std::cerr << std::endl;
-      // }
-    // }
-  // }
-// #endif
   FrameFilter(header, tag.key_frame, frame);
 }
 
