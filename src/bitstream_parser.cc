@@ -46,13 +46,14 @@ FrameHeader BitstreamParser::ReadFrameHeader() {
     frame_header_.clamping_type = bd_.LitU8(1);
     ensure(!frame_header_.color_space && !frame_header_.clamping_type,
            "[Error] ReadFrameHeader: Unsupported color_space / clamping_type");
+    mb_num_cols_ = (frame_tag_.width + 15) / 16;
+    mb_num_rows_ = (frame_tag_.height + 15) / 16;
+    context_.get().mb_metadata.resize(uint32_t(mb_num_cols_) * mb_num_rows_);
+    fill(context_.get().mb_metadata.begin(), context_.get().mb_metadata.end(),
+         0);
+    context_.get().segment_id.resize(uint32_t(mb_num_cols_) * mb_num_rows_);
+    fill(context_.get().segment_id.begin(), context_.get().segment_id.end(), 0);
   }
-  mb_num_cols_ = (frame_tag_.width + 15) / 16;
-  mb_num_rows_ = (frame_tag_.height + 15) / 16;
-  context_.get().mb_metadata.resize(uint32_t(mb_num_cols_) * mb_num_rows_);
-  fill(context_.get().mb_metadata.begin(), context_.get().mb_metadata.end(), 0);
-  context_.get().segment_id.resize(uint32_t(mb_num_cols_) * mb_num_rows_);
-  fill(context_.get().segment_id.begin(), context_.get().segment_id.end(), 0);
   frame_header_.segmentation_enabled = bd_.LitU8(1);
   if (frame_header_.segmentation_enabled) {
     UpdateSegmentation();
@@ -163,8 +164,8 @@ void BitstreamParser::UpdateSegmentation() {
 }
 
 void BitstreamParser::MbLfAdjust() {
-  bool loop_filter_adj_enable = bd_.LitU8(1);
-  if (loop_filter_adj_enable) {
+  loop_filter_adj_enable_ = bd_.LitU8(1);
+  if (loop_filter_adj_enable_) {
     bool mode_ref_lf_delta_update = bd_.LitU8(1);
     if (mode_ref_lf_delta_update) {
       for (unsigned i = 0; i < kNumRefFrames; i++) {
@@ -338,6 +339,8 @@ InterMBHeader BitstreamParser::ReadInterMBHeader(
   }
   context_.get().mb_metadata.at(macroblock_metadata_idx_) |=
       (result.mv_mode == MV_SPLIT);
+  context_.get().mb_metadata.at(macroblock_metadata_idx_) |=
+      (uint16_t(result.mv_mode) << 6);
   macroblock_metadata_idx_++;
   return result;
 }
@@ -372,7 +375,7 @@ IntraMBHeader BitstreamParser::ReadIntraMBHeaderKF() {
   context_.get().mb_metadata.at(macroblock_metadata_idx_) |=
       (result.intra_y_mode != B_PRED);
   context_.get().mb_metadata.at(macroblock_metadata_idx_) |=
-      (result.intra_y_mode << 6);
+      (uint16_t(result.intra_y_mode) << 6);
   macroblock_metadata_idx_++;
   return result;
 }
@@ -386,7 +389,7 @@ IntraMBHeader BitstreamParser::ReadIntraMBHeaderNonKF() {
   context_.get().mb_metadata.at(macroblock_metadata_idx_) |=
       (result.intra_y_mode != B_PRED);
   context_.get().mb_metadata.at(macroblock_metadata_idx_) |=
-      (result.intra_y_mode << 6);
+      (uint16_t(result.intra_y_mode) << 6);
   macroblock_metadata_idx_++;
   return result;
 }
@@ -440,7 +443,7 @@ ResidualData BitstreamParser::ReadResidualData(
   auto first_coeff = (macroblock_metadata & 0x1) ? 1 : 0;
   result.has_y2 = first_coeff;
   residual_macroblock_idx_++;
-  if (!(macroblock_metadata & 0x2)) {
+  if (!((macroblock_metadata >> 1) & 0x1)) {
     std::array<bool, 25> non_zero{};
     if (macroblock_metadata & 0x1) {
       tie(result.dct_coeff.at(0), non_zero.at(0)) =
@@ -476,21 +479,35 @@ ResidualData BitstreamParser::ReadResidualData(
     }
   }
   result.segment_id = (macroblock_metadata >> 2) & 0x3;
-  result.loop_filter_level = int8_t(frame_header_.loop_filter_level);
-  result.loop_filter_level +=
-      context_.get().ref_frame_delta_lf.at((macroblock_metadata >> 4) & 0x3);
-  auto prediction_mode = (macroblock_metadata >> 6) & 0x3;
-  if (((macroblock_metadata >> 4) & 0x3) == CURRENT_FRAME) {
-    if (prediction_mode == B_PRED) {
-      result.loop_filter_level += context_.get().mb_mode_delta_lf.at(0);
+  int loop_filter_level = frame_header_.loop_filter_level;
+  if (frame_header_.segmentation_enabled) {
+    if (frame_header_.segment_feature_mode == SEGMENT_MODE_ABSOLUTE) {
+      loop_filter_level =
+          context_.get().loop_filter_level_segment.at(result.segment_id);
+    } else {
+      loop_filter_level +=
+          context_.get().loop_filter_level_segment.at(result.segment_id);
     }
-  } else if (prediction_mode == MV_ZERO) {
-    result.loop_filter_level += context_.get().mb_mode_delta_lf.at(1);
-  } else if (prediction_mode == MV_SPLIT) {
-    result.loop_filter_level += context_.get().mb_mode_delta_lf.at(3);
-  } else {
-    result.loop_filter_level += context_.get().mb_mode_delta_lf.at(2);
+    loop_filter_level = std::clamp(loop_filter_level, 0, 63);
   }
+  if (loop_filter_adj_enable_) {
+    loop_filter_level +=
+        context_.get().ref_frame_delta_lf.at((macroblock_metadata >> 4) & 0x3);
+    auto prediction_mode = (macroblock_metadata >> 6) & 0x7;
+    if (((macroblock_metadata >> 4) & 0x3) == CURRENT_FRAME) {
+      if (prediction_mode == B_PRED) {
+        loop_filter_level += context_.get().mb_mode_delta_lf.at(0);
+      }
+    } else if (prediction_mode == MV_ZERO) {
+      loop_filter_level += context_.get().mb_mode_delta_lf.at(1);
+    } else if (prediction_mode == MV_SPLIT) {
+      loop_filter_level += context_.get().mb_mode_delta_lf.at(3);
+    } else {
+      loop_filter_level += context_.get().mb_mode_delta_lf.at(2);
+    }
+    loop_filter_level = std::clamp(loop_filter_level, 0, 63);
+  }
+  result.loop_filter_level = uint8_t(loop_filter_level);
   return result;
 }
 

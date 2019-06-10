@@ -117,7 +117,7 @@ struct IntraMBHeader {
 struct ResidualData {
   std::array<std::array<int16_t, 16>, 25> dct_coeff;
   uint8_t segment_id;
-  int8_t loop_filter_level;
+  uint8_t loop_filter_level;
   bool has_y2;
 };
 
@@ -127,7 +127,7 @@ struct ParserContext {
   // (segment_id << 2) | (mb_skip_coeff << 1) |
   // (is_inter_mb && mv_mode == MV_SPLIT) || (!is_inter_mv && intra_y_mode !=
   // B_PRED)
-  std::vector<uint8_t> mb_metadata;
+  std::vector<uint16_t> mb_metadata;
   std::vector<uint8_t> segment_id;
   std::array<uint8_t, kNumYModeProb> intra_16x16_prob;
   std::array<uint8_t, kNumUVModeProb> intra_chroma_prob;
@@ -199,6 +199,7 @@ class BitstreamParser {
   uint16_t mb_cur_row_, mb_cur_col_, mb_num_rows_, mb_num_cols_;
   uint32_t first_part_size_;
   std::array<BoolDecoder, 8> residual_bd_;
+  bool loop_filter_adj_enable_;
 
   FrameTag ReadFrameTag();
 
@@ -234,7 +235,8 @@ class BitstreamParser {
         mb_cur_col_(),
         mb_num_rows_(),
         mb_num_cols_(),
-        first_part_size_() {}
+        first_part_size_(),
+        loop_filter_adj_enable_() {}
 
   std::pair<FrameTag, FrameHeader> ReadFrameTagHeader();
 
