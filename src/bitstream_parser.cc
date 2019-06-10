@@ -187,6 +187,13 @@ void BitstreamParser::MbLfAdjust() {
       }
     }
   }
+  // TODO: This is fucking slow.
+  std::copy(context_.get().ref_frame_delta_lf.begin(),
+            context_.get().ref_frame_delta_lf.end(),
+            frame_header_.ref_frame_delta_lf.begin());
+  std::copy(context_.get().mb_mode_delta_lf.begin(),
+            context_.get().mb_mode_delta_lf.end(),
+            frame_header_.mb_mode_delta_lf.begin());
 }
 
 QuantIndices BitstreamParser::ReadQuantIndices() {
