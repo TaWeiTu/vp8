@@ -2,6 +2,7 @@
 #define DCT_H_
 
 #include <array>
+#include <iostream>
 
 #include "quantizer.h"
 

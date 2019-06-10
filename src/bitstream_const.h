@@ -145,6 +145,11 @@ constexpr std::array<TreeIndex, 2 * (kNumDctTokens - 1)> kCoeffTree = {
     14,        16,        -DCT_CAT1, -DCT_CAT2, 18,     20,
     -DCT_CAT3, -DCT_CAT4, -DCT_CAT5, -DCT_CAT6};
 
+constexpr std::array<TreeIndex, 2 * (kNumDctTokens - 2)> kCoeffTreeNoEOB = {
+    -DCT_0, 2,      -DCT_1,    4,         6,         10,        -DCT_2,
+    8,      -DCT_3, -DCT_4,    12,        14,        -DCT_CAT1, -DCT_CAT2,
+    16,     18,     -DCT_CAT3, -DCT_CAT4, -DCT_CAT5, -DCT_CAT6};
+
 static const std::array<std::array<Prob, 4>, 6> kModeProb = {
     {{7, 1, 1, 143},
      {14, 18, 14, 107},
@@ -285,7 +290,7 @@ const std::vector<std::vector<Prob>> kPcat = {
     {173, 148, 140, 0},
     {176, 155, 140, 135, 0},
     {180, 157, 141, 134, 130, 0},
-    {254, 254, 243, 230, 196, 177, 53, 140, 133, 130, 129, 0}};
+    {254, 254, 243, 230, 196, 177, 153, 140, 133, 130, 129, 0}};
 
 constexpr std::array<
     std::array<std::array<std::array<Prob, kNumDctTokens - 1>, 3>, 8>, 4>
@@ -494,13 +499,18 @@ constexpr std::array<Prob, kNumYModes - 1> kKeyFrameYModeProb = {145, 156, 163,
 
 constexpr std::array<Prob, kNumUVModes - 1> kUVModeProb = {162, 101, 204};
 
-constexpr std::array<Prob, kNumUVModes - 1> kKeyFrameUVModeProb = {142, 114, 183};
+constexpr std::array<Prob, kNumUVModes - 1> kKeyFrameUVModeProb = {142, 114,
+                                                                   183};
 
 constexpr std::array<Prob, kNumIntraBModes - 1> kBModeProb = {
     120, 90, 79, 133, 87, 85, 80, 111, 151};
 
-constexpr std::array<unsigned, 16> kCoeffBands = {0, 1, 2, 3, 6, 4, 5, 6,
-                                                  6, 6, 6, 6, 6, 6, 6, 7};
+constexpr std::array<uint8_t, 16> kCoeffBands = {0, 1, 2, 3, 6, 4, 5, 6,
+                                                 6, 6, 6, 6, 6, 6, 6, 7};
+
+constexpr std::array<uint8_t, 16> kZigZag = {0, 1,  4,  8,  5, 2,  3,  6,
+                                             9, 12, 13, 10, 7, 11, 14, 15};
+
 }  // namespace vp8
 
 #endif  // BITSTREAM_CONST_H_

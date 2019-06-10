@@ -11,7 +11,7 @@ void VPredChroma(size_t r, size_t c, Plane<2> &mb) {
 }
 void HPredChroma(size_t r, size_t c, Plane<2> &mb) {
   if (c == 0)
-    mb.at(r).at(c).FillWith(127);
+    mb.at(r).at(c).FillWith(129);
   else
     mb.at(r).at(c).FillCol(mb.at(r).at(c - 1).GetCol(7));
 }
@@ -37,11 +37,12 @@ void DCPredChroma(size_t r, size_t c, Plane<2> &mb) {
 }
 
 void TMPredChroma(size_t r, size_t c, Plane<2> &mb) {
-  int16_t p = (r == 0 || c == 0 ? 128 : mb.at(r - 1).at(c - 1).GetPixel(7, 7));
+  int16_t p =
+      (r == 0 ? 127 : c == 0 ? 129 : mb.at(r - 1).at(c - 1).GetPixel(7, 7));
   for (size_t i = 0; i < 8; ++i) {
     for (size_t j = 0; j < 8; ++j) {
       int16_t x = (c == 0 ? 129 : mb.at(r).at(c - 1).GetPixel(i, 7));
-      int16_t y = (r == 0 ? 127 : mb.at(r - 1).at(c).GetPixel(7, i));
+      int16_t y = (r == 0 ? 127 : mb.at(r - 1).at(c).GetPixel(7, j));
       mb.at(r).at(c).SetPixel(i, j, Clamp255(int16_t(x + y - p)));
     }
   }
@@ -56,7 +57,7 @@ void VPredLuma(size_t r, size_t c, Plane<4> &mb) {
 
 void HPredLuma(size_t r, size_t c, Plane<4> &mb) {
   if (c == 0)
-    mb.at(r).at(c).FillWith(127);
+    mb.at(r).at(c).FillWith(129);
   else
     mb.at(r).at(c).FillCol(mb.at(r).at(c - 1).GetCol(15));
 }
@@ -69,11 +70,11 @@ void DCPredLuma(size_t r, size_t c, Plane<4> &mb) {
 
   int32_t sum = 0, shf = 3;
   if (r > 0) {
-    for (size_t i = 0; i < 8; ++i) sum += mb.at(r - 1).at(c).GetPixel(15, i);
+    for (size_t i = 0; i < 16; ++i) sum += mb.at(r - 1).at(c).GetPixel(15, i);
     shf++;
   }
   if (c > 0) {
-    for (size_t i = 0; i < 8; ++i) sum += mb.at(r).at(c - 1).GetPixel(i, 15);
+    for (size_t i = 0; i < 16; ++i) sum += mb.at(r).at(c - 1).GetPixel(i, 15);
     shf++;
   }
 
@@ -83,11 +84,11 @@ void DCPredLuma(size_t r, size_t c, Plane<4> &mb) {
 
 void TMPredLuma(size_t r, size_t c, Plane<4> &mb) {
   int16_t p =
-      (r == 0 || c == 0 ? 128 : mb.at(r - 1).at(c - 1).GetPixel(15, 15));
+      (r == 0 ? 127 : c == 0 ? 129 : mb.at(r - 1).at(c - 1).GetPixel(15, 15));
   for (size_t i = 0; i < 16; ++i) {
     for (size_t j = 0; j < 16; ++j) {
       int16_t x = (c == 0 ? 129 : mb.at(r).at(c - 1).GetPixel(i, 15));
-      int16_t y = (r == 0 ? 127 : mb.at(r - 1).at(c).GetPixel(15, i));
+      int16_t y = (r == 0 ? 127 : mb.at(r - 1).at(c).GetPixel(15, j));
       mb.at(r).at(c).SetPixel(i, j, Clamp255(int16_t(x + y - p)));
     }
   }
@@ -96,7 +97,6 @@ void TMPredLuma(size_t r, size_t c, Plane<4> &mb) {
 void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
                std::vector<std::vector<IntraContext>> &context,
                BitstreamParser &ps, Plane<4> &mb) {
-
   auto LeftSubBlockMode = [&context, r, c](size_t idx) {
     if ((idx & 3) == 0) {
       if (c == 0) return B_DC_PRED;
@@ -119,10 +119,10 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
 
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 4; ++j) {
-      std::array<int16_t, 8> above;
-      std::array<int16_t, 4> left;
-      std::array<int16_t, 4> row_above;
-      std::array<int16_t, 4> row_right;
+      std::array<int16_t, 8> above{};
+      std::array<int16_t, 4> left{};
+      std::array<int16_t, 4> row_above{};
+      std::array<int16_t, 4> row_right{};
 
       if (i == 0)
         row_above = r == 0 ? std::array<int16_t, 4>{127, 127, 127, 127}
@@ -131,12 +131,14 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
         row_above = mb.at(r).at(c).at(i - 1).at(j).GetRow(3);
 
       if (j == 3) {
-        if (r == 0)
+        if (r == 0) {
           row_right = std::array<int16_t, 4>{127, 127, 127, 127};
-        else if (c + 1 == mb.at(r).size())
-          row_right = mb.at(r - 1).at(c).at(3).at(3).GetRow(3);
-        else
+        } else if (c + 1 == mb.at(r).size()) {
+          int16_t x = mb.at(r - 1).at(c).at(3).at(3).at(3).at(3);
+          row_right = std::array<int16_t, 4>{x, x, x, x};
+        } else {
           row_right = mb.at(r - 1).at(c + 1).at(3).at(0).GetRow(3);
+        }
       } else {
         if (i == 0)
           row_right = r == 0 ? std::array<int16_t, 4>{127, 127, 127, 127}
@@ -163,42 +165,27 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
         p = r == 0 ? 127 : mb.at(r - 1).at(c).at(3).at(j - 1).at(3).at(3);
       else
         p = r == 0 && c == 0
-                ? 128
+                ? 127
                 : r == 0
                       ? 127
                       : c == 0 ? 129
                                : mb.at(r - 1).at(c - 1).at(3).at(3).at(3).at(3);
 
-      // #ifdef DEBUG
-      // std::cerr << "reading subblock mode of above and left" << std::endl;
-      // #endif
       SubBlockMode mode =
           is_key_frame ? ps.ReadSubBlockBModeKF(AboveSubBlockMode(i << 2 | j),
                                                 LeftSubBlockMode(i << 2 | j))
                        : ps.ReadSubBlockBModeNonKF();
-// #ifdef DEBUG
-// std::cerr << "done reading subblock mode of above and left" << std::endl;
-// #endif
-#ifdef DEBUG
-      std::cerr << "subblock mode = " << mode << std::endl;
-#endif
       context.at(r << 2 | i).at(c << 2 | j) = IntraContext(true, mode);
       BPredSubBlock(above, left, p, mode, mb.at(r).at(c).at(i).at(j));
       ApplySBResidual(rv.y.at(i << 2 | j), mb.at(r).at(c).at(i).at(j));
 #ifdef DEBUG
-      static int cnt = 0;
-      if (cnt == 16) exit(0);
-      cnt += 1;
-      for (size_t x = 0; x < 4; ++x) {
-        for (size_t y = 0; y < 4; ++y) {
-          std::cerr << mb.at(r).at(c).at(i).at(j).at(x).at(y) << ' ';
-        }
-        std::cerr << std::endl;
-      }
-      for (size_t i = 0; i < 8; ++i) std::cerr << above.at(i) << ' ';
+      std::cerr << "left:" << std::endl;
+      for (size_t i = 0; i < 4; ++i) std::cerr << left.at(i) << ' '; 
       std::cerr << std::endl;
-      for (size_t i = 0; i < 4; ++i) std::cerr << left.at(i) << ' ';
+      std::cerr << "above:" << std::endl;
+      for (size_t i = 0; i < 8; ++i) std::cerr << above.at(i) << ' '; 
       std::cerr << std::endl;
+      std::cerr << "p: " << p << std::endl;
 #endif
     }
   }
@@ -209,7 +196,7 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
                    SubBlockMode mode, SubBlock &sub) {
   const std::array<int16_t, 9> edge = {
       left.at(3),  left.at(2),  left.at(1),  left.at(0),  p,
-      above.at(3), above.at(2), above.at(1), above.at(0),
+      above.at(0), above.at(1), above.at(2), above.at(3),
   };
   switch (mode) {
     case B_VE_PRED: {
@@ -228,7 +215,7 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
       for (size_t i = 0; i < 4; ++i) {
         int16_t x = i == 0 ? p : left.at(i - 1);
         int16_t y = left.at(i);
-        int16_t z = i == 3 ? above.at(3) : above.at(i + 1);
+        int16_t z = i == 3 ? left.at(3) : left.at(i + 1);
         int16_t avg = (x + y + y + z + 2) >> 2;
         sub.at(i).at(0) = sub.at(i).at(1) = sub.at(i).at(2) = sub.at(i).at(3) =
             avg;
@@ -266,13 +253,20 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
     }
 
     case B_RD_PRED: {
-      for (size_t d = 0; d < 7; ++d) {
-        int16_t x = edge.at(d);
-        int16_t y = edge.at(d + 1);
-        int16_t z = edge.at(d + 2);
-        int16_t avg = (x + y + y + z + 2) >> 2;
-        for (size_t i = 0; i + d < 4; ++i) sub.at(i).at(d + i) = avg;
-      }
+      sub.at(3).at(0) =
+          (edge.at(0) + edge.at(1) + edge.at(1) + edge.at(2) + 2) >> 2;
+      sub.at(3).at(1) = sub.at(2).at(0) =
+          (edge.at(1) + edge.at(2) + edge.at(2) + edge.at(3) + 2) >> 2;
+      sub.at(3).at(2) = sub.at(2).at(1) = sub.at(1).at(0) =
+          (edge.at(2) + edge.at(3) + edge.at(3) + edge.at(4) + 2) >> 2;
+      sub.at(3).at(3) = sub.at(2).at(2) = sub.at(1).at(1) = sub.at(0).at(0) =
+          (edge.at(3) + edge.at(4) + edge.at(4) + edge.at(5) + 2) >> 2;
+      sub.at(2).at(3) = sub.at(1).at(2) = sub.at(0).at(1) =
+          (edge.at(4) + edge.at(5) + edge.at(5) + edge.at(6) + 2) >> 2;
+      sub.at(1).at(3) = sub.at(0).at(2) =
+          (edge.at(5) + edge.at(6) + edge.at(6) + edge.at(7) + 2) >> 2;
+      sub.at(0).at(3) =
+          (edge.at(6) + edge.at(7) + edge.at(7) + edge.at(8) + 2) >> 2;
       break;
     }
 
@@ -361,12 +355,12 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
 
 using namespace internal;
 
-void IntraPredict(const FrameTag &tag, size_t r, size_t c, const ResidualValue &rv,
-                  const IntraMBHeader &mh,
+void IntraPredict(const FrameTag &tag, size_t r, size_t c,
+                  const ResidualValue &rv, const IntraMBHeader &mh,
                   std::vector<std::vector<IntraContext>> &context,
                   BitstreamParser &ps, Frame &frame) {
 #ifdef DEBUG
-  std::cerr << "ymode = " << mh.intra_y_mode << std::endl;
+  std::cerr << "mode = " << mh.intra_y_mode << std::endl;
 #endif
   switch (mh.intra_y_mode) {
     case V_PRED:
@@ -376,7 +370,21 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c, const ResidualValue &
           context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_VE_PRED);
       }
+#ifdef DEBUG
+      for (size_t i = 0; i < 16; ++i) {
+        for (size_t j = 0; j < 16; ++j)
+          std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+        std::cerr << std::endl;
+      }
+#endif
       ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
+#ifdef DEBUG
+      for (size_t i = 0; i < 16; ++i) {
+        for (size_t j = 0; j < 16; ++j)
+          std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+        std::cerr << std::endl;
+      }
+#endif
       break;
 
     case H_PRED:
@@ -386,7 +394,21 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c, const ResidualValue &
           context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_HE_PRED);
       }
+#ifdef DEBUG
+      for (size_t i = 0; i < 16; ++i) {
+        for (size_t j = 0; j < 16; ++j)
+          std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+        std::cerr << std::endl;
+      }
+#endif
       ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
+#ifdef DEBUG
+      for (size_t i = 0; i < 16; ++i) {
+        for (size_t j = 0; j < 16; ++j)
+          std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+        std::cerr << std::endl;
+      }
+#endif
       break;
 
     case DC_PRED:
@@ -396,7 +418,21 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c, const ResidualValue &
           context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_DC_PRED);
       }
+#ifdef DEBUG
+      for (size_t i = 0; i < 16; ++i) {
+        for (size_t j = 0; j < 16; ++j)
+          std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+        std::cerr << std::endl;
+      }
+#endif
       ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
+#ifdef DEBUG
+      for (size_t i = 0; i < 16; ++i) {
+        for (size_t j = 0; j < 16; ++j)
+          std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+        std::cerr << std::endl;
+      }
+#endif
       break;
 
     case TM_PRED:
@@ -406,11 +442,32 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c, const ResidualValue &
           context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_TM_PRED);
       }
+#ifdef DEBUG
+      for (size_t i = 0; i < 16; ++i) {
+        for (size_t j = 0; j < 16; ++j)
+          std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+        std::cerr << std::endl;
+      }
+#endif
       ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
+#ifdef DEBUG
+      for (size_t i = 0; i < 16; ++i) {
+        for (size_t j = 0; j < 16; ++j)
+          std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+        std::cerr << std::endl;
+      }
+#endif
       break;
 
     case B_PRED:
       BPredLuma(r, c, tag.key_frame, rv, context, ps, frame.Y);
+#ifdef DEBUG
+      for (size_t i = 0; i < 16; ++i) {
+        for (size_t j = 0; j < 16; ++j)
+          std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+        std::cerr << std::endl;
+      }
+#endif
       break;
 
     default:
@@ -444,11 +501,26 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c, const ResidualValue &
       ensure(false, "[Error] IntraPredict: Unknown UV mode.");
       break;
   }
-    ApplyMBResidual(rv.u, frame.U.at(r).at(c));
-    ApplyMBResidual(rv.v, frame.V.at(r).at(c));
-  // #ifdef DEBUG
-  // std::cerr << "[IntraPredict] Done" << std::endl;
-  // #endif
+  ApplyMBResidual(rv.u, frame.U.at(r).at(c));
+  ApplyMBResidual(rv.v, frame.V.at(r).at(c));
+
+#ifdef DEBUG
+  // for (size_t i = 0; i < 16; ++i) {
+    // for (size_t j = 0; j < 16; ++j)
+      // std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+    // std::cerr << std::endl;
+  // }
+  // for (size_t i = 0; i < 8; ++i) {
+    // for (size_t j = 0; j < 8; ++j)
+      // std::cerr << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
+    // std::cerr << std::endl;
+  // }
+  // for (size_t i = 0; i < 8; ++i) {
+    // for (size_t j = 0; j < 8; ++j)
+      // std::cerr << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
+    // std::cerr << std::endl;
+  // }
+#endif
 }
 
 }  // namespace vp8

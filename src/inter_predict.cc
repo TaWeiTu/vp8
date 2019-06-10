@@ -303,10 +303,9 @@ void Sixtap(const Plane<C> &refer, size_t r, size_t c, uint8_t mr, uint8_t mc,
 }
 
 template <size_t C>
-void InterpBlock(
-    const Plane<C> &refer,
-    const std::array<std::array<int16_t, 6>, 8> &filter, size_t r, size_t c,
-    MacroBlock<C> &mb) {
+void InterpBlock(const Plane<C> &refer,
+                 const std::array<std::array<int16_t, 6>, 8> &filter, size_t r,
+                 size_t c, MacroBlock<C> &mb) {
   size_t offset = C / 2 + 2;
   for (size_t i = 0; i < C; ++i) {
     for (size_t j = 0; j < C; ++j) {
@@ -328,7 +327,7 @@ void InterpBlock(
       size_t tc = size_t(int32_t(c << offset | (j << 2)) + (mv.dc >> 3));
       if (mr | mc) Sixtap(refer, tr, tc, mr, mc, filter, mb.at(i).at(j));
     }
-  } 
+  }
 }
 
 template std::array<std::array<int16_t, 4>, 9> HorizontalSixtap<4>(
@@ -344,13 +343,11 @@ template void Sixtap<2>(const Plane<2> &, size_t, size_t, uint8_t, uint8_t,
                         SubBlock &);
 
 template void InterpBlock<4>(
-    const Plane<4> &refer,
-    const std::array<std::array<int16_t, 6>, 8> &filter, size_t r, size_t c,
-    MacroBlock<4> &mb);
+    const Plane<4> &refer, const std::array<std::array<int16_t, 6>, 8> &filter,
+    size_t r, size_t c, MacroBlock<4> &mb);
 template void InterpBlock<2>(
-    const Plane<2> &refer,
-    const std::array<std::array<int16_t, 6>, 8> &filter, size_t r, size_t c,
-    MacroBlock<2> &mb);
+    const Plane<2> &refer, const std::array<std::array<int16_t, 6>, 8> &filter,
+    size_t r, size_t c, MacroBlock<2> &mb);
 
 }  // namespace internal
 
@@ -361,17 +358,18 @@ void InterPredict(const FrameTag &tag, size_t r, size_t c,
                   const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
                   std::vector<std::vector<InterContext>> &context,
                   BitstreamParser &ps, Frame &frame) {
+
+#ifdef DEBUG
+  std::cerr << "Inter-Predict" << std::endl;
+#endif
   ConfigureMVs(r, c, tag.version == 3, ref_frame_bias, ref_frame, context, ps,
                frame);
   std::array<std::array<int16_t, 6>, 8> subpixel_filters =
       tag.version == 0 ? kBicubicFilter : kBilinearFilter;
 
-  InterpBlock(refs[ref_frame].Y, subpixel_filters, r, c,
-              frame.Y.at(r).at(c));
-  InterpBlock(refs[ref_frame].U, subpixel_filters, r, c,
-              frame.U.at(r).at(c));
-  InterpBlock(refs[ref_frame].V, subpixel_filters, r, c,
-              frame.V.at(r).at(c));
+  InterpBlock(refs[ref_frame].Y, subpixel_filters, r, c, frame.Y.at(r).at(c));
+  InterpBlock(refs[ref_frame].U, subpixel_filters, r, c, frame.U.at(r).at(c));
+  InterpBlock(refs[ref_frame].V, subpixel_filters, r, c, frame.V.at(r).at(c));
 }
 
 }  // namespace vp8

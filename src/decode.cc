@@ -53,7 +53,7 @@ int main(int argc, const char **argv) {
   assert(read_bytes(2) == 0);   // Version
   assert(read_bytes(2) == 32);  // Header length
   assert(read_bytes(4) == vp80);
-  auto width = read_bytes(2), height = read_bytes(2),
+  auto width_ = read_bytes(2), height_ = read_bytes(2),
        frame_rate = read_bytes(4), time_scale = read_bytes(4),
        num_frames = read_bytes(4);
   read_bytes(4);  // Reserved bytes
@@ -68,14 +68,17 @@ int main(int argc, const char **argv) {
 
   std::vector<uint8_t> buffer;
 
+  size_t height = 0, width = 0;
   for (size_t frame_cnt = 0; frame_cnt < num_frames; frame_cnt++) {
     auto frame_size = read_bytes(4);
     read_bytes(4);
     read_bytes(4);
     // Decoding loop: reconstruct the frame and update the golden/altref frame
     // (if necessary).
+#ifdef DEBUG
     std::cerr << "[Info] Start decoding frame number " << frame_cnt
               << std::endl;
+#endif
     buffer.resize(frame_size);
     // TODO: (Improvement) This part is a bit ugly.
     fs.read(reinterpret_cast<char *>(buffer.data()), frame_size);
@@ -84,12 +87,12 @@ int main(int argc, const char **argv) {
     vp8::FrameHeader header;
     vp8::FrameTag tag;
     std::tie(tag, header) = ps.ReadFrameTagHeader();
+    if (tag.key_frame) {
+        height = tag.height;
+        width = tag.width;
+    }
 
-#ifdef DEBUG
-    std::cerr << "height = " << tag.height << " width = " << tag.width
-              << std::endl;
-#endif
-    vp8::Frame frame(tag.height, tag.width);
+    vp8::Frame frame(height, width);
 
     InitSignBias(header, ref_frame_bias);
     vp8::Reconstruct(header, tag, ref_frames, ref_frame_bias, ps, frame);
@@ -97,7 +100,9 @@ int main(int argc, const char **argv) {
 
     yuv.WriteFrame(frame);
 
+#ifdef DEBUG
     std::cerr << "[Info] Done decoding frame number " << frame_cnt << std::endl;
+#endif
   }
   return 0;
 }

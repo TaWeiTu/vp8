@@ -158,18 +158,18 @@ struct ParserContext {
 
 struct ResidualParam {
   uint8_t y2_nonzero;
-  std::array<bool, 4> y1_above;
-  std::array<bool, 4> y1_left;
-  std::array<bool, 2> u_above;
-  std::array<bool, 2> u_left;
-  std::array<bool, 2> v_above;
-  std::array<bool, 2> v_left;
+  std::array<uint8_t, 4> y1_above;
+  std::array<uint8_t, 4> y1_left;
+  std::array<uint8_t, 2> u_above;
+  std::array<uint8_t, 2> u_left;
+  std::array<uint8_t, 2> v_above;
+  std::array<uint8_t, 2> v_left;
 
   ResidualParam() = default;
-  ResidualParam(uint8_t y2_nonzero_, std::array<bool, 4> y1_above_,
-                std::array<bool, 4> y1_left_, std::array<bool, 2> u_above_,
-                std::array<bool, 2> u_left_, std::array<bool, 2> v_above_,
-                std::array<bool, 2> v_left_)
+  ResidualParam(uint8_t y2_nonzero_, std::array<uint8_t, 4> y1_above_,
+                std::array<uint8_t, 4> y1_left_, std::array<uint8_t, 2> u_above_,
+                std::array<uint8_t, 2> u_left_, std::array<uint8_t, 2> v_above_,
+                std::array<uint8_t, 2> v_left_)
       : y2_nonzero(y2_nonzero_),
         y1_above(y1_above_),
         y1_left(y1_left_),
@@ -207,7 +207,7 @@ class BitstreamParser {
   void MVProbUpdate();
 
   std::pair<std::array<int16_t, 16>, bool> ReadResidualBlock(
-      int first_coeff, const std::array<Prob, kNumCoeffProb>& prob);
+      unsigned block_type, unsigned zero_cnt);
 
   int16_t ReadMVComponent(bool kind);
 

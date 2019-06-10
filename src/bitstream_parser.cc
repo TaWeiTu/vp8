@@ -265,7 +265,6 @@ void BitstreamParser::MVProbUpdate() {
 MacroBlockPreHeader BitstreamParser::ReadMacroBlockPreHeader() {
   MacroBlockPreHeader result{};
   if (frame_header_.update_mb_segmentation_map) {
-    assert(0);
     result.segment_id =
         uint8_t(bd_.Tree(context_.get().segment_prob, kMbSegmentTree));
     context_.get().mb_metadata.at(macroblock_metadata_idx_) |= result.segment_id
@@ -273,7 +272,6 @@ MacroBlockPreHeader BitstreamParser::ReadMacroBlockPreHeader() {
   }
   if (frame_header_.mb_no_skip_coeff) {
     result.mb_skip_coeff = bd_.Bool(frame_header_.prob_skip_false);
-    assert(result.mb_skip_coeff == 0);
     context_.get().mb_metadata.at(macroblock_metadata_idx_) |=
         result.mb_skip_coeff << 1;
   }
@@ -425,62 +423,42 @@ ResidualData BitstreamParser::ReadResidualData(
   ResidualData result{};
   auto macroblock_metadata =
       context_.get().mb_metadata.at(residual_macroblock_idx_);
-  auto first_coeff = (macroblock_metadata & 0x2) ? 1 : 0;
+  auto first_coeff = (macroblock_metadata & 0x1) ? 1 : 0;
   result.has_y2 = first_coeff;
   residual_macroblock_idx_++;
   if (!(macroblock_metadata & 0x2)) {
     std::array<bool, 25> non_zero{};
     if (macroblock_metadata & 0x1) {
-      auto &prob = context_.get()
-                       .coeff_prob.get()
-                       .at(1)
-                       .at(kCoeffBands.at(0))
-                       .at(residual_ctx.y2_nonzero);
       tie(result.dct_coeff.at(0), non_zero.at(0)) =
-          ReadResidualBlock(first_coeff, prob);
+          ReadResidualBlock(1, residual_ctx.y2_nonzero);
     }
     unsigned block_type_y = first_coeff ? 0 : 3;
     for (unsigned i = 1; i <= 16; i++) {
       unsigned above_nonzero =
           (i <= 4) ? residual_ctx.y1_above.at(i - 1) : non_zero.at(i - 4);
-      unsigned left_nonzero = ((i - 1) & 4)
+      unsigned left_nonzero = ((i - 1) & 3)
                                   ? non_zero.at(i - 1)
                                   : residual_ctx.y1_left.at((i - 1) >> 2);
-      auto &prob = context_.get()
-                       .coeff_prob.get()
-                       .at(block_type_y)
-                       .at(kCoeffBands.at(i - 1))
-                       .at(above_nonzero + left_nonzero);
       std::tie(result.dct_coeff.at(i), non_zero.at(i)) =
-          ReadResidualBlock(first_coeff, prob);
+          ReadResidualBlock(block_type_y, above_nonzero + left_nonzero);
     }
     for (unsigned i = 17; i <= 20; i++) {
       unsigned above_nonzero =
           (i <= 18) ? residual_ctx.u_above.at(i - 17) : non_zero.at(i - 2);
-      unsigned left_nonzero = ((i - 17) & 2)
+      unsigned left_nonzero = ((i - 17) & 1)
                                   ? non_zero.at(i - 1)
-                                  : residual_ctx.y1_left.at((i - 17) >> 1);
-      auto &prob = context_.get()
-                       .coeff_prob.get()
-                       .at(2)
-                       .at(kCoeffBands.at(i - 17))
-                       .at(above_nonzero + left_nonzero);
+                                  : residual_ctx.u_left.at((i - 17) >> 1);
       std::tie(result.dct_coeff.at(i), non_zero.at(i)) =
-          ReadResidualBlock(first_coeff, prob);
+          ReadResidualBlock(2, above_nonzero + left_nonzero);
     }
     for (unsigned i = 21; i <= 24; i++) {
       unsigned above_nonzero =
-          (i <= 22) ? residual_ctx.u_above.at(i - 21) : non_zero.at(i - 2);
-      unsigned left_nonzero = ((i - 21) & 2)
+          (i <= 22) ? residual_ctx.v_above.at(i - 21) : non_zero.at(i - 2);
+      unsigned left_nonzero = ((i - 21) & 1)
                                   ? non_zero.at(i - 1)
-                                  : residual_ctx.y1_left.at((i - 21) >> 1);
-      auto &prob = context_.get()
-                       .coeff_prob.get()
-                       .at(2)
-                       .at(kCoeffBands.at(i - 21))
-                       .at(above_nonzero + left_nonzero);
+                                  : residual_ctx.v_left.at((i - 21) >> 1);
       std::tie(result.dct_coeff.at(i), non_zero.at(i)) =
-          ReadResidualBlock(first_coeff, prob);
+          ReadResidualBlock(2, above_nonzero + left_nonzero);
     }
   }
   result.segment_id = (macroblock_metadata >> 2) & 0x3;
@@ -503,32 +481,54 @@ ResidualData BitstreamParser::ReadResidualData(
 }
 
 std::pair<std::array<int16_t, 16>, bool> BitstreamParser::ReadResidualBlock(
-    int first_coeff, const std::array<Prob, kNumCoeffProb> &prob) {
+    unsigned block_type, unsigned zero_cnt) {
   std::array<int16_t, 16> result{};
   bool non_zero = false;
-  for (unsigned i = unsigned(first_coeff); i < 16; i++) {
-    DctToken token =
-        DctToken(residual_bd_.at(cur_partition_).Tree(prob, kCoeffTree));
+  bool last_zero = false;
+  unsigned ctx3 = zero_cnt;
+  for (unsigned n = (block_type == 0 ? 1 : 0); n < 16; n++) {
+    unsigned i = kZigZag.at(n);
+    auto &prob = context_.get()
+                     .coeff_prob.get()
+                     .at(block_type)
+                     .at(kCoeffBands.at(n))
+                     .at(ctx3);
+    DctToken token;
+    if (last_zero) {
+      auto prob_no_eob =
+          IteratorArray<std::remove_reference<decltype(prob)>::type>(
+              prob.begin() + 1, prob.end());
+      token = DctToken(
+          residual_bd_.at(cur_partition_).Tree(prob_no_eob, kCoeffTreeNoEOB));
+    } else {
+      token = DctToken(residual_bd_.at(cur_partition_).Tree(prob, kCoeffTree));
+    }
     if (token == DCT_EOB) {
       break;
     }
     result.at(i) = kTokenToCoeff.at(token);
     if (result.at(i) != DCT_0) {
       non_zero = true;
-    }
-    if (token >= DCT_CAT1) {
-      size_t idx = size_t(token - DCT_CAT1 + 1);
-      uint16_t v = 0;
-      for (unsigned j = 0; j < idx; j++) {
-        v += v + residual_bd_.at(cur_partition_).Bool(kPcat.at(idx - 1).at(j));
+      last_zero = false;
+      if (token >= DCT_CAT1) {
+        size_t idx = size_t(token - DCT_CAT1);
+        unsigned v = 0;
+        for (unsigned j = 0; kPcat.at(idx).at(j); j++) {
+          v += v + residual_bd_.at(cur_partition_).Bool(kPcat.at(idx).at(j));
+        }
+        result.at(i) += uint16_t(v);
       }
-      result.at(i) += v;
-    }
-    bool sign = residual_bd_.at(cur_partition_).LitU8(1);
-    if (sign) {
-      result.at(i) = -result.at(i);
+      ctx3 = result.at(i) > 1 ? 2 : unsigned(result.at(i));
+      bool sign = residual_bd_.at(cur_partition_).LitU8(1);
+      if (sign) {
+        result.at(i) = -result.at(i);
+      }
+    } else {
+      last_zero = true;
+      ctx3 = 0;
     }
   }
+  mb_cur_col_++;
   return make_pair(result, non_zero);
 }
 

@@ -69,7 +69,7 @@ class SubBlock {
   void SetMotionVector(const MotionVector& v) { mv_ = v; }
 
  private:
-  std::array<std::array<int16_t, 4>, 4> pixels_;
+  std::array<std::array<int16_t, 4>, 4> pixels_{};
   MotionVector mv_;
 };
 
@@ -91,21 +91,23 @@ class MacroBlock {
   void FillRow(const std::array<int16_t, C * 4>& row) {
     for (size_t i = 0; i < C; ++i) {
       for (size_t j = 0; j < C; ++j)
-        subs_.at(i).at(j).FillRow(std::array<int16_t, 4>{
-            row.at(j), row.at(j + 1), row.at(j + 2), row.at(j + 3)});
+        subs_.at(i).at(j).FillRow(
+            std::array<int16_t, 4>{row.at(j << 2), row.at(j << 2 | 1),
+                                   row.at(j << 2 | 2), row.at(j << 2 | 3)});
     }
   }
 
   void FillCol(const std::array<int16_t, C * 4>& col) {
     for (size_t i = 0; i < C; ++i) {
       for (size_t j = 0; j < C; ++j)
-        subs_.at(i).at(j).FillRow(std::array<int16_t, 4>{
-            col.at(j), col.at(j + 1), col.at(j + 2), col.at(j + 3)});
+        subs_.at(i).at(j).FillCol(
+            std::array<int16_t, 4>{col.at(i << 2), col.at(i << 2 | 1),
+                                   col.at(i << 2 | 2), col.at(i << 2 | 3)});
     }
   }
 
   std::array<int16_t, C * 4> GetRow(size_t i) const {
-    std::array<int16_t, C * 4> res;
+    std::array<int16_t, C * 4> res{};
     for (size_t c = 0; c < C; ++c) {
       std::array<int16_t, 4> row = subs_.at(i >> 2).at(c).GetRow(i & 3);
       std::copy(row.begin(), row.end(), res.begin() + (c << 2));
@@ -114,7 +116,7 @@ class MacroBlock {
   }
 
   std::array<int16_t, C * 4> GetCol(size_t i) const {
-    std::array<int16_t, C * 4> res;
+    std::array<int16_t, C * 4> res{};
     for (size_t c = 0; c < C; ++c) {
       std::array<int16_t, 4> col = subs_.at(c).at(i >> 2).GetCol(i & 3);
       std::copy(col.begin(), col.end(), res.begin() + (c << 2));

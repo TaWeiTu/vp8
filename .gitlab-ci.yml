@@ -1,0 +1,5 @@
+image: registry.gitlab.com/taweitu/vp8:latest
+
+test:
+  script:
+    - make test

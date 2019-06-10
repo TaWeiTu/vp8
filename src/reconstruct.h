@@ -17,10 +17,10 @@ namespace vp8 {
 namespace internal {
 
 void UpdateNonzero(const ResidualValue &rv, bool has_y2, size_t r, size_t c,
-                   std::vector<bool> &y2_row, std::vector<bool> &y2_col,
-                   std::vector<std::vector<bool>> &y1_nonzero,
-                   std::vector<std::vector<bool>> &u_nonzero,
-                   std::vector<std::vector<bool>> &v_nonzero);
+                   std::vector<uint8_t> &y2_row, std::vector<uint8_t> &y2_col,
+                   std::vector<std::vector<uint8_t>> &y1_nonzero,
+                   std::vector<std::vector<uint8_t>> &u_nonzero,
+                   std::vector<std::vector<uint8_t>> &v_nonzero);
 
 void Predict(const FrameHeader &header, const FrameTag &tag,
              const std::array<Frame, 4> &refs,

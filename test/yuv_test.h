@@ -22,15 +22,15 @@ void TestYuv() {
       for (size_t c = 0; c < kW / 16; ++c) {
         for (size_t i = 0; i < 16; ++i) {
           for (size_t j = 0; j < 16; ++j)
-            f.Y[r][c].SetPixel(i, j, kDis(kRng));
+            f.Y.at(r).at(c).SetPixel(i, j, kDis(kRng));
         }
         for (size_t i = 0; i < 8; ++i) {
           for (size_t j = 0; j < 8; ++j)
-            f.U[r][c].SetPixel(i, j, kDis(kRng));
+            f.U.at(r).at(c).SetPixel(i, j, kDis(kRng));
         }
         for (size_t i = 0; i < 8; ++i) {
           for (size_t j = 0; j < 8; ++j)
-            f.V[r][c].SetPixel(i, j, kDis(kRng));
+            f.V.at(r).at(c).SetPixel(i, j, kDis(kRng));
         }
       }
     }
