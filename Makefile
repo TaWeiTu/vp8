@@ -35,7 +35,7 @@ src/yuv.o: src/yuv.cc src/yuv.h src/utils.h src/frame.h
 	$(CHECK) src/yuv.cc
 	$(CXX) $(CFLAGS) -c -o src/yuv.o src/yuv.cc 
 
-src/filter.o: src/filter.cc src/filter.h src/utils.h src/frame.h
+src/filter.o: src/filter.cc src/filter.h src/utils.h src/frame.h src/intra_predict.o src/inter_predict.o
 	$(CHECK) src/filter.cc
 	$(CXX) $(CFLAGS) -c -o src/filter.o src/filter.cc 
 
