@@ -415,6 +415,7 @@ ResidualData BitstreamParser::ReadResidualData(
       }
     }
   }
+  mb_cur_col_++;
   ensure(
       mb_cur_row_ < mb_num_rows_,
       "[Error] ReadResidualData: Consumed too many macroblocks; vomiting...");
@@ -528,7 +529,6 @@ std::pair<std::array<int16_t, 16>, bool> BitstreamParser::ReadResidualBlock(
       ctx3 = 0;
     }
   }
-  mb_cur_col_++;
   return make_pair(result, non_zero);
 }
 
