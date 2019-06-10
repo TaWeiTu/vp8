@@ -3,6 +3,8 @@
 
 #include <array>
 
+#include "quantizer.h"
+
 namespace vp8 {
 
 void DCT(std::array<std::array<int16_t, 4>, 4> &);

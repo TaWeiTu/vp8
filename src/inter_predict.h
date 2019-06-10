@@ -8,6 +8,7 @@
 
 #include "bitstream_parser.h"
 #include "frame.h"
+#include "residual.h"
 #include "utils.h"
 
 namespace vp8 {

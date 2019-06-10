@@ -11,22 +11,24 @@
 #include "inter_predict.h"
 #include "intra_predict.h"
 #include "quantizer.h"
+#include "residual.h"
 
 namespace vp8 {
 namespace internal {
 
-void Predict(const FrameTag &tag, const std::array<Frame, 4> &refs,
+void UpdateNonzero(const ResidualValue &rv, bool has_y2, size_t r, size_t c,
+                   std::vector<bool> &y2_row, std::vector<bool> &y2_col,
+                   std::vector<std::vector<bool>> &y1_nonzero,
+                   std::vector<std::vector<bool>> &u_nonzero,
+                   std::vector<std::vector<bool>> &v_nonzero);
+
+void Predict(const FrameHeader &header, const FrameTag &tag,
+             const std::array<Frame, 4> &refs,
              const std::array<bool, 4> &ref_frame_bias,
              std::vector<std::vector<InterContext>> &interc,
              std::vector<std::vector<IntraContext>> &intrac,
-             std::vector<std::vector<uint8_t>> &seg_id,
-             BitstreamParser &ps, Frame &frame);
-
-void AddResidual(const FrameHeader &header,
-                 const std::vector<std::vector<InterContext>> &interc,
-                 const std::vector<std::vector<IntraContext>> &intrac,
-                 const std::vector<std::vector<uint8_t>> &seg_id,
-                 BitstreamParser &ps, Frame &frame);
+             BitstreamParser &ps,
+             Frame &frame);
 
 }  // namespace internal
 

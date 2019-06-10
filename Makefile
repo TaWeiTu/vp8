@@ -7,9 +7,9 @@ CFLAGS := $(DBGFLAGS)
 
 all: decode
 	
-decode: src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/reconstruct.o src/yuv.o src/decode.cc 
+decode: src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/reconstruct.o src/yuv.o src/residual.o src/decode.cc 
 	$(CHECK) src/decode.cc
-	$(CXX) $(CFLAGS) -o decode src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/reconstruct.o src/yuv.o src/decode.cc
+	$(CXX) $(CFLAGS) -o decode src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/reconstruct.o src/yuv.o src/residual.o src/decode.cc
 
 src/bool_decoder.o: src/bool_decoder.cc src/bool_decoder.h src/utils.h
 	$(CHECK) src/bool_decoder.cc
@@ -46,6 +46,10 @@ src/bitstream_parser.o: src/bitstream_parser.cc src/bitstream_parser.h src/bitst
 src/reconstruct.o: src/reconstruct.cc src/reconstruct.h src/bitstream_parser.o src/intra_predict.o src/inter_predict.o src/filter.o
 	$(CHECK) src/reconstruct.cc
 	$(CXX) $(CFLAGS) -c -o src/reconstruct.o src/reconstruct.cc 
+
+src/residual.o: src/residual.cc src/residual.h src/quantizer.o src/dct.o
+	$(CHECK) src/residual.cc
+	$(CXX) $(CFLAGS) -c -o src/residual.o src/residual.cc
 
 .PHONY: clean
 clean: 
