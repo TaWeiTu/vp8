@@ -36,7 +36,6 @@ void YUV::WriteFrame(const Frame &frame) {
       fs_.write(reinterpret_cast<char *>(&v), sizeof(v));
     }
   }
-  if (fs_.is_open()) fs_.close();
 }
 
 YUV::~YUV() {
