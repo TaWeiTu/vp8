@@ -208,6 +208,7 @@ void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
 void ConfigureMVs(size_t r, size_t c, bool trim,
                   const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
                   std::vector<std::vector<InterContext>> &context,
+                  std::vector<std::vector<uint8_t>> &skip_lf,
                   BitstreamParser &ps, Frame &frame) {
   int16_t left = int16_t(-(1 << 7)), right = int16_t(frame.hblock);
   int16_t up = int16_t(-((r + 1) << 7)),
@@ -221,6 +222,7 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
   ClampMV(near, left, right, up, down);
 
   context.at(r).at(c) = InterContext(hd.mv_mode, ref_frame);
+  skip_lf.at(r).at(c) += hd.mv_mode == MV_SPLIT;
 
   switch (hd.mv_mode) {
     case MV_NEAREST:
@@ -357,12 +359,13 @@ void InterPredict(const FrameTag &tag, size_t r, size_t c,
                   const std::array<Frame, 4> &refs,
                   const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
                   std::vector<std::vector<InterContext>> &context,
+                  std::vector<std::vector<uint8_t>> &skip_lf,
                   BitstreamParser &ps, Frame &frame) {
 
 #ifdef DEBUG
   std::cerr << "Inter-Predict" << std::endl;
 #endif
-  ConfigureMVs(r, c, tag.version == 3, ref_frame_bias, ref_frame, context, ps,
+  ConfigureMVs(r, c, tag.version == 3, ref_frame_bias, ref_frame, context, skip_lf, ps,
                frame);
   std::array<std::array<int16_t, 6>, 8> subpixel_filters =
       tag.version == 0 ? kBicubicFilter : kBilinearFilter;

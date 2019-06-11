@@ -2,8 +2,8 @@
 import os
 import hashlib
 
-prefix = '../example/vp8-test-vectors/'
-binary = '../decode'
+prefix = os.environ['TEST_PATH']
+binary = './decode'
 
 test = []
 
@@ -14,9 +14,7 @@ with open(prefix + 'test_case_14xx_descriptions.tsv') as f:
             test.append((dat[0], int(dat[3]), int(dat[4]), int(dat[5])))
 
 for file, frame, height, width in test:
-    if file == 'vp80-03-segmentation-1401.ivf':
-        continue
-    print(file)
+    print('[Test] Testing %s' % file)
     os.system('%s %s tmp_test.yuv' % (binary, prefix + file))
     hashvalue = []
     with open(prefix + file + '.md5') as f:

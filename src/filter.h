@@ -51,21 +51,15 @@ void PlaneFilterNormal(const FrameHeader &header, size_t hblock, size_t vblock,
 
 void PlaneFilterSimple(const FrameHeader &header, size_t hblock, size_t vblock,
                        bool is_key_frame,
-                       const std::vector<std::vector<InterContext>> &interc,
-                       const std::vector<std::vector<IntraContext>> &intrac,
                        const std::vector<std::vector<uint8_t>> &lf,
-                       const std::vector<std::vector<uint8_t>> &nonzero,
+                       const std::vector<std::vector<uint8_t>> &skip_lf,
                        Plane<4> &frame);
 
 }  // namespace internal
 
 void FrameFilter(const FrameHeader &header, bool is_key_frame,
-                 const std::vector<std::vector<InterContext>> &interc,
-                 const std::vector<std::vector<IntraContext>> &intrac,
                  const std::vector<std::vector<uint8_t>> &lf,
-                 const std::vector<std::vector<uint8_t>> &y_nonzero,
-                 const std::vector<std::vector<uint8_t>> &u_nonzero,
-                 const std::vector<std::vector<uint8_t>> &v_nonzero,
+                 const std::vector<std::vector<uint8_t>> &skip_lf,
                  Frame &frame);
 
 }  // namespace vp8

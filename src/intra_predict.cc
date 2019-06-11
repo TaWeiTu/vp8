@@ -358,10 +358,12 @@ using namespace internal;
 void IntraPredict(const FrameTag &tag, size_t r, size_t c,
                   const ResidualValue &rv, const IntraMBHeader &mh,
                   std::vector<std::vector<IntraContext>> &context,
+                  std::vector<std::vector<uint8_t>> &skip_lf,
                   BitstreamParser &ps, Frame &frame) {
 // #ifdef DEBUG
   // std::cerr << "mode = " << mh.intra_y_mode << std::endl;
 // #endif
+  if (mh.intra_y_mode == B_PRED) skip_lf.at(r).at(c) = 0;
   switch (mh.intra_y_mode) {
     case V_PRED:
       VPredLuma(r, c, frame.Y);

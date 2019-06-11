@@ -90,6 +90,7 @@ void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
 void ConfigureMVs(size_t r, size_t c, bool trim,
                   const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
                   std::vector<std::vector<InterContext>> &context,
+                  std::vector<std::vector<uint8_t>> &skip_lf,
                   BitstreamParser &ps, Frame &frame);
 
 // Horizontal pixel interpolation, this should return a 9x4 temporary matrix for
@@ -122,6 +123,7 @@ void InterPredict(const FrameTag &tag, size_t r, size_t c,
                   const std::array<Frame, 4> &refs,
                   const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
                   std::vector<std::vector<InterContext>> &context,
+                  std::vector<std::vector<uint8_t>> &skip_lf,
                   BitstreamParser &ps, Frame &frame);
 
 }  // namespace vp8

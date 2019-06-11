@@ -3,7 +3,7 @@ DBGFLAGS := -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -DDEBUG -fsanitize=undefi
 CFLAGS := -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-switch-enum -Wno-undefined-func-template -std=c++17 -O3 -march=native
 CHECK := cppcheck --enable=all --inconclusive --check-config --suppress=missingIncludeSystem
 
-CFLAGS := $(DBGFLAGS)
+# CFLAGS := $(DBGFLAGS)
 
 all: decode
 	
@@ -57,7 +57,8 @@ clean:
 	rm ./decode
 
 .PHONY: test
-test: test/main.cc test/dct_test.h src/dct.o test/yuv_test.h src/yuv.o src/utils.h
+test: test/main.cc test/dct_test.h src/dct.o test/yuv_test.h src/yuv.o src/utils.h test/intra_test.py decode
 	$(CXX) $(CFLAGS) src/dct.o src/yuv.o test/main.cc
 	./a.out
 	rm ./a.out
+	TEST_PATH=example/vp8-test-vectors/ test/intra_test.py
