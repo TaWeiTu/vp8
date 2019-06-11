@@ -3,9 +3,10 @@ DBGFLAGS := -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -DDEBUG -fsanitize=undefi
 CFLAGS := -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-switch-enum -Wno-undefined-func-template -std=c++17 -O3 -march=native
 CHECK := cppcheck --enable=all --inconclusive --check-config --suppress=missingIncludeSystem
 
-# CFLAGS := $(DBGFLAGS)
-
 all: decode
+
+debug: CFLAGS := $(DBGFLAGS)
+debug: decode
 	
 decode: src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/reconstruct.o src/yuv.o src/residual.o src/decode.cc 
 	$(CHECK) src/decode.cc
@@ -55,6 +56,7 @@ src/residual.o: src/residual.cc src/residual.h src/quantizer.o src/dct.o
 clean: 
 	rm src/*.o
 	rm ./decode
+
 
 .PHONY: test
 test: test/main.cc test/dct_test.h src/dct.o test/yuv_test.h src/yuv.o src/utils.h test/intra_test.py decode
