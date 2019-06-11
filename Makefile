@@ -62,5 +62,5 @@ test: test/main.cc test/dct_test.h src/dct.o test/yuv_test.h src/yuv.o src/utils
 	@./a.out
 	@rm ./a.out
 	@echo '[Info] Start testing intra-coded test vectors'
-	@TEST_PATH=example/vp8-test-vectors/ test/intra_test.py
+	@test/intra_test.py
 	@echo '[Info] Done testing intra-coded test vectors'
