@@ -146,7 +146,6 @@ void PlaneFilterNormal(const FrameHeader &header, size_t hblock, size_t vblock,
                        const std::vector<std::vector<uint8_t>> &nonzero,
                        Plane<C> &frame) {
   uint8_t sharpness_level = header.sharpness_level;
-  std::cout << "header.loop_filter_level = " << int(header.loop_filter_level) << std::endl;
   if (header.loop_filter_level == 0) {
     std::cout << "skip filtering" << std::endl;
     return;
@@ -158,7 +157,6 @@ void PlaneFilterNormal(const FrameHeader &header, size_t hblock, size_t vblock,
     for (size_t c = 0; c < hblock; c++) {
       MacroBlock<C> &mb = frame.at(r).at(c);
       uint8_t loop_filter_level = lf.at(r).at(c);
-      if (loop_filter_level == 0) continue;
 
       if (loop_filter_level == 0) continue;
       uint8_t interior_limit = loop_filter_level;
@@ -180,14 +178,17 @@ void PlaneFilterNormal(const FrameHeader &header, size_t hblock, size_t vblock,
           hev_threshold = 3;
         else if (loop_filter_level >= 20)
           hev_threshold = 2;
-        else
+        else if (loop_filter_level >= 15)
           hev_threshold = 1;
       }
 
-      int16_t edge_limit_mb =
-          (int16_t(loop_filter_level + 2) * 2) + int16_t(interior_limit);
-      int16_t edge_limit_sb =
-          (int16_t(loop_filter_level) * 2) + int16_t(interior_limit);
+      // int16_t edge_limit_mb =
+          // (int16_t(loop_filter_level + 2) * 2) + int16_t(interior_limit);
+      // int16_t edge_limit_sb =
+          // (int16_t(loop_filter_level) * 2) + int16_t(interior_limit);
+
+      int16_t edge_limit_mb = loop_filter_level + 2;
+      int16_t edge_limit_sb = loop_filter_level;
 
       bool should_skip =
           (!interc.at(r).at(c).is_inter_mb ||
@@ -205,10 +206,10 @@ void PlaneFilterNormal(const FrameHeader &header, size_t hblock, size_t vblock,
           SubBlock &lsb = lmb.at(i).at(C - 1);
 
           for (size_t j = 0; j < 4; j++) {
-            filter.Horizontal(lsb, rsb, j);
+            filter.Vertical(lsb, rsb, j);
             filter.MacroBlockFilter(hev_threshold, interior_limit,
                                     edge_limit_mb);
-            filter.FillHorizontal(lsb, rsb, j);
+            filter.FillVertical(lsb, rsb, j);
           }
         }
       }
@@ -220,10 +221,10 @@ void PlaneFilterNormal(const FrameHeader &header, size_t hblock, size_t vblock,
             SubBlock &lsb = mb.at(i).at(j - 1);
 
             for (size_t a = 0; a < 4; a++) {
-              filter.Horizontal(lsb, rsb, a);
+              filter.Vertical(lsb, rsb, a);
               filter.SubBlockFilter(hev_threshold, interior_limit,
                                     edge_limit_sb);
-              filter.FillHorizontal(lsb, rsb, a);
+              filter.FillVertical(lsb, rsb, a);
             }
           }
         }
@@ -236,10 +237,10 @@ void PlaneFilterNormal(const FrameHeader &header, size_t hblock, size_t vblock,
           SubBlock &usb = umb.at(C - 1).at(i);
 
           for (size_t j = 0; j < 4; j++) {
-            filter.Vertical(usb, dsb, j);
+            filter.Horizontal(usb, dsb, j);
             filter.MacroBlockFilter(hev_threshold, interior_limit,
                                     edge_limit_mb);
-            filter.FillVertical(usb, dsb, j);
+            filter.FillHorizontal(usb, dsb, j);
           }
         }
       }
@@ -251,10 +252,10 @@ void PlaneFilterNormal(const FrameHeader &header, size_t hblock, size_t vblock,
             SubBlock &usb = mb.at(i - 1).at(j);
 
             for (size_t a = 0; a < 4; a++) {
-              filter.Vertical(usb, dsb, a);
+              filter.Horizontal(usb, dsb, a);
               filter.SubBlockFilter(hev_threshold, interior_limit,
                                     edge_limit_sb);
-              filter.FillVertical(usb, dsb, a);
+              filter.FillHorizontal(usb, dsb, a);
             }
           }
         }

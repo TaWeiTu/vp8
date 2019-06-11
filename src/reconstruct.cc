@@ -145,15 +145,14 @@ void Reconstruct(const FrameHeader &header, const FrameTag &tag,
                                        std::vector<uint8_t>(frame.hblock));
 
   std::vector<std::vector<uint8_t>> y_nonzero(
-      frame.vblock << 2, std::vector<uint8_t>(frame.hblock << 2));
+      frame.vblock << 2, std::vector<uint8_t>(frame.hblock << 2, 0));
   std::vector<std::vector<uint8_t>> u_nonzero(
-      frame.vblock << 1, std::vector<uint8_t>(frame.hblock << 1));
+      frame.vblock << 1, std::vector<uint8_t>(frame.hblock << 1, 0));
   std::vector<std::vector<uint8_t>> v_nonzero(
-      frame.vblock << 1, std::vector<uint8_t>(frame.hblock << 1));
+      frame.vblock << 1, std::vector<uint8_t>(frame.hblock << 1, 0));
 
   Predict(header, tag, refs, ref_frame_bias, interc, intrac, lf, y_nonzero,
           u_nonzero, v_nonzero, ps, frame);
-  std::cout << "before frame filter lf = " << int(header.loop_filter_level) << std::endl;
   FrameFilter(header, tag.key_frame, interc, intrac, lf, y_nonzero, u_nonzero,
               v_nonzero, frame);
 }
