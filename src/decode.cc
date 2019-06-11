@@ -95,6 +95,7 @@ int main(int argc, const char **argv) {
     vp8::Frame frame(height, width);
 
     InitSignBias(header, ref_frame_bias);
+    std::cout << "Frame number " << frame_cnt << std::endl;
     vp8::Reconstruct(header, tag, ref_frames, ref_frame_bias, ps, frame);
     RefreshRefFrames(header, ref_frames, frame);
 

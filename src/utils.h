@@ -55,7 +55,7 @@ class SpanReader {
   SpanReader() : SpanReader(nullptr, nullptr) {}
 
   uint8_t ReadByte() {
-    if (begin_ >= end_) {
+    if (cursor_ >= end_) {
       throw std::out_of_range("Out of range");
     }
     return *cursor_++;

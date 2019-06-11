@@ -5,6 +5,7 @@ namespace internal {
 
 void UpdateNonzero(const ResidualValue &rv, bool has_y2, size_t r, size_t c,
                    std::vector<uint8_t> &y2_row, std::vector<uint8_t> &y2_col,
+                   std::vector<std::vector<uint8_t>> &y_nonzero,
                    std::vector<std::vector<uint8_t>> &y1_nonzero,
                    std::vector<std::vector<uint8_t>> &u_nonzero,
                    std::vector<std::vector<uint8_t>> &v_nonzero) {
@@ -15,6 +16,7 @@ void UpdateNonzero(const ResidualValue &rv, bool has_y2, size_t r, size_t c,
     }
     y2_row.at(r) = uint8_t(nonzero > 0);
     y2_col.at(c) = uint8_t(nonzero > 0);
+    y_nonzero.at(r << 2).at(c << 2) = uint8_t(nonzero > 0);
   }
   for (size_t p = 0; p < 16; ++p) {
     uint8_t nonzero = false;
@@ -22,6 +24,8 @@ void UpdateNonzero(const ResidualValue &rv, bool has_y2, size_t r, size_t c,
       for (size_t j = 0; j < 4; ++j) nonzero += rv.y.at(p).at(i).at(j) != 0;
     }
     y1_nonzero.at(r << 2 | (p >> 2)).at(c << 2 | (p & 3)) =
+        uint8_t(nonzero > 0);
+    y_nonzero.at(r << 2 | (p >> 2)).at(c << 2 | (p & 3)) +=
         uint8_t(nonzero > 0);
   }
   for (size_t p = 0; p < 4; ++p) {
@@ -45,15 +49,15 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
              const std::array<bool, 4> &ref_frame_bias,
              std::vector<std::vector<InterContext>> &interc,
              std::vector<std::vector<IntraContext>> &intrac,
-             BitstreamParser &ps, Frame &frame) {
+             std::vector<std::vector<uint8_t>> &lf,
+             std::vector<std::vector<uint8_t>> &y_nonzero,
+             std::vector<std::vector<uint8_t>> &u_nonzero,
+             std::vector<std::vector<uint8_t>> &v_nonzero, BitstreamParser &ps,
+             Frame &frame) {
   std::vector<uint8_t> y2_row(frame.vblock, false);
   std::vector<uint8_t> y2_col(frame.hblock, false);
   std::vector<std::vector<uint8_t>> y1_nonzero(
       frame.vblock << 2, std::vector<uint8_t>(frame.hblock << 2, 0));
-  std::vector<std::vector<uint8_t>> u_nonzero(
-      frame.vblock << 1, std::vector<uint8_t>(frame.hblock << 1, 0));
-  std::vector<std::vector<uint8_t>> v_nonzero(
-      frame.vblock << 1, std::vector<uint8_t>(frame.hblock << 1, 0));
 
 #ifdef DEBUG
   std::cerr << "Start prediction" << std::endl;
@@ -62,9 +66,10 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
       MacroBlockPreHeader pre = ps.ReadMacroBlockPreHeader();
-// #ifdef DEBUG
+      // segment_id.at(r).at(c) = pre.segment_id;
+      // #ifdef DEBUG
       // std::cerr << "ReadMacroBlockPreHeader()" << std::endl;
-// #endif
+      // #endif
       int16_t qp = header.quant_indices.y_ac_qi;
       if (header.segmentation_enabled)
         qp = header.segment_feature_mode == SEGMENT_MODE_ABSOLUTE
@@ -99,9 +104,10 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
         ResidualData rd = ps.ReadResidualData(ResidualParam(
             y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
 
+        lf.at(r).at(c) = rd.loop_filter_level;
         ResidualValue rv = DequantizeResidualData(rd, qp, header.quant_indices);
-        UpdateNonzero(rv, rd.has_y2, r, c, y2_row, y2_col, y1_nonzero,
-                      u_nonzero, v_nonzero);
+        UpdateNonzero(rv, rd.has_y2, r, c, y2_row, y2_col, y_nonzero,
+                      y1_nonzero, u_nonzero, v_nonzero);
         InverseTransformResidual(rv, rd.has_y2);
         ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
         ApplyMBResidual(rv.u, frame.U.at(r).at(c));
@@ -112,9 +118,10 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
 
         ResidualData rd = ps.ReadResidualData(ResidualParam(
             y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
+        lf.at(r).at(c) = rd.loop_filter_level;
         ResidualValue rv = DequantizeResidualData(rd, qp, header.quant_indices);
-        UpdateNonzero(rv, rd.has_y2, r, c, y2_row, y2_col, y1_nonzero,
-                      u_nonzero, v_nonzero);
+        UpdateNonzero(rv, rd.has_y2, r, c, y2_row, y2_col, y_nonzero,
+                      y1_nonzero, u_nonzero, v_nonzero);
         InverseTransformResidual(rv, rd.has_y2);
         IntraPredict(tag, r, c, rv, mh, intrac, ps, frame);
       }
@@ -134,32 +141,21 @@ void Reconstruct(const FrameHeader &header, const FrameTag &tag,
       frame.vblock, std::vector<InterContext>(frame.hblock));
   std::vector<std::vector<IntraContext>> intrac(
       frame.vblock << 2, std::vector<IntraContext>(frame.hblock << 2));
-  std::vector<std::vector<uint8_t>> seg_id(frame.vblock,
-                                           std::vector<uint8_t>(frame.hblock));
+  std::vector<std::vector<uint8_t>> lf(frame.vblock,
+                                       std::vector<uint8_t>(frame.hblock));
 
-  Predict(header, tag, refs, ref_frame_bias, interc, intrac, ps, frame);
-// #ifdef DEBUG
-  // for (size_t r = 0; r < frame.vblock; ++r) {
-    // for (size_t c = 0; c < frame.hblock; ++c) {
-      // for (size_t i = 0; i < 16; ++i) {
-        // for (size_t j = 0; j < 16; ++j)
-          // std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-        // std::cerr << std::endl;
-      // }
-      // for (size_t i = 0; i < 8; ++i) {
-        // for (size_t j = 0; j < 8; ++j)
-          // std::cerr << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
-        // std::cerr << std::endl;
-      // }
-      // for (size_t i = 0; i < 8; ++i) {
-        // for (size_t j = 0; j < 8; ++j)
-          // std::cerr << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
-        // std::cerr << std::endl;
-      // }
-    // }
-  // }
-// #endif
-  FrameFilter(header, tag.key_frame, frame);
+  std::vector<std::vector<uint8_t>> y_nonzero(
+      frame.vblock << 2, std::vector<uint8_t>(frame.hblock << 2));
+  std::vector<std::vector<uint8_t>> u_nonzero(
+      frame.vblock << 1, std::vector<uint8_t>(frame.hblock << 1));
+  std::vector<std::vector<uint8_t>> v_nonzero(
+      frame.vblock << 1, std::vector<uint8_t>(frame.hblock << 1));
+
+  Predict(header, tag, refs, ref_frame_bias, interc, intrac, lf, y_nonzero,
+          u_nonzero, v_nonzero, ps, frame);
+  std::cout << "before frame filter lf = " << int(header.loop_filter_level) << std::endl;
+  FrameFilter(header, tag.key_frame, interc, intrac, lf, y_nonzero, u_nonzero,
+              v_nonzero, frame);
 }
 
 }  // namespace vp8

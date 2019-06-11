@@ -39,8 +39,8 @@ ResidualValue DequantizeResidualData(ResidualData &rd, int16_t qp,
 void InverseTransformResidual(ResidualValue &rv, bool has_y2) {
   if (has_y2) IWHT(rv.y2);
   for (size_t p = 0; p < 16; ++p) {
-    IDCT(rv.y.at(p));
     if (has_y2) rv.y.at(p).at(0).at(0) = rv.y2.at(p >> 2).at(p & 3);
+    IDCT(rv.y.at(p));
   }
   for (size_t p = 0; p < 4; ++p) IDCT(rv.u.at(p));
   for (size_t p = 0; p < 4; ++p) IDCT(rv.v.at(p));
