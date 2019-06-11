@@ -257,7 +257,7 @@ void PlaneFilterSimple(const FrameHeader &header, size_t hblock, size_t vblock,
         if (interior_limit > 9 - sharpness_level)
           interior_limit = 9 - sharpness_level;
       }
-      if (!interior_limit) interior_limit = 1;
+      if (interior_limit < 1) interior_limit = 1;
 
       uint8_t hev_threshold = 0;
       if (is_key_frame) {
@@ -270,7 +270,7 @@ void PlaneFilterSimple(const FrameHeader &header, size_t hblock, size_t vblock,
           hev_threshold = 3;
         else if (loop_filter_level >= 20)
           hev_threshold = 2;
-        else
+        else if (loop_filter_level >= 15)
           hev_threshold = 1;
       }
 
@@ -286,23 +286,23 @@ void PlaneFilterSimple(const FrameHeader &header, size_t hblock, size_t vblock,
           SubBlock &lsb = lmb.at(i).at(3);
 
           for (size_t j = 0; j < 4; j++) {
-            filter.Vertical(lsb, rsb, j);
+            filter.Horizontal(lsb, rsb, j);
             filter.SimpleFilter(edge_limit_mb);
-            filter.FillVertical(lsb, rsb, j);
+            filter.FillHorizontal(lsb, rsb, j);
           }
         }
       }
 
       if (!skip_lf.at(r).at(c)) {
-        for (size_t i = 0; i < 4; i++) {
-          for (size_t j = 1; j < 4; j++) {
-            SubBlock &rsb = mb.at(i).at(j);
-            SubBlock &lsb = mb.at(i).at(j - 1);
+        for (size_t i = 1; i < 4; i++) {
+          for (size_t j = 0; j < 4; j++) {
+            SubBlock &rsb = mb.at(j).at(i);
+            SubBlock &lsb = mb.at(j).at(i - 1);
 
             for (size_t a = 0; a < 4; a++) {
-              filter.Vertical(lsb, rsb, a);
+              filter.Horizontal(lsb, rsb, a);
               filter.SimpleFilter(edge_limit_sb);
-              filter.FillVertical(lsb, rsb, a);
+              filter.FillHorizontal(lsb, rsb, a);
             }
           }
         }
@@ -315,9 +315,9 @@ void PlaneFilterSimple(const FrameHeader &header, size_t hblock, size_t vblock,
           SubBlock &usb = umb.at(3).at(i);
 
           for (size_t j = 0; j < 4; j++) {
-            filter.Horizontal(usb, dsb, j);
+            filter.Vertical(usb, dsb, j);
             filter.SimpleFilter(edge_limit_mb);
-            filter.FillHorizontal(usb, dsb, j);
+            filter.FillVertical(usb, dsb, j);
           }
         }
       }
@@ -329,9 +329,9 @@ void PlaneFilterSimple(const FrameHeader &header, size_t hblock, size_t vblock,
             SubBlock &usb = mb.at(i - 1).at(j);
 
             for (size_t a = 0; a < 4; a++) {
-              filter.Horizontal(usb, dsb, a);
+              filter.Vertical(usb, dsb, a);
               filter.SimpleFilter(edge_limit_sb);
-              filter.FillHorizontal(usb, dsb, a);
+              filter.FillVertical(usb, dsb, a);
             }
           }
         }
