@@ -50,8 +50,8 @@ void LoopFilter::SubBlockFilter(int16_t hev_threshold, int16_t interior_limit,
   int16_t P1 = minus128(p1_);
   int16_t Q1 = minus128(q1_);
 
+  int16_t a = (Adjust(false) + 1) >> 1;
   if (IsHighVariance(hev_threshold)) {
-    int16_t a = (Adjust(false) + 1) >> 1;
     q1_ = plus128(Q1 - a);
     p1_ = plus128(P1 + a);
   }
