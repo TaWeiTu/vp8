@@ -134,8 +134,7 @@ void LoopFilter::FillVertical(SubBlock &usb, SubBlock &dsb, size_t idx) const {
 }
 
 void LoopFilter::SimpleFilter(int16_t limit) {
-  if (IsFilterSimple(limit))
-    Adjust(true);
+  if (IsFilterSimple(limit)) Adjust(true);
 }
 
 template <size_t C>
@@ -330,9 +329,9 @@ void PlaneFilterSimple(const FrameHeader &header, size_t hblock, size_t vblock,
           SubBlock &lsb = lmb.at(i).at(3);
 
           for (size_t j = 0; j < 4; j++) {
-            filter.Horizontal(lsb, rsb, j);
+            filter.Vertical(lsb, rsb, j);
             filter.SimpleFilter(edge_limit_mb);
-            filter.FillHorizontal(lsb, rsb, j);
+            filter.FillVertical(lsb, rsb, j);
           }
         }
       }
@@ -344,9 +343,9 @@ void PlaneFilterSimple(const FrameHeader &header, size_t hblock, size_t vblock,
             SubBlock &lsb = mb.at(i).at(j - 1);
 
             for (size_t a = 0; a < 4; a++) {
-              filter.Horizontal(lsb, rsb, a);
+              filter.Vertical(lsb, rsb, a);
               filter.SimpleFilter(edge_limit_sb);
-              filter.FillHorizontal(lsb, rsb, a);
+              filter.FillVertical(lsb, rsb, a);
             }
           }
         }
@@ -359,9 +358,9 @@ void PlaneFilterSimple(const FrameHeader &header, size_t hblock, size_t vblock,
           SubBlock &usb = umb.at(3).at(i);
 
           for (size_t j = 0; j < 4; j++) {
-            filter.Vertical(usb, dsb, j);
+            filter.Horizontal(usb, dsb, j);
             filter.SimpleFilter(edge_limit_mb);
-            filter.FillVertical(usb, dsb, j);
+            filter.FillHorizontal(usb, dsb, j);
           }
         }
       }
@@ -373,9 +372,9 @@ void PlaneFilterSimple(const FrameHeader &header, size_t hblock, size_t vblock,
             SubBlock &usb = mb.at(i - 1).at(j);
 
             for (size_t a = 0; a < 4; a++) {
-              filter.Vertical(usb, dsb, a);
+              filter.Horizontal(usb, dsb, a);
               filter.SimpleFilter(edge_limit_sb);
-              filter.FillVertical(usb, dsb, a);
+              filter.FillHorizontal(usb, dsb, a);
             }
           }
         }
@@ -398,18 +397,17 @@ void FrameFilter(const FrameHeader &header, bool is_key_frame,
                  Frame &frame) {
   size_t hblock = frame.hblock, vblock = frame.vblock;
   // std::cout << "loop_filter_level = " << int(header.loop_filter_level) << std::endl;
-  // if (header.filter_type) {
-    // PlaneFilterNormal(header, hblock, vblock, is_key_frame, interc, intrac, lf,
-                      // y_nonzero, frame.Y);
-    // PlaneFilterNormal(header, hblock, vblock, is_key_frame, interc, intrac, lf,
-                      // u_nonzero, frame.U);
-    // PlaneFilterNormal(header, hblock, vblock, is_key_frame, interc, intrac, lf,
-                      // v_nonzero, frame.V);
-  // } else {
-    // std::cout << "Simple filter" << std::endl;
+  if (!header.filter_type) {
+    PlaneFilterNormal(header, hblock, vblock, is_key_frame, interc, intrac, lf,
+                      y_nonzero, frame.Y);
+    PlaneFilterNormal(header, hblock, vblock, is_key_frame, interc, intrac, lf,
+                      u_nonzero, frame.U);
+    PlaneFilterNormal(header, hblock, vblock, is_key_frame, interc, intrac, lf,
+                      v_nonzero, frame.V);
+  } else {
     PlaneFilterSimple(header, hblock, vblock, is_key_frame, interc, intrac, lf,
                       y_nonzero, frame.Y);
-  // }
+  }
 }
 
 }  // namespace vp8
