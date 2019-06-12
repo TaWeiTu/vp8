@@ -66,3 +66,5 @@ test: test/main.cc test/dct_test.h src/dct.o test/yuv_test.h src/yuv.o src/utils
 	@echo '[Info] Start testing intra-coded test vectors'
 	@test/intra_test.py
 	@echo '[Info] Done testing intra-coded test vectors'
+	@rm ./tmp_split.yuv
+	@rm ./tmp_test.yuv

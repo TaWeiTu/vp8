@@ -2,7 +2,9 @@
 import os
 import hashlib
 
-prefix = os.environ['TEST_PATH']
+prefix = os.environ['VP8_TEST_VECTORS']
+if prefix[-1] != '/': 
+    prefix += '/'
 binary = './decode'
 
 test = []
