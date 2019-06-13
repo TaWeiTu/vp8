@@ -78,6 +78,9 @@ FrameHeader BitstreamParser::ReadFrameHeader() {
   frame_header_.quant_indices = ReadQuantIndices();
   if (frame_tag_.key_frame) {
     frame_header_.refresh_entropy_probs = bd_.LitU8(1);
+    frame_header_.refresh_golden_frame = true;
+    frame_header_.refresh_alternate_frame = true;
+    frame_header_.refresh_last = true;
   } else {
     frame_header_.refresh_golden_frame = bd_.LitU8(1);
     frame_header_.refresh_alternate_frame = bd_.LitU8(1);
