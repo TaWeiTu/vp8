@@ -186,6 +186,9 @@ class Plane {
   size_t vblock() const { return blocks_.size(); }
   size_t hblock() const { return blocks_.at(0).size(); }
 
+  size_t vsize() const { return blocks_.size() * C * 4; }
+  size_t hsize() const { return blocks_.at(0).size() * C * 4; }
+
  private:
   size_t offset_, mask_;
   std::vector<std::vector<MacroBlock<C>>> blocks_;

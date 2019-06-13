@@ -269,54 +269,38 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
   }
   ConfigureChromaMVs(frame.Y.at(r).at(c), trim, frame.U.at(r).at(c));
   ConfigureChromaMVs(frame.Y.at(r).at(c), trim, frame.V.at(r).at(c));
-// #ifdef DEBUG
-  // std::cerr << "[Debug] Exit ConfigureMVs()" << std::endl;
-// #endif
+#ifdef DEBUG
+  std::cerr << "[Debug] Exit ConfigureMVs()" << std::endl;
+#endif
 }
 
 template <size_t C>
 std::array<std::array<int16_t, 4>, 9> HorizontalSixtap(
     const Plane<C> &refer, int32_t r, int32_t c,
     const std::array<int16_t, 6> &filter) {
-// #ifdef DEBUG
-  // std::cerr << "[Debug] Enter HorizontalSixtap()" << std::endl;
-// #endif
   std::array<std::array<int16_t, 4>, 9> res;
   auto GetPixel = [&refer](int32_t row, int32_t col) -> int16_t {
-    row = std::clamp(row, 0, int32_t(refer.vblock()) - 1);
-    col = std::clamp(col, 0, int32_t(refer.hblock()) - 1);
+    row = std::clamp(row, 0, int32_t(refer.vsize()) - 1);
+    col = std::clamp(col, 0, int32_t(refer.hsize()) - 1);
     return refer.GetPixel(size_t(row), size_t(col));
   };
-#ifdef DEBUG
-  for (size_t i = 0; i < 6; ++i) std::cerr << filter.at(i) << ' ';
-  std::cerr << std::endl;
-#endif
   for (int32_t i = 0; i < 9; ++i) {
     for (int32_t j = 0; j < 4; ++j) {
-      int32_t sum = int32_t(GetPixel(r + i - 2, c + j - 2)) * filter.at(0) +
-                    int32_t(GetPixel(r + i - 2, c + j - 1)) * filter.at(1) +
-                    int32_t(GetPixel(r + i - 2, c + j + 0)) * filter.at(2) +
-                    int32_t(GetPixel(r + i - 2, c + j + 1)) * filter.at(3) +
-                    int32_t(GetPixel(r + i - 2, c + j + 2)) * filter.at(4) +
-                    int32_t(GetPixel(r + i - 2, c + j + 3)) * filter.at(5);
+      int32_t sum = int32_t(GetPixel(r + i, c + j - 2)) * filter.at(0) +
+                    int32_t(GetPixel(r + i, c + j - 1)) * filter.at(1) +
+                    int32_t(GetPixel(r + i, c + j + 0)) * filter.at(2) +
+                    int32_t(GetPixel(r + i, c + j + 1)) * filter.at(3) +
+                    int32_t(GetPixel(r + i, c + j + 2)) * filter.at(4) +
+                    int32_t(GetPixel(r + i, c + j + 3)) * filter.at(5);
       res.at(size_t(i)).at(size_t(j)) = Clamp255(int16_t((sum + 64) >> 7));
-#ifdef DEBUG
-      std::cerr << "first pass = " << int(Clamp255(int16_t((sum + 64) >> 7))) << std::endl;
-#endif
     }
   }
-// #ifdef DEBUG
-  // std::cerr << "[Debug] Exit HorizontalSixtap()" << std::endl;
-// #endif
   return res;
 }
 
 void VerticalSixtap(const std::array<std::array<int16_t, 4>, 9> &refer,
                     const std::array<int16_t, 6> &filter,
                     SubBlock &sub) {
-// #ifdef DEBUG
-  // std::cerr << "[Debug] Enter VerticalSixtap()" << std::endl;
-// #endif
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 4; ++j) {
       int32_t sum = int32_t(refer.at(i + 0).at(j)) * filter.at(0) +
@@ -328,33 +312,24 @@ void VerticalSixtap(const std::array<std::array<int16_t, 4>, 9> &refer,
       sub.at(i).at(j) = Clamp255(int16_t((sum + 64) >> 7));
     }
   }
-// #ifdef DEBUG
-  // std::cerr << "[Debug] Exit VerticalSixtap()" << std::endl;
-// #endif
 }
 
 template <size_t C>
 void Sixtap(const Plane<C> &refer, int32_t r, int32_t c, uint8_t mr, uint8_t mc,
             const std::array<std::array<int16_t, 6>, 8> &filter,
             SubBlock &sub) {
-// #ifdef DEBUG
-  // std::cerr << "[Debug] Enter Sixtap()" << std::endl;
-// #endif
   std::array<std::array<int16_t, 4>, 9> tmp =
       HorizontalSixtap(refer, r - 2, c, filter.at(mc));
   VerticalSixtap(tmp, filter.at(mr), sub);
-// #ifdef DEBUG
-  // std::cerr << "[Debug] Exit Sixtap()" << std::endl;
-// #endif
 }
 
 template <size_t C>
 void InterpBlock(const Plane<C> &refer,
                  const std::array<std::array<int16_t, 6>, 8> &filter, size_t r,
                  size_t c, MacroBlock<C> &mb) {
-// #ifdef DEBUG
-  // std::cerr << "[Debug] Enter InterpBlock()" << std::endl;
-// #endif
+#ifdef DEBUG
+  std::cerr << "[Debug] Enter InterpBlock()" << std::endl;
+#endif
   size_t offset = C / 2 + 2;
   for (size_t i = 0; i < C; ++i) {
     for (size_t j = 0; j < C; ++j) {
@@ -379,9 +354,29 @@ void InterpBlock(const Plane<C> &refer,
 #ifdef DEBUG
       std::cerr << "tr = " << tr << " tc = " << tc << std::endl;
 #endif
-      if (mr | mc) Sixtap(refer, tr, tc, mr, mc, filter, mb.at(i).at(j));
+      if (mr | mc) {
+        Sixtap(refer, tr, tc, mr, mc, filter, mb.at(i).at(j));
+      } else {
+        auto GetPixel = [&refer](int32_t row, int32_t col) -> int16_t {
+          row = std::clamp(row, 0, int32_t(refer.vsize()) - 1);
+          col = std::clamp(col, 0, int32_t(refer.hsize()) - 1);
+          return refer.GetPixel(size_t(row), size_t(col));
+        };
+        for (int32_t x = 0; x < 4; ++x) {
+          for (int32_t y = 0; y < 4; ++y)
+            mb.at(i).at(j).at(size_t(x)).at(size_t(y)) = GetPixel(tr + x, tc + y);
+        }
+      }
     }
   }
+#ifdef DEBUG
+  std::cerr << "result" << std::endl;
+  for (size_t i = 0; i < C * 4; ++i) {
+    for (size_t j = 0; j < C * 4; ++j)
+      std::cerr << mb.GetPixel(i, j) << ' ';
+    std::cerr << std::endl;
+  }
+#endif
 }
 
 template std::array<std::array<int16_t, 4>, 9> HorizontalSixtap<4>(
@@ -421,10 +416,6 @@ void InterPredict(const FrameTag &tag, size_t r, size_t c,
                frame);
   std::array<std::array<int16_t, 6>, 8> subpixel_filters =
       tag.version == 0 ? kBicubicFilter : kBilinearFilter;
-
-#ifdef DEBUG
-  std::cerr << "tag.version = " << int(tag.version) << std::endl;
-#endif
 
 #ifdef DEBUG
   std::cerr << "[Debug] ref_frame = " << int(ref_frame) << std::endl;
