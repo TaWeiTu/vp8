@@ -146,6 +146,7 @@ struct ParserContext {
   SegmentMode segment_feature_mode;
   std::array<int16_t, kMaxMacroBlockSegments> quantizer_segment;
   std::array<int16_t, kMaxMacroBlockSegments> loop_filter_level_segment;
+  uint16_t mb_num_rows, mb_num_cols;
 
   ParserContext()
       : mb_metadata(),
@@ -161,7 +162,9 @@ struct ParserContext {
         mv_prob(kDefaultMVContext),
         segment_feature_mode(),
         quantizer_segment(),
-        loop_filter_level_segment() {}
+        loop_filter_level_segment(),
+        mb_num_rows(),
+        mb_num_cols() {}
 };
 
 struct ResidualParam {
@@ -196,7 +199,7 @@ class BitstreamParser {
   std::reference_wrapper<ParserContext> context_;
   size_t macroblock_metadata_idx_, residual_macroblock_idx_;
   uint8_t nbr_of_dct_partitions_, cur_partition_;
-  uint16_t mb_cur_row_, mb_cur_col_, mb_num_rows_, mb_num_cols_;
+  uint16_t mb_cur_row_, mb_cur_col_;
   uint32_t first_part_size_;
   std::array<BoolDecoder, 8> residual_bd_;
   bool loop_filter_adj_enable_;
@@ -233,8 +236,6 @@ class BitstreamParser {
         cur_partition_(),
         mb_cur_row_(),
         mb_cur_col_(),
-        mb_num_rows_(),
-        mb_num_cols_(),
         first_part_size_(),
         loop_filter_adj_enable_() {}
 

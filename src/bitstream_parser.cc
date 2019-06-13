@@ -46,12 +46,14 @@ FrameHeader BitstreamParser::ReadFrameHeader() {
     frame_header_.clamping_type = bd_.LitU8(1);
     ensure(!frame_header_.color_space && !frame_header_.clamping_type,
            "[Error] ReadFrameHeader: Unsupported color_space / clamping_type");
-    mb_num_cols_ = (frame_tag_.width + 15) / 16;
-    mb_num_rows_ = (frame_tag_.height + 15) / 16;
-    context_.get().mb_metadata.resize(uint32_t(mb_num_cols_) * mb_num_rows_);
+    context_.get().mb_num_cols = (frame_tag_.width + 15) / 16;
+    context_.get().mb_num_rows = (frame_tag_.height + 15) / 16;
+    context_.get().mb_metadata.resize(uint32_t(context_.get().mb_num_cols) *
+                                      context_.get().mb_num_rows);
     fill(context_.get().mb_metadata.begin(), context_.get().mb_metadata.end(),
          0);
-    context_.get().segment_id.resize(uint32_t(mb_num_cols_) * mb_num_rows_);
+    context_.get().segment_id.resize(uint32_t(context_.get().mb_num_cols) *
+                                     context_.get().mb_num_rows);
     fill(context_.get().segment_id.begin(), context_.get().segment_id.end(), 0);
   }
   frame_header_.segmentation_enabled = bd_.LitU8(1);
@@ -430,7 +432,7 @@ int16_t BitstreamParser::ReadMVComponent(bool kind) {
 
 ResidualData BitstreamParser::ReadResidualData(
     const ResidualParam &residual_ctx) {
-  if (mb_cur_col_ == mb_num_cols_) {
+  if (mb_cur_col_ == context_.get().mb_num_cols) {
     mb_cur_row_++;
     mb_cur_col_ = 0;
     if (nbr_of_dct_partitions_ > 1) {
@@ -442,7 +444,7 @@ ResidualData BitstreamParser::ReadResidualData(
   }
   mb_cur_col_++;
   ensure(
-      mb_cur_row_ < mb_num_rows_,
+      mb_cur_row_ < context_.get().mb_num_rows,
       "[Error] ReadResidualData: Consumed too many macroblocks; vomiting...");
   ensure(residual_macroblock_idx_ < macroblock_metadata_idx_,
          "[Error] ReadResidualData: Corresponding macroblock not yet read.");
