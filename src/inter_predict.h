@@ -82,7 +82,7 @@ void ConfigureChromaMVs(const MacroBlock<4> &luma, bool trim,
 
 // In case of mode MV_SPLIT, set the motion vectors of each subblock
 // independently.
-void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
+void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c, MotionVector best,
                           BitstreamParser &ps, Plane<4> &mb);
 
 // For each (luma or chroma) macroblocks, configure their motion vectors (if
@@ -97,18 +97,18 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
 // the vertical pixel interpolation later.
 template <size_t C>
 std::array<std::array<int16_t, 4>, 9> HorizontalSixtap(
-    const Plane<C> &refer, size_t r, size_t c,
+    const Plane<C> &refer, int32_t r, int32_t c,
     const std::array<int16_t, 6> &filter);
 
 // Vertical pixel interpolation.
 void VerticalSixtap(const std::array<std::array<int16_t, 4>, 9> &refer,
-                    size_t r, size_t c, const std::array<int16_t, 6> &filter,
+                    const std::array<int16_t, 6> &filter,
                     SubBlock &sub);
 
 // Sixtap pixel interpolation. First do the horizontal interpolation, then
 // vertical.
 template <size_t C>
-void Sixtap(const Plane<C> &refer, size_t r, size_t c, uint8_t mr, uint8_t mc,
+void Sixtap(const Plane<C> &refer, int32_t r, int32_t c, uint8_t mr, uint8_t mc,
             const std::array<std::array<int16_t, 6>, 8> &filter, SubBlock &sub);
 
 // For each of the macroblock in the current plane, predict the value of it.

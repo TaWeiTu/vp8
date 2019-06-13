@@ -341,8 +341,8 @@ InterMBHeader BitstreamParser::ReadInterMBHeader(
     // The rest is up to the caller to call ReadSubBlockMode() &
     // ReadSubBlockMV().
   } else if (result.mv_mode == MV_NEW) {
-    auto h = ReadMVComponent(false);
-    auto w = ReadMVComponent(true);
+    int16_t h = int16_t(ReadMVComponent(false) * 2);
+    int16_t w = int16_t(ReadMVComponent(true) * 2);
     result.mv_new = MotionVector(h, w);
   }
   context_.get().mb_metadata.at(macroblock_metadata_idx_) |=
