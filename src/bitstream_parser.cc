@@ -415,8 +415,8 @@ int16_t BitstreamParser::ReadMVComponent(bool kind) {
     for (unsigned i = 9; i > 3; i--) {
       a += bd_.Bool(p.at(kMVPBits + i)) << i;
     }
-    if ((a & 0xFFF0) == 0) {
-      a += bd_.Bool(p.at(kMVPBits + 3)) << 3;
+    if ((a & 0xFFF0) == 0 || bd_.Bool(p.at(kMVPBits + 3))) {
+      a += 1 << 3;
     }
   } else {
     a = int16_t(
