@@ -14,17 +14,19 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
 // #ifdef DEBUG
   // std::cerr << "[Debug] Enter SearchMVs()" << std::endl;
 // #endif
-  static std::array<uint8_t, 4> cnt;
-  std::fill(cnt.begin(), cnt.end(), 0);
-  std::vector<MotionVector> mv;
+  std::array<uint8_t, 4> cnt{};
+  std::array<MotionVector, 4> mv{};
+  uint8_t ptr = 0;
+
+  enum { CNT_ZERO, CNT_NEAREST, CNT_NEAR, CNT_SPLIT };
 
   if (r > 0 && context.at(r - 1).at(c).is_inter_mb) {
     MotionVector v = r ? mb.at(r - 1).at(c).GetMotionVector() : kZero;
     if (r > 0)
       v = Invert(v, context.at(r - 1).at(c).ref_frame, ref_frame,
                  ref_frame_bias);
-    if (v != kZero) mv.push_back(v);
-    cnt.at(mv.size()) += 2;
+    if (v != kZero) mv.at(++ptr) = v;
+    cnt.at(ptr) += 2;
   }
 
   if (c > 0 && context.at(r).at(c - 1).is_inter_mb) {
@@ -33,8 +35,8 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
       v = Invert(v, context.at(r).at(c - 1).ref_frame, ref_frame,
                  ref_frame_bias);
     if (v != kZero) {
-      if (!mv.empty() && mv.back() != v) mv.push_back(v);
-      cnt.at(mv.size()) += 2;
+      if (mv.at(ptr) != v) mv.at(++ptr) = v;
+      cnt.at(ptr) += 2;
     } else {
       cnt.at(0) += 2;
     }
@@ -46,43 +48,43 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
       v = Invert(v, context.at(r - 1).at(c - 1).ref_frame, ref_frame,
                  ref_frame_bias);
     if (v != kZero) {
-      if (!mv.empty() && mv.back() != v) mv.push_back(v);
-      cnt.at(mv.size()) += 1;
+      if (mv.at(ptr) != v) mv.at(++ptr) = v;
+      cnt.at(ptr) += 1;
     } else {
       cnt.at(0) += 1;
     }
   }
 
   // found three distinct motion vectors
-  if (mv.size() == 3u && mv.at(2) == mv.at(0)) ++cnt.at(1);
-  // unfound motion vectors are set to ZERO
-  while (mv.size() < 3u) mv.push_back(kZero);
+  if (cnt.at(CNT_SPLIT) && mv.at(CNT_SPLIT) == mv.at(CNT_NEAREST)) ++cnt.at(CNT_NEAREST);
 
-  cnt.at(3) =
-      (r > 0 && context.at(r - 1).at(c).mv_mode == MV_SPLIT) +
+  cnt.at(CNT_SPLIT) =
+      (r > 0 && context.at(r - 1).at(c).mv_mode == MV_SPLIT) * 2 +
       (c > 0 && context.at(r).at(c - 1).mv_mode == MV_SPLIT) * 2 +
       (r > 0 && c > 0 && context.at(r - 1).at(c - 1).mv_mode == MV_SPLIT);
 
-  if (cnt.at(2) > cnt.at(1)) {
-    std::swap(cnt.at(1), cnt.at(2));
-    std::swap(mv.at(0), mv.at(1));
+  if (cnt.at(CNT_NEAR) > cnt.at(CNT_NEAREST)) {
+    std::swap(cnt.at(CNT_NEAR), cnt.at(CNT_NEAREST));
+    std::swap(mv.at(CNT_NEAR), mv.at(CNT_NEAREST));
   }
-  if (cnt.at(1) >= cnt.at(0)) mv.at(0) = mv.at(1);
-  best = mv.at(0);
-  nearest = mv.at(1);
-  near = mv.at(2);
+  if (cnt.at(CNT_NEAREST) >= cnt.at(CNT_ZERO)) mv.at(CNT_ZERO) = mv.at(CNT_NEAREST);
+  best = mv.at(CNT_ZERO);
+  nearest = mv.at(CNT_NEAREST);
+  near = mv.at(CNT_NEAR);
 
 #ifdef DEBUG
+  for (size_t i = 0; i < 4; ++i)
+    std::cerr << mv.at(i).dr << ' ' << mv.at(i).dc << std::endl;
   // std::cerr << "[Debug] Exit SearchMVs()" << std::endl;
-  std::cerr << "[Debug] cnt = {" << int(cnt.at(0)) << ' ' << int(cnt.at(1)) << ' ' << int(cnt.at(2)) << ' ' << int(cnt.at(3)) << "}" << std::endl;
+  std::cout << "cnt = {" << int(cnt.at(0)) << ' ' << int(cnt.at(1)) << ' ' << int(cnt.at(2)) << ' ' << int(cnt.at(3)) << "}" << std::endl;
 #endif
   return ps.ReadInterMBHeader(cnt);
 }
 
-void ClampMV(MotionVector &mv, int16_t left, int16_t right, int16_t up,
-             int16_t down) {
+void ClampMV(int16_t left, int16_t right, int16_t up,
+             int16_t down, MotionVector &mv) {
   mv.dr = std::clamp(mv.dr, up, down);
-  mv.dc = std::clamp(mv.dr, left, right);
+  mv.dc = std::clamp(mv.dc, left, right);
 }
 
 MotionVector Invert(const MotionVector &mv, uint8_t ref_frame1,
@@ -214,22 +216,37 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
                   std::vector<std::vector<InterContext>> &context,
                   std::vector<std::vector<uint8_t>> &skip_lf,
                   BitstreamParser &ps, Frame &frame) {
-  int16_t left = int16_t(-(1 << 7)), right = int16_t(frame.hblock);
+  int16_t left = int16_t(-(1 << 7)), right = int16_t(frame.hblock << 7);
   int16_t up = int16_t(-((r + 1) << 7)),
           down = int16_t((frame.vblock - r) << 7);
+
+#ifdef DEBUG
+  std::cerr << "left = " << left << " right = " << right << " up = " << up << " down = " << down << std::endl;
+#endif
 
   MotionVector best, nearest, near, mv;
   InterMBHeader hd = SearchMVs(r, c, frame.Y, ref_frame_bias, ref_frame,
                                context, ps, best, nearest, near);
-  ClampMV(best, left, right, up, down);
-  ClampMV(nearest, left, right, up, down);
-  ClampMV(near, left, right, up, down);
+
+#ifdef DEBUG
+  std::cerr << "Before clamping" << std::endl;
+  std::cerr << "best = " << best.dr << ' ' << best.dc << std::endl;
+  std::cerr << "nearest = " << nearest.dr << ' ' << nearest.dc << std::endl;
+  std::cerr << "near = " << near.dr << ' ' << near.dc << std::endl;
+#endif
+
+  ClampMV(left, right, up, down, best);
+  ClampMV(left, right, up, down, nearest);
+  ClampMV(left, right, up, down, near);
 
   context.at(r).at(c) = InterContext(hd.mv_mode, ref_frame);
   skip_lf.at(r).at(c) += hd.mv_mode == MV_SPLIT;
 
 #ifdef DEBUG
   std::cerr << "MV_MODE = " << hd.mv_mode << std::endl;
+  std::cerr << "best = " << best.dr << ' ' << best.dc << std::endl;
+  std::cerr << "nearest = " << nearest.dr << ' ' << nearest.dc << std::endl;
+  std::cerr << "near = " << near.dr << ' ' << near.dc << std::endl;
 #endif
 
   switch (hd.mv_mode) {
@@ -320,8 +337,7 @@ void Sixtap(const Plane<C> &refer, int32_t r, int32_t c, uint8_t mr, uint8_t mc,
             SubBlock &sub) {
   std::array<std::array<int16_t, 4>, 9> tmp =
       HorizontalSixtap(refer, r - 2, c, filter.at(mc));
-  VerticalSixtap(tmp, filter.at(mr), sub);
-}
+  VerticalSixtap(tmp, filter.at(mr), sub); }
 
 template <size_t C>
 void InterpBlock(const Plane<C> &refer,

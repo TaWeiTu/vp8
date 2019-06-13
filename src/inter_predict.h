@@ -62,8 +62,8 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
                         MotionVector &nearest, MotionVector &near);
 
 // Make sure that the motion vector indeed point to a valid position.
-void ClampMV(MotionVector &mb, int16_t left, int16_t right, int16_t up,
-             int16_t down);
+void ClampMV(int16_t left, int16_t right, int16_t up,
+             int16_t down, MotionVector &mb);
 
 // Invert the motion vector the sign bias is different in the reference frames
 // of two macroblocks.
