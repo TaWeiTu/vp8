@@ -11,6 +11,9 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
                         const std::vector<std::vector<InterContext>> &context,
                         BitstreamParser &ps, MotionVector &best,
                         MotionVector &nearest, MotionVector &near) {
+#ifdef DEBUG
+  std::cerr << "[Debug] Enter SearchMVs()" << std::endl;
+#endif
   static std::array<uint8_t, 4> cnt;
   std::fill(cnt.begin(), cnt.end(), 0);
   std::vector<MotionVector> mv;
@@ -69,6 +72,10 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
   nearest = mv.at(1);
   near = mv.at(2);
 
+#ifdef DEBUG
+  std::cerr << "[Debug] Exit SearchMVs()" << std::endl;
+  std::cerr << "[Debug] cnt = {" << int(cnt.at(0)) << ' ' << int(cnt.at(1)) << ' ' << int(cnt.at(2)) << ' ' << int(cnt.at(3)) << "}" << std::endl;
+#endif
   return ps.ReadInterMBHeader(cnt);
 }
 

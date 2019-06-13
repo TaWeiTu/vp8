@@ -39,14 +39,14 @@ class BoolDecoder {
     return uint16_t(-res);
   }
 
-  // Prepare the Boolean decoder to decode probability encoded data.
-  void Init();
-
  private:
   uint32_t value_;
   uint32_t range_;
   uint8_t bit_count_;
   SpanReader<uint8_t> sp_;
+
+  // Prepare the Boolean decoder to decode probability encoded data.
+  void Init();
 };
 
 }  // namespace vp8
