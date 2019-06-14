@@ -318,8 +318,8 @@ SubBlockMVMode BitstreamParser::ReadSubBlockMVMode(uint8_t sub_mv_context) {
 }
 
 MotionVector BitstreamParser::ReadSubBlockMV() {
-  auto h = ReadMVComponent(false);
-  auto w = ReadMVComponent(true);
+  int16_t h = int16_t(ReadMVComponent(false) * 2);
+  int16_t w = int16_t(ReadMVComponent(true) * 2);
   return MotionVector(h, w);
 }
 

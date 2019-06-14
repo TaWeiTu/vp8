@@ -150,7 +150,7 @@ constexpr std::array<TreeIndex, 2 * (kNumDctTokens - 2)> kCoeffTreeNoEOB = {
     8,      -DCT_3, -DCT_4,    12,        14,        -DCT_CAT1, -DCT_CAT2,
     16,     18,     -DCT_CAT3, -DCT_CAT4, -DCT_CAT5, -DCT_CAT6};
 
-static const std::array<std::array<Prob, 4>, 6> kModeProb = {
+constexpr std::array<std::array<Prob, 4>, 6> kModeProb = {
     {{7, 1, 1, 143},
      {14, 18, 14, 107},
      {135, 64, 57, 68},
@@ -158,13 +158,13 @@ static const std::array<std::array<Prob, 4>, 6> kModeProb = {
      {159, 134, 128, 34},
      {234, 188, 128, 28}}};
 
-const std::array<std::array<Prob, kMVPCount>, kNumMVDimen> kMVUpdateProbs = {
+constexpr std::array<std::array<Prob, kMVPCount>, kNumMVDimen> kMVUpdateProbs = {
     {{237, 246, 253, 253, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 250,
       250, 252, 254, 254},
      {231, 243, 245, 253, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 251,
       251, 254, 254, 254}}};
 
-const std::array<std::array<Prob, kMVPCount>, kNumMVDimen> kDefaultMVContext = {
+constexpr std::array<std::array<Prob, kMVPCount>, kNumMVDimen> kDefaultMVContext = {
     {{162, 128, 225, 146, 172, 147, 214, 39, 156, 128, 129, 132, 75, 145, 178,
       206, 239, 254, 254},
      {164, 128, 204, 170, 119, 235, 140, 230, 228, 128, 130, 130, 74, 148, 180,

@@ -36,12 +36,14 @@ void YUV::WriteFrame(const Frame &frame) {
       fs_.write(reinterpret_cast<char *>(&v), sizeof(v));
     }
   }
+#ifdef DEBUG
   static int counter = 0;
   ++counter;
   if (counter == 2) {
     if (fs_.is_open()) fs_.close();
     exit(0);
   }
+#endif
 }
 
 YUV::~YUV() {

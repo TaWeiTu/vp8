@@ -76,7 +76,8 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
   for (size_t i = 0; i < 4; ++i)
     std::cerr << mv.at(i).dr << ' ' << mv.at(i).dc << std::endl;
   // std::cerr << "[Debug] Exit SearchMVs()" << std::endl;
-  std::cout << "cnt = {" << int(cnt.at(0)) << ' ' << int(cnt.at(1)) << ' ' << int(cnt.at(2)) << ' ' << int(cnt.at(3)) << "}" << std::endl;
+  std::cerr << "cnt = {" << int(cnt.at(0)) << ' ' << int(cnt.at(1)) << ' ' << int(cnt.at(2)) << ' ' << int(cnt.at(3)) << "}" << std::endl;
+  std::cerr << "mv = {" << mv.at(0).dr << ' ' << mv.at(0).dc << ' ' << mv.at(1).dr << ' ' << mv.at(1).dc << ' ' << mv.at(2).dr << ' ' << mv.at(2).dc << ' ' << mv.at(3).dr << ' ' << mv.at(3).dc << "}" << std::endl;
 #endif
   return ps.ReadInterMBHeader(cnt);
 }
@@ -118,8 +119,8 @@ void ConfigureChromaMVs(const MacroBlock<4> &luma, bool trim,
 
       int16_t sr = int16_t(ulv.dr + urv.dr + dlv.dr + drv.dr);
       int16_t sc = int16_t(ulv.dc + urv.dc + dlv.dc + drv.dc);
-      int16_t dr = (sr >= 0 ? (sr + 4) >> 3 : -((-sr + 4) >> 3));
-      int16_t dc = (sc >= 0 ? (sc + 4) >> 3 : -((-sc + 4) >> 3));
+      int16_t dr = (sr >= 0 ? (sr + 4) / 8 : -((-sr + 4) / 8));
+      int16_t dc = (sc >= 0 ? (sc + 4) / 8: -((-sc + 4) / 8));
       if (trim) {
         dr = dr & (~7);
         dc = dc & (~7);
@@ -286,6 +287,16 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
   }
   ConfigureChromaMVs(frame.Y.at(r).at(c), trim, frame.U.at(r).at(c));
   ConfigureChromaMVs(frame.Y.at(r).at(c), trim, frame.V.at(r).at(c));
+#ifdef DEBUG
+  if (hd.mv_mode == MV_SPLIT) {
+    for (size_t i = 0; i < 2; ++i) {
+      for (size_t j = 0; j < 2; ++j) {
+        MotionVector mv = frame.U.at(r).at(c).at(i).at(j).GetMotionVector();
+        std::cout << "uvrow = " << mv.dr << " uvcol = " << mv.dc << std::endl;
+      }
+    }
+  }
+#endif
 #ifdef DEBUG
   std::cerr << "[Debug] Exit ConfigureMVs()" << std::endl;
 #endif
