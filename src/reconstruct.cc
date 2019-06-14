@@ -111,6 +111,24 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
         ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
         ApplyMBResidual(rv.u, frame.U.at(r).at(c));
         ApplyMBResidual(rv.v, frame.V.at(r).at(c));
+
+#ifdef DEBUG
+        for (size_t i = 0; i < 16; ++i) {
+          for (size_t j = 0; j < 16; ++j)
+            std::cout << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+          std::cout << std::endl;
+        }
+        for (size_t i = 0; i < 8; ++i) {
+          for (size_t j = 0; j < 8; ++j)
+            std::cout << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
+          std::cout << std::endl;
+        }
+        for (size_t i = 0; i < 8; ++i) {
+          for (size_t j = 0; j < 8; ++j)
+            std::cout << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
+          std::cout << std::endl;
+        }
+#endif
       } else {
         IntraMBHeader mh = tag.key_frame ? ps.ReadIntraMBHeaderKF()
                                          : ps.ReadIntraMBHeaderNonKF();

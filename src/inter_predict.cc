@@ -287,16 +287,16 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
   }
   ConfigureChromaMVs(frame.Y.at(r).at(c), trim, frame.U.at(r).at(c));
   ConfigureChromaMVs(frame.Y.at(r).at(c), trim, frame.V.at(r).at(c));
-#ifdef DEBUG
-  if (hd.mv_mode == MV_SPLIT) {
-    for (size_t i = 0; i < 2; ++i) {
-      for (size_t j = 0; j < 2; ++j) {
-        MotionVector mv = frame.U.at(r).at(c).at(i).at(j).GetMotionVector();
-        std::cout << "uvrow = " << mv.dr << " uvcol = " << mv.dc << std::endl;
-      }
-    }
-  }
-#endif
+// #ifdef DEBUG
+  // if (hd.mv_mode == MV_SPLIT) {
+    // for (size_t i = 0; i < 2; ++i) {
+      // for (size_t j = 0; j < 2; ++j) {
+        // MotionVector mv = frame.U.at(r).at(c).at(i).at(j).GetMotionVector();
+        // std::cout << "uvrow = " << mv.dr << " uvcol = " << mv.dc << std::endl;
+      // }
+    // }
+  // }
+// #endif
 #ifdef DEBUG
   std::cerr << "[Debug] Exit ConfigureMVs()" << std::endl;
 #endif
