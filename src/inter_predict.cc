@@ -451,6 +451,23 @@ void InterPredict(const FrameTag &tag, size_t r, size_t c,
   InterpBlock(refs.at(ref_frame).Y, subpixel_filters, r, c, frame.Y.at(r).at(c));
   InterpBlock(refs.at(ref_frame).U, subpixel_filters, r, c, frame.U.at(r).at(c));
   InterpBlock(refs.at(ref_frame).V, subpixel_filters, r, c, frame.V.at(r).at(c));
+#ifdef DEBUG
+  for (size_t i = 0; i < 16; ++i) {
+    for (size_t j = 0; j < 16; ++j)
+      std::cout << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+    std::cout << std::endl;
+  }
+  for (size_t i = 0; i < 8; ++i) {
+    for (size_t j = 0; j < 8; ++j)
+      std::cout << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
+    std::cout << std::endl;
+  }
+  for (size_t i = 0; i < 8; ++i) {
+    for (size_t j = 0; j < 8; ++j)
+      std::cout << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
+    std::cout << std::endl;
+  }
+#endif
 }
 
 }  // namespace vp8

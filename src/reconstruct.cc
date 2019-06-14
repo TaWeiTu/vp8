@@ -112,23 +112,23 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
         ApplyMBResidual(rv.u, frame.U.at(r).at(c));
         ApplyMBResidual(rv.v, frame.V.at(r).at(c));
 
-#ifdef DEBUG
-        for (size_t i = 0; i < 16; ++i) {
-          for (size_t j = 0; j < 16; ++j)
-            std::cout << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-          std::cout << std::endl;
-        }
-        for (size_t i = 0; i < 8; ++i) {
-          for (size_t j = 0; j < 8; ++j)
-            std::cout << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
-          std::cout << std::endl;
-        }
-        for (size_t i = 0; i < 8; ++i) {
-          for (size_t j = 0; j < 8; ++j)
-            std::cout << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
-          std::cout << std::endl;
-        }
-#endif
+// #ifdef DEBUG
+        // for (size_t i = 0; i < 16; ++i) {
+          // for (size_t j = 0; j < 16; ++j)
+            // std::cout << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+          // std::cout << std::endl;
+        // }
+        // for (size_t i = 0; i < 8; ++i) {
+          // for (size_t j = 0; j < 8; ++j)
+            // std::cout << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
+          // std::cout << std::endl;
+        // }
+        // for (size_t i = 0; i < 8; ++i) {
+          // for (size_t j = 0; j < 8; ++j)
+            // std::cout << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
+          // std::cout << std::endl;
+        // }
+// #endif
       } else {
         IntraMBHeader mh = tag.key_frame ? ps.ReadIntraMBHeaderKF()
                                          : ps.ReadIntraMBHeaderNonKF();
@@ -142,6 +142,23 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
         InverseTransformResidual(rv, rd.has_y2);
         IntraPredict(tag, r, c, rv, mh, intrac, skip_lf, ps, frame);
       }
+// #ifdef DEBUG
+  // for (size_t i = 0; i < 16; ++i) {
+    // for (size_t j = 0; j < 16; ++j)
+      // std::cout << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+    // std::cout << std::endl;
+  // }
+  // for (size_t i = 0; i < 8; ++i) {
+    // for (size_t j = 0; j < 8; ++j)
+      // std::cout << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
+    // std::cout << std::endl;
+  // }
+  // for (size_t i = 0; i < 8; ++i) {
+    // for (size_t j = 0; j < 8; ++j)
+      // std::cout << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
+    // std::cout << std::endl;
+  // }
+// #endif
     }
   }
 }

@@ -528,10 +528,10 @@ std::pair<std::array<int16_t, 16>, bool> BitstreamParser::ReadResidualBlock(
   bool non_zero = false;
   bool last_zero = false;
   unsigned ctx3 = zero_cnt;
-  auto get_at_idx = block_type == 1 ? [](size_t n) { return uint8_t(n); }
-                                    : [](size_t n) { return kZigZag.at(n); };
+  // auto get_at_idx = block_type == 1 ? [](size_t n) { return uint8_t(n); }
+                                    // : [](size_t n) { return kZigZag.at(n); };
   for (unsigned n = (block_type == 0 ? 1 : 0); n < 16; n++) {
-    unsigned i = get_at_idx(n);
+    unsigned i = kZigZag.at(n);
     auto &prob = context_.get()
                      .coeff_prob.get()
                      .at(block_type)
