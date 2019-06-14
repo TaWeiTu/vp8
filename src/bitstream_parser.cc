@@ -50,12 +50,12 @@ FrameHeader BitstreamParser::ReadFrameHeader() {
     context_.get().mb_num_rows = (frame_tag_.height + 15) / 16;
     context_.get().mb_metadata.resize(uint32_t(context_.get().mb_num_cols) *
                                       context_.get().mb_num_rows);
-    fill(context_.get().mb_metadata.begin(), context_.get().mb_metadata.end(),
-         0);
     context_.get().segment_id.resize(uint32_t(context_.get().mb_num_cols) *
                                      context_.get().mb_num_rows);
     fill(context_.get().segment_id.begin(), context_.get().segment_id.end(), 0);
   }
+  fill(context_.get().mb_metadata.begin(), context_.get().mb_metadata.end(),
+      0);
   frame_header_.segmentation_enabled = bd_.LitU8(1);
   if (frame_header_.segmentation_enabled) {
     UpdateSegmentation();
