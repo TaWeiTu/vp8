@@ -18,7 +18,7 @@ struct InterContext {
   MacroBlockMV mv_mode;
   uint8_t ref_frame;
 
-  InterContext() : is_inter_mb(false) {}
+  InterContext() : is_inter_mb(false), mv_mode(), ref_frame(0) {}
 
   explicit InterContext(MacroBlockMV mv_mode_, uint8_t ref_frame_)
       : is_inter_mb(true), mv_mode(mv_mode_), ref_frame(ref_frame_) {}
@@ -62,8 +62,8 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
                         MotionVector &nearest, MotionVector &near);
 
 // Make sure that the motion vector indeed point to a valid position.
-void ClampMV(int16_t left, int16_t right, int16_t up,
-             int16_t down, MotionVector &mb);
+void ClampMV(int16_t left, int16_t right, int16_t up, int16_t down,
+             MotionVector &mb);
 
 // Invert the motion vector the sign bias is different in the reference frames
 // of two macroblocks.
@@ -82,8 +82,8 @@ void ConfigureChromaMVs(const MacroBlock<4> &luma, bool trim,
 
 // In case of mode MV_SPLIT, set the motion vectors of each subblock
 // independently.
-void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c, MotionVector best,
-                          BitstreamParser &ps, Plane<4> &mb);
+void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
+                          MotionVector best, BitstreamParser &ps, Plane<4> &mb);
 
 // For each (luma or chroma) macroblocks, configure their motion vectors (if
 // needed).
@@ -102,8 +102,7 @@ std::array<std::array<int16_t, 4>, 9> HorizontalSixtap(
 
 // Vertical pixel interpolation.
 void VerticalSixtap(const std::array<std::array<int16_t, 4>, 9> &refer,
-                    const std::array<int16_t, 6> &filter,
-                    SubBlock &sub);
+                    const std::array<int16_t, 6> &filter, SubBlock &sub);
 
 // Sixtap pixel interpolation. First do the horizontal interpolation, then
 // vertical.
