@@ -56,11 +56,6 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
       frame.vblock << 1, std::vector<uint8_t>(frame.hblock << 1, 0));
   std::vector<std::vector<uint8_t>> v_nonzero(
       frame.vblock << 1, std::vector<uint8_t>(frame.hblock << 1, 0));
-
-#ifdef DEBUG
-  std::cerr << "Start prediction" << std::endl;
-#endif
-
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
       MacroBlockPreHeader pre = ps.ReadMacroBlockPreHeader();

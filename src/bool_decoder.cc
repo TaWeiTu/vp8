@@ -11,6 +11,10 @@ void BoolDecoder::Init() {
 }
 
 uint8_t BoolDecoder::Bool(uint8_t prob) {
+  if (!has_init_) {
+    Init();
+    has_init_ = true;
+  }
   uint32_t split = 1 + (((range_ - 1) * prob) >> 8);
   uint8_t res = 0;
   if (value_ >= (split << 8)) {

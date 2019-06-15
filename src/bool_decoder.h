@@ -15,7 +15,7 @@ namespace vp8 {
 class BoolDecoder {
  public:
   BoolDecoder() = default;
-  explicit BoolDecoder(SpanReader<uint8_t> sp) : sp_(sp) { Init(); }
+  explicit BoolDecoder(SpanReader<uint8_t> sp) : sp_(sp), has_init_(false) {}
 
   // Decode a 1-bit boolean value.
   uint8_t Bool(uint8_t prob);
@@ -47,6 +47,8 @@ class BoolDecoder {
 
   // Prepare the Boolean decoder to decode probability encoded data.
   void Init();
+
+  bool has_init_;
 };
 
 }  // namespace vp8
