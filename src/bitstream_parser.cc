@@ -135,6 +135,8 @@ void BitstreamParser::UpdateSegmentation() {
         context_.get().quantizer_segment.at(i) = quantizer_update_sign
                                                      ? -quantizer_update_value
                                                      : quantizer_update_value;
+      } else {
+        context_.get().quantizer_segment.at(i) = 0;
       }
     }
     for (unsigned i = 0; i < kMaxMacroBlockSegments; i++) {
@@ -144,6 +146,8 @@ void BitstreamParser::UpdateSegmentation() {
         bool lf_update_sign = bd_.LitU8(1);
         context_.get().loop_filter_level_segment.at(i) =
             lf_update_sign ? -lf_update_value : lf_update_value;
+      } else {
+        context_.get().loop_filter_level_segment.at(i) = 0;
       }
     }
   }
