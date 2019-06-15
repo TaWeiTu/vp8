@@ -42,10 +42,10 @@ void YUV::WriteFrame(const Frame &frame) {
     }
   }
 #ifdef DEBUG
-  if (counter == 2) {
-    if (fs_.is_open()) fs_.close();
-    exit(0);
-  }
+  // if (counter == 2) {
+    // if (fs_.is_open()) fs_.close();
+    // exit(0);
+  // }
 #endif
 }
 

@@ -401,9 +401,9 @@ void InterpBlock(const Plane<C> &refer,
     for (size_t j = 0; j < C; ++j) {
       MotionVector mv = mb.at(i).at(j).GetMotionVector();
 #ifdef DEBUG
-      if (C == 4) {
-        std::cerr << "mv = " << mv.dr << ' ' << mv.dc << std::endl;
-      }
+      // if (C == 4) {
+        // std::cerr << "mv = " << mv.dr << ' ' << mv.dc << std::endl;
+      // }
 #endif
       // if (mv == kZero) {
         // for (size_t x = 0; x < 4; ++x) {
