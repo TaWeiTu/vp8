@@ -31,9 +31,6 @@ void RefreshRefFrames(const vp8::FrameHeader &header,
       ref_frames.at(vp8::ALTREF_FRAME) = ref_frames.at(vp8::GOLDEN_FRAME);
   }
   if (header.refresh_last) {
-#ifdef DEBUG
-    std::cerr << ".at(Debug) header.refresh_last == true" << std::endl;
-#endif
     ref_frames.at(vp8::LAST_FRAME) = frame;
   }
 }

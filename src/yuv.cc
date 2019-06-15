@@ -17,7 +17,7 @@ void YUV::WriteFrame(const Frame &frame) {
 #ifdef DEBUG
   static int counter = 0;
   ++counter;
-  if (counter != 2) return;
+  if (counter != 4) return;
 #endif
   for (size_t r = 0; r < frame.vsize; ++r) {
     for (size_t c = 0; c < frame.hsize; ++c) {
@@ -42,7 +42,7 @@ void YUV::WriteFrame(const Frame &frame) {
     }
   }
 #ifdef DEBUG
-  if (counter == 2) {
+  if (counter == 4) {
     if (fs_.is_open()) fs_.close();
     exit(0);
   }

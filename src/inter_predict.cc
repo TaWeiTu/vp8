@@ -241,10 +241,10 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
   ClampMV(left, right, up, down, near);
 
   context.at(r).at(c) = InterContext(hd.mv_mode, ref_frame);
-  skip_lf.at(r).at(c) += hd.mv_mode == MV_SPLIT;
+  if (hd.mv_mode == MV_SPLIT) skip_lf.at(r).at(c) = 0;
 
 #ifdef DEBUG
-  std::cerr << "MV_MODE = " << hd.mv_mode << std::endl;
+  std::cout << "MV_MODE = " << hd.mv_mode << std::endl;
   std::cerr << "best = " << best.dr << ' ' << best.dc << std::endl;
   std::cerr << "nearest = " << nearest.dr << ' ' << nearest.dc << std::endl;
   std::cerr << "near = " << near.dr << ' ' << near.dc << std::endl;
@@ -439,6 +439,9 @@ void InterPredict(const FrameTag &tag, size_t r, size_t c,
 #ifdef DEBUG
   std::cerr << "Inter-Predict" << std::endl;
 #endif
+#ifdef DEBUG
+  std::cout << r << ' ' << c << std::endl;
+#endif
   ConfigureMVs(r, c, tag.version == 3, ref_frame_bias, ref_frame, context, skip_lf, ps,
                frame);
   std::array<std::array<int16_t, 6>, 8> subpixel_filters =
@@ -448,26 +451,29 @@ void InterPredict(const FrameTag &tag, size_t r, size_t c,
   std::cerr << "[Debug] ref_frame = " << int(ref_frame) << std::endl;
 #endif
 
+  assert(ref_frame != CURRENT_FRAME);
+
   InterpBlock(refs.at(ref_frame).Y, subpixel_filters, r, c, frame.Y.at(r).at(c));
   InterpBlock(refs.at(ref_frame).U, subpixel_filters, r, c, frame.U.at(r).at(c));
   InterpBlock(refs.at(ref_frame).V, subpixel_filters, r, c, frame.V.at(r).at(c));
-#ifdef DEBUG
-  for (size_t i = 0; i < 16; ++i) {
-    for (size_t j = 0; j < 16; ++j)
-      std::cout << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-    std::cout << std::endl;
-  }
-  for (size_t i = 0; i < 8; ++i) {
-    for (size_t j = 0; j < 8; ++j)
-      std::cout << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
-    std::cout << std::endl;
-  }
-  for (size_t i = 0; i < 8; ++i) {
-    for (size_t j = 0; j < 8; ++j)
-      std::cout << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
-    std::cout << std::endl;
-  }
-#endif
+// #ifdef DEBUG
+  // std::cout << r << ' ' << c << std::endl;
+  // for (size_t i = 0; i < 16; ++i) {
+    // for (size_t j = 0; j < 16; ++j)
+      // std::cout << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+    // std::cout << std::endl;
+  // }
+  // for (size_t i = 0; i < 8; ++i) {
+    // for (size_t j = 0; j < 8; ++j)
+      // std::cout << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
+    // std::cout << std::endl;
+  // }
+  // for (size_t i = 0; i < 8; ++i) {
+    // for (size_t j = 0; j < 8; ++j)
+      // std::cout << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
+    // std::cout << std::endl;
+  // }
+// #endif
 }
 
 }  // namespace vp8
