@@ -1,5 +1,6 @@
 #include <array>
 #include <cassert>
+#include <utility>
 
 #include "bitstream_const.h"
 #include "reconstruct.h"

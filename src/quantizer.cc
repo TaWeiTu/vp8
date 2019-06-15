@@ -12,14 +12,8 @@ void Quantize(std::array<int16_t, 16>& coefficients, int16_t DCfact,
 }
 void Dequantize(std::array<int16_t, 16>& coefficients, int16_t DCfact,
                 int16_t ACfact) {
-// #ifdef DEBUG
-  // std::cerr << coefficients.at(0) << ' ' << DCfact << std::endl;
-// #endif
   coefficients.at(0) *= DCfact;
   for (size_t i = 1; i < 16; i++) {
-// #ifdef DEBUG
-  // std::cerr << coefficients.at(i) << ' ' << ACfact << std::endl;
-// #endif
     coefficients.at(i) *= ACfact;
   }
 }

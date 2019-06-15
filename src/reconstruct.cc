@@ -74,6 +74,7 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
         qp = header.segment_feature_mode == SEGMENT_MODE_ABSOLUTE
                  ? header.quantizer_segment.at(pre.segment_id)
                  : header.quantizer_segment.at(pre.segment_id) + qp;
+      qp = std::clamp(qp, int16_t(0), int16_t(127));
 
       uint8_t y2_nonzero = y2_row.at(r) + y2_col.at(c);
       std::array<uint8_t, 4> y1_above{}, y1_left{};
