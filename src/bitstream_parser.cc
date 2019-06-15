@@ -54,8 +54,7 @@ FrameHeader BitstreamParser::ReadFrameHeader() {
                                      context_.get().mb_num_rows);
     fill(context_.get().segment_id.begin(), context_.get().segment_id.end(), 0);
   }
-  fill(context_.get().mb_metadata.begin(), context_.get().mb_metadata.end(),
-      0);
+  fill(context_.get().mb_metadata.begin(), context_.get().mb_metadata.end(), 0);
   frame_header_.segmentation_enabled = bd_.LitU8(1);
   if (frame_header_.segmentation_enabled) {
     UpdateSegmentation();
@@ -242,7 +241,7 @@ QuantIndices BitstreamParser::ReadQuantIndices() {
 }
 
 void BitstreamParser::TokenProbUpdate() {
-  if (!frame_header_.refresh_entropy_probs) {
+  if (frame_header_.refresh_entropy_probs) {
     context_.get().coeff_prob = std::ref(context_.get().coeff_prob_persistent);
   } else {
     // TODO: (Improvement) Write a safe_copy with bounds checking
@@ -292,7 +291,7 @@ MacroBlockPreHeader BitstreamParser::ReadMacroBlockPreHeader() {
   if (frame_header_.mb_no_skip_coeff) {
     result.mb_skip_coeff = bd_.Bool(frame_header_.prob_skip_false);
     context_.get().mb_metadata.at(macroblock_metadata_idx_) |=
-        result.mb_skip_coeff << 1;
+        uint16_t(result.mb_skip_coeff) << 1;
   }
   if (!frame_tag_.key_frame) {
     result.is_inter_mb = bd_.Bool(frame_header_.prob_intra);
@@ -346,7 +345,7 @@ InterMBHeader BitstreamParser::ReadInterMBHeader(
     result.mv_new = MotionVector(h, w);
   }
   context_.get().mb_metadata.at(macroblock_metadata_idx_) |=
-      (result.mv_mode == MV_SPLIT);
+      (result.mv_mode != MV_SPLIT);
   context_.get().mb_metadata.at(macroblock_metadata_idx_) |=
       (uint16_t(result.mv_mode) << 6);
   macroblock_metadata_idx_++;
@@ -528,8 +527,6 @@ std::pair<std::array<int16_t, 16>, bool> BitstreamParser::ReadResidualBlock(
   bool non_zero = false;
   bool last_zero = false;
   unsigned ctx3 = zero_cnt;
-  // auto get_at_idx = block_type == 1 ? [](size_t n) { return uint8_t(n); }
-                                    // : [](size_t n) { return kZigZag.at(n); };
   for (unsigned n = (block_type == 0 ? 1 : 0); n < 16; n++) {
     unsigned i = kZigZag.at(n);
     auto &prob = context_.get()
