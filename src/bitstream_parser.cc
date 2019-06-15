@@ -324,9 +324,6 @@ MotionVector BitstreamParser::ReadSubBlockMV() {
 
 InterMBHeader BitstreamParser::ReadInterMBHeader(
     const std::array<uint8_t, 4> &cnt) {
-#ifdef DEBUG
-  std::cerr << "[Debug] Enter ReadInterMBHeader()" << std::endl;
-#endif
   std::array<uint8_t, 4> mv_ref_probs{};
   mv_ref_probs.at(0) = kModeProb.at(cnt.at(0)).at(0);
   mv_ref_probs.at(1) = kModeProb.at(cnt.at(1)).at(1);
@@ -349,9 +346,6 @@ InterMBHeader BitstreamParser::ReadInterMBHeader(
   context_.get().mb_metadata.at(macroblock_metadata_idx_) |=
       (uint16_t(result.mv_mode) << 6);
   macroblock_metadata_idx_++;
-#ifdef DEBUG
-  std::cerr << "[Debug] Exit ReadInterMBHeader()" << std::endl;
-#endif
   return result;
 }
 

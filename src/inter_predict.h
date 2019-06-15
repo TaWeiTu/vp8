@@ -18,7 +18,7 @@ struct InterContext {
   MacroBlockMV mv_mode;
   uint8_t ref_frame;
 
-  InterContext() : is_inter_mb(false) {}
+  InterContext() : is_inter_mb(false), mv_mode(MV_ZERO), ref_frame(0) {}
 
   explicit InterContext(MacroBlockMV mv_mode_, uint8_t ref_frame_)
       : is_inter_mb(true), mv_mode(mv_mode_), ref_frame(ref_frame_) {}

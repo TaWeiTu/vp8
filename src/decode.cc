@@ -14,24 +14,28 @@ void InitSignBias(const vp8::FrameHeader &header,
 void RefreshRefFrames(const vp8::FrameHeader &header,
                       std::array<vp8::Frame, 4> &ref_frames,
                       const vp8::Frame &frame) {
+  std::array<vp8::Frame, 4> tmp = ref_frames;
   if (header.refresh_golden_frame) {
-    ref_frames.at(vp8::GOLDEN_FRAME) = frame;
+    tmp.at(vp8::GOLDEN_FRAME) = frame;
   } else {
     if (header.copy_buffer_to_golden == 1)
-      ref_frames.at(vp8::GOLDEN_FRAME) = ref_frames.at(vp8::LAST_FRAME);
+      tmp.at(vp8::GOLDEN_FRAME) = ref_frames.at(vp8::LAST_FRAME);
     else if (header.copy_buffer_to_golden == 2)
-      ref_frames.at(vp8::GOLDEN_FRAME) = ref_frames.at(vp8::ALTREF_FRAME);
+      tmp.at(vp8::GOLDEN_FRAME) = ref_frames.at(vp8::ALTREF_FRAME);
   }
   if (header.refresh_alternate_frame) {
-    ref_frames.at(vp8::ALTREF_FRAME) = frame;
+    tmp.at(vp8::ALTREF_FRAME) = frame;
   } else {
     if (header.copy_buffer_to_alternate == 1)
-      ref_frames.at(vp8::ALTREF_FRAME) = ref_frames.at(vp8::LAST_FRAME);
+      tmp.at(vp8::ALTREF_FRAME) = ref_frames.at(vp8::LAST_FRAME);
     else if (header.copy_buffer_to_alternate == 2)
-      ref_frames.at(vp8::ALTREF_FRAME) = ref_frames.at(vp8::GOLDEN_FRAME);
+      tmp.at(vp8::ALTREF_FRAME) = ref_frames.at(vp8::GOLDEN_FRAME);
   }
   if (header.refresh_last) {
-    ref_frames.at(vp8::LAST_FRAME) = frame;
+    tmp.at(vp8::LAST_FRAME) = frame;
+  }
+  for (size_t i = 0; i < 4; ++i) {
+    ref_frames.at(i) = tmp.at(i);
   }
 }
 

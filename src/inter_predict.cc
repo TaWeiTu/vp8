@@ -119,12 +119,15 @@ void ConfigureChromaMVs(const MacroBlock<4> &luma, bool trim,
 
       int16_t sr = int16_t(ulv.dr + urv.dr + dlv.dr + drv.dr);
       int16_t sc = int16_t(ulv.dc + urv.dc + dlv.dc + drv.dc);
-      int16_t dr = (sr >= 0 ? (sr + 4) / 8 : -((-sr + 4) / 8));
-      int16_t dc = (sc >= 0 ? (sc + 4) / 8 : -((-sc + 4) / 8));
+      int16_t dr = (sr >= 0 ? (sr + 4) / 8 : (sr - 4) / 8);
+      int16_t dc = (sc >= 0 ? (sc + 4) / 8 : (sc - 4) / 8);
       if (trim) {
         dr = dr & (~7);
         dc = dc & (~7);
       }
+#ifdef DEBUG
+      std::cout << "dr = " << dr << " dc = " << dc << std::endl;
+#endif
       chroma.at(r).at(c).SetMotionVector(dr, dc);
     }
   }
@@ -209,6 +212,9 @@ void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
                "mode.");
         break;
     }
+#ifdef DEBUG
+    std::cout << "split row = " << mv.dr << " col = " << mv.dc << std::endl;
+#endif
     for (size_t j = 0; j < part.at(i).size(); ++j) {
       size_t ir = part.at(i).at(j) >> 2, ic = part.at(i).at(j) & 3;
       mb.at(r).at(c).at(ir).at(ic).SetMotionVector(mv);
@@ -225,10 +231,10 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
   int16_t up = int16_t(-((r + 1) << 7)),
           down = int16_t((frame.vblock - r) << 7);
 
-#ifdef DEBUG
-  std::cerr << "left = " << left << " right = " << right << " up = " << up
-            << " down = " << down << std::endl;
-#endif
+// #ifdef DEBUG
+  // std::cerr << "left = " << left << " right = " << right << " up = " << up
+            // << " down = " << down << std::endl;
+// #endif
 
   MotionVector best, nearest, near, mv;
   InterMBHeader hd = SearchMVs(r, c, frame.Y, ref_frame_bias, ref_frame,
@@ -255,10 +261,10 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
   // std::cerr << "near = " << near.dr << ", " << near.dc << std::endl;
 #endif
 #ifdef DEBUG
-  std::cout << "After clamping" << std::endl;
-  std::cout << "best = " << best.dr << ", " << best.dc << std::endl;
-  std::cout << "nearest = " << nearest.dr << ", " << nearest.dc << std::endl;
-  std::cout << "near = " << near.dr << ", " << near.dc << std::endl;
+  // std::cout << "After clamping" << std::endl;
+  // std::cout << "best = " << best.dr << ", " << best.dc << std::endl;
+  // std::cout << "nearest = " << nearest.dr << ", " << nearest.dc << std::endl;
+  // std::cout << "near = " << near.dr << ", " << near.dc << std::endl;
 #endif
 
   switch (hd.mv_mode) {
@@ -309,9 +315,9 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
   // }
   // }
 // #endif
-#ifdef DEBUG
-  std::cerr << "[Debug] Exit ConfigureMVs()" << std::endl;
-#endif
+// #ifdef DEBUG
+  // std::cerr << "[Debug] Exit ConfigureMVs()" << std::endl;
+// #endif
 }
 
 template <size_t C>
@@ -378,25 +384,32 @@ void InterpBlock(const Plane<C> &refer,
         }
         continue;
       }
-#ifdef DEBUG
-      std::cerr << "mv.dr = " << int(mv.dr) << "mv.dr & 7 = " << int(mv.dr & 7)
-                << ' ' << "mv.dc = " << int(mv.dc)
-                << "mv.dc & 7 = " << int(mv.dc & 7) << std::endl;
-#endif
+// #ifdef DEBUG
+      // std::cerr << "mv.dr = " << int(mv.dr) << "mv.dr & 7 = " << int(mv.dr & 7)
+                // << ' ' << "mv.dc = " << int(mv.dc)
+                // << "mv.dc & 7 = " << int(mv.dc & 7) << std::endl;
+// #endif
       uint8_t mr = mv.dr & 7, mc = mv.dc & 7;
       int32_t tr = int32_t(r << offset | (i << 2)) + (mv.dr >> 3);
       int32_t tc = int32_t(c << offset | (j << 2)) + (mv.dc >> 3);
+// #ifdef DEBUG
+      // std::cerr << "tr = " << tr << " tc = " << tc << std::endl;
+// #endif
+      auto GetPixel = [&refer](int32_t row, int32_t col) -> int16_t {
+        row = std::clamp(row, 0, int32_t(refer.vsize()) - 1);
+        col = std::clamp(col, 0, int32_t(refer.hsize()) - 1);
+        return refer.GetPixel(size_t(row), size_t(col));
+      };
 #ifdef DEBUG
-      std::cerr << "tr = " << tr << " tc = " << tc << std::endl;
+      for (size_t x = 0; x < 4; ++x) {
+        for (size_t y = 0; y < 4; ++y)
+          std::cout << GetPixel(tr + x, tc + y) << ' ';
+        std::cout << std::endl;
+      }
 #endif
       if (mr | mc) {
         Sixtap(refer, tr, tc, mr, mc, filter, mb.at(i).at(j));
       } else {
-        auto GetPixel = [&refer](int32_t row, int32_t col) -> int16_t {
-          row = std::clamp(row, 0, int32_t(refer.vsize()) - 1);
-          col = std::clamp(col, 0, int32_t(refer.hsize()) - 1);
-          return refer.GetPixel(size_t(row), size_t(col));
-        };
         for (int32_t x = 0; x < 4; ++x) {
           for (int32_t y = 0; y < 4; ++y)
             mb.at(i).at(j).at(size_t(x)).at(size_t(y)) =
@@ -405,13 +418,13 @@ void InterpBlock(const Plane<C> &refer,
       }
     }
   }
-#ifdef DEBUG
-  std::cerr << "result" << std::endl;
-  for (size_t i = 0; i < C * 4; ++i) {
-    for (size_t j = 0; j < C * 4; ++j) std::cerr << mb.GetPixel(i, j) << ' ';
-    std::cerr << std::endl;
-  }
-#endif
+// #ifdef DEBUG
+  // std::cerr << "result" << std::endl;
+  // for (size_t i = 0; i < C * 4; ++i) {
+    // for (size_t j = 0; j < C * 4; ++j) std::cerr << mb.GetPixel(i, j) << ' ';
+    // std::cerr << std::endl;
+  // }
+// #endif
 }
 
 template std::array<std::array<int16_t, 4>, 9> HorizontalSixtap<4>(
@@ -443,22 +456,17 @@ void InterPredict(const FrameTag &tag, size_t r, size_t c,
                   std::vector<std::vector<InterContext>> &context,
                   std::vector<std::vector<uint8_t>> &skip_lf,
                   BitstreamParser &ps, Frame &frame) {
-#ifdef DEBUG
-  std::cerr << "Inter-Predict" << std::endl;
-#endif
-#ifdef DEBUG
-  std::cout << r << ' ' << c << std::endl;
-#endif
+// #ifdef DEBUG
+  // std::cerr << "Inter-Predict" << std::endl;
+// #endif
   ConfigureMVs(r, c, tag.version == 3, ref_frame_bias, ref_frame, context,
                skip_lf, ps, frame);
   std::array<std::array<int16_t, 6>, 8> subpixel_filters =
       tag.version == 0 ? kBicubicFilter : kBilinearFilter;
 
-#ifdef DEBUG
-  std::cerr << "[Debug] ref_frame = " << int(ref_frame) << std::endl;
-#endif
-
-  assert(ref_frame != CURRENT_FRAME);
+// #ifdef DEBUG
+  // std::cerr << "[Debug] ref_frame = " << int(ref_frame) << std::endl;
+// #endif
 
   InterpBlock(refs.at(ref_frame).Y, subpixel_filters, r, c,
               frame.Y.at(r).at(c));
@@ -466,24 +474,25 @@ void InterPredict(const FrameTag &tag, size_t r, size_t c,
               frame.U.at(r).at(c));
   InterpBlock(refs.at(ref_frame).V, subpixel_filters, r, c,
               frame.V.at(r).at(c));
-  // #ifdef DEBUG
-  // std::cout << r << ' ' << c << std::endl;
-  // for (size_t i = 0; i < 16; ++i) {
-  // for (size_t j = 0; j < 16; ++j)
-  // std::cout << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-  // std::cout << std::endl;
-  // }
-  // for (size_t i = 0; i < 8; ++i) {
-  // for (size_t j = 0; j < 8; ++j)
-  // std::cout << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
-  // std::cout << std::endl;
-  // }
-  // for (size_t i = 0; i < 8; ++i) {
-  // for (size_t j = 0; j < 8; ++j)
-  // std::cout << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
-  // std::cout << std::endl;
-  // }
-  // #endif
+#ifdef DEBUG
+  std::cout << "mb_row = " << r << "mb_col = "  << c << std::endl;
+  std::cerr << "row = " << r << " col = " << c << std::endl;
+  for (size_t i = 0; i < 16; ++i) {
+    for (size_t j = 0; j < 16; ++j)
+      std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+    std::cerr << std::endl;
+  }
+  for (size_t i = 0; i < 8; ++i) {
+    for (size_t j = 0; j < 8; ++j)
+      std::cerr << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
+    std::cerr << std::endl;
+  }
+  for (size_t i = 0; i < 8; ++i) {
+    for (size_t j = 0; j < 8; ++j)
+      std::cerr << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
+    std::cerr << std::endl;
+  }
+#endif
 }
 
 }  // namespace vp8
