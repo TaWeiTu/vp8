@@ -14,11 +14,11 @@ YUV::YUV(const char *filename) {
 
 void YUV::WriteFrame(const Frame &frame) {
   // ffplay -video_size 176x144 -framerate 1 -pixel_format yuv420p output.yuv
-// #ifdef DEBUG
-  // static int counter = 0;
-  // ++counter;
+#ifdef DEBUG
+  static int counter = 0;
+  ++counter;
   // if (counter != 10) return;
-// #endif
+#endif
   for (size_t r = 0; r < frame.vsize; ++r) {
     for (size_t c = 0; c < frame.hsize; ++c) {
       uint8_t y =
@@ -41,12 +41,12 @@ void YUV::WriteFrame(const Frame &frame) {
       fs_.write(reinterpret_cast<char *>(&v), sizeof(v));
     }
   }
-// #ifdef DEBUG
-  // if (counter == 10) {
-    // if (fs_.is_open()) fs_.close();
-    // exit(0);
-  // }
-// #endif
+#ifdef DEBUG
+  if (counter == 2) {
+    if (fs_.is_open()) fs_.close();
+    exit(0);
+  }
+#endif
 }
 
 YUV::~YUV() {

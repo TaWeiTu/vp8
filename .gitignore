@@ -9,3 +9,4 @@ example/
 decode
 decode.dSYM
 log*
+default.profraw

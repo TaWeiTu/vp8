@@ -22,15 +22,23 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
 
   if (r > 0 && context.at(r - 1).at(c).is_inter_mb) {
     MotionVector v = mb.at(r - 1).at(c).GetMotionVector();
-    v = Invert(v, context.at(r - 1).at(c).ref_frame, ref_frame, ref_frame_bias);
-    if (v != kZero) mv.at(++ptr) = v;
+    if (v != kZero) {
+#ifdef DEBUG
+      std::cout << "above mv = " << v.dr << ' ' << v.dc << std::endl;
+#endif
+      v = Invert(v, context.at(r - 1).at(c).ref_frame, ref_frame, ref_frame_bias);
+      mv.at(++ptr) = v;
+    }
     cnt.at(ptr) += 2;
   }
 
   if (c > 0 && context.at(r).at(c - 1).is_inter_mb) {
     MotionVector v = mb.at(r).at(c - 1).GetMotionVector();
-    v = Invert(v, context.at(r).at(c - 1).ref_frame, ref_frame, ref_frame_bias);
     if (v != kZero) {
+#ifdef DEBUG
+      std::cout << "left mv = " << v.dr << ' ' << v.dc << std::endl;
+#endif
+      v = Invert(v, context.at(r).at(c - 1).ref_frame, ref_frame, ref_frame_bias);
       if (mv.at(ptr) != v) mv.at(++ptr) = v;
       cnt.at(ptr) += 2;
     } else {
@@ -40,9 +48,12 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
 
   if (r > 0 && c > 0 && context.at(r - 1).at(c - 1).is_inter_mb) {
     MotionVector v = mb.at(r - 1).at(c - 1).GetMotionVector();
-    v = Invert(v, context.at(r - 1).at(c - 1).ref_frame, ref_frame,
-               ref_frame_bias);
     if (v != kZero) {
+#ifdef DEBUG
+      std::cout << "above left mv = " << v.dr << ' ' << v.dc << std::endl;
+#endif
+      v = Invert(v, context.at(r - 1).at(c - 1).ref_frame, ref_frame,
+          ref_frame_bias);
       if (mv.at(ptr) != v) mv.at(++ptr) = v;
       cnt.at(ptr) += 1;
     } else {
@@ -51,7 +62,7 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
   }
 
   // found three distinct motion vectors
-  if (cnt.at(CNT_SPLIT) && mv.at(CNT_SPLIT) == mv.at(CNT_NEAREST))
+  if (cnt.at(CNT_SPLIT) && mv.at(ptr) == mv.at(CNT_NEAREST))
     ++cnt.at(CNT_NEAREST);
 
   cnt.at(CNT_SPLIT) =
@@ -79,13 +90,20 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
   // << mv.at(1).dc << ' ' << mv.at(2).dr << ' ' << mv.at(2).dc << ' ' <<
   // mv.at(3).dr << ' ' << mv.at(3).dc << "}" << std::endl;
   // #endif
-  return ps.ReadInterMBHeader(cnt);
+  auto hd = ps.ReadInterMBHeader(cnt);
+#ifdef DEBUG
+  if (hd.mv_mode == MV_SPLIT)
+    std::cout << "cnt = " << int(cnt.at(0)) << ' ' << int(cnt.at(1)) << ' ' << int(cnt.at(2)) << ' ' << int(cnt.at(3)) << std::endl;
+#endif
+  return hd;
 }
 
-void ClampMV(int16_t left, int16_t right, int16_t up, int16_t down,
+void ClampMV(int16_t top, int16_t bottom, int16_t left, int16_t right,
              MotionVector &mv) {
-  mv.dr = std::clamp(mv.dr, up, down);
-  mv.dc = std::clamp(mv.dc, left, right);
+  if (mv.dc < (left - (16 << 3))) mv.dc = (left - (16 << 3));
+  else if (mv.dc > (right + (16 << 3))) mv.dc = (right + (16 << 3));
+  if (mv.dr < (top - (16 << 3))) mv.dr = (top - (16 << 3));
+  else if (mv.dr > (bottom + (16 << 3))) mv.dr = (bottom + (16 << 3));
 }
 
 MotionVector Invert(const MotionVector &mv, uint8_t ref_frame1,
@@ -125,9 +143,9 @@ void ConfigureChromaMVs(const MacroBlock<4> &luma, bool trim,
         dr = dr & (~7);
         dc = dc & (~7);
       }
-#ifdef DEBUG
-      std::cout << "dr = " << dr << " dc = " << dc << std::endl;
-#endif
+// #ifdef DEBUG
+      // std::cout << "dr = " << dr << " dc = " << dc << std::endl;
+// #endif
       chroma.at(r).at(c).SetMotionVector(dr, dc);
     }
   }
@@ -186,9 +204,9 @@ void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
     uint8_t context = SubBlockContext(left, above);
     SubBlockMVMode mode = ps.ReadSubBlockMVMode(context);
     MotionVector mv;
-#ifdef DEBUG
-    std::cout << "subblock = " << mode - kNumIntraBModes << std::endl;
-#endif
+// #ifdef DEBUG
+    // std::cout << "subblock = " << mode - kNumIntraBModes << std::endl;
+// #endif
     switch (mode) {
       case LEFT_4x4:
         mv = left;
@@ -212,9 +230,9 @@ void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
                "mode.");
         break;
     }
-#ifdef DEBUG
-    std::cout << "split row = " << mv.dr << " col = " << mv.dc << std::endl;
-#endif
+// #ifdef DEBUG
+    // std::cout << "split row = " << mv.dr << " col = " << mv.dc << std::endl;
+// #endif
     for (size_t j = 0; j < part.at(i).size(); ++j) {
       size_t ir = part.at(i).at(j) >> 2, ic = part.at(i).at(j) & 3;
       mb.at(r).at(c).at(ir).at(ic).SetMotionVector(mv);
@@ -227,9 +245,11 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
                   std::vector<std::vector<InterContext>> &context,
                   std::vector<std::vector<uint8_t>> &skip_lf,
                   BitstreamParser &ps, Frame &frame) {
-  int16_t left = int16_t(-(1 << 7)), right = int16_t(frame.hblock << 7);
-  int16_t up = int16_t(-((r + 1) << 7)),
-          down = int16_t((frame.vblock - r) << 7);
+  int16_t top = ((-int16_t(r) * 16) * 8);
+  int16_t bottom = ((int16_t(frame.vblock) - 1 - int16_t(r)) * 16) * 8;
+  int16_t left = ((-int16_t(c) * 16) * 8);
+  int16_t right = ((int16_t(frame.hblock) - 1 - int16_t(c)) * 16) * 8;
+
 
 // #ifdef DEBUG
   // std::cerr << "left = " << left << " right = " << right << " up = " << up
@@ -241,21 +261,21 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
                                context, ps, best, nearest, near);
 
 #ifdef DEBUG
-  std::cout << "Before clamping" << std::endl;
-  std::cout << "best = " << best.dr << ", " << best.dc << std::endl;
-  std::cout << "nearest = " << nearest.dr << ", " << nearest.dc << std::endl;
-  std::cout << "near = " << near.dr << ", " << near.dc << std::endl;
+  // std::cout << "Before clamping" << std::endl;
+  // std::cout << "best = " << best.dr << ", " << best.dc << std::endl;
+  // std::cout << "nearest = " << nearest.dr << ", " << nearest.dc << std::endl;
+  // std::cout << "near = " << near.dr << ", " << near.dc << std::endl;
 #endif
 
-  // ClampMV(left, right, up, down, best);
-  // ClampMV(left, right, up, down, nearest);
-  // ClampMV(left, right, up, down, near);
+  ClampMV(top, bottom, left, right, best);
+  ClampMV(top, bottom, left, right, nearest);
+  ClampMV(top, bottom, left, right, near);
 
   context.at(r).at(c) = InterContext(hd.mv_mode, ref_frame);
   if (hd.mv_mode == MV_SPLIT) skip_lf.at(r).at(c) = 0;
 
 #ifdef DEBUG
-  std::cout << "MV_MODE = " << hd.mv_mode << std::endl;
+  // std::cout << "MV_MODE = " << hd.mv_mode << std::endl;
   // std::cerr << "best = " << best.dr << ", "  << best.dc << std::endl;
   // std::cerr << "nearest = " << nearest.dr << ", " << nearest.dc << std::endl;
   // std::cerr << "near = " << near.dr << ", " << near.dc << std::endl;
@@ -290,6 +310,9 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
       break;
 
     case MV_SPLIT:
+#ifdef DEBUG
+      std::cout << "best = " << best.dr << ' ' << best.dc << std::endl;
+#endif
       ConfigureSubBlockMVs(hd, r, c, best, ps, frame.Y);
       mv = frame.Y.at(r).at(c).GetSubBlockMV(15);
       frame.Y.at(r).at(c).SetMotionVector(mv);
@@ -300,9 +323,9 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
       break;
   }
 
-#ifdef DEBUG
-  std::cout << "mv = " << int(mv.dr) << ", " << int(mv.dc) << std::endl;
-#endif
+// #ifdef DEBUG
+  // std::cout << "mv = " << int(mv.dr) << ", " << int(mv.dc) << std::endl;
+// #endif
   ConfigureChromaMVs(frame.Y.at(r).at(c), trim, frame.U.at(r).at(c));
   ConfigureChromaMVs(frame.Y.at(r).at(c), trim, frame.V.at(r).at(c));
   // #ifdef DEBUG
@@ -330,6 +353,7 @@ std::array<std::array<int16_t, 4>, 9> HorizontalSixtap(
     col = std::clamp(col, 0, int32_t(refer.hsize()) - 1);
     return refer.GetPixel(size_t(row), size_t(col));
   };
+
   for (int32_t i = 0; i < 9; ++i) {
     for (int32_t j = 0; j < 4; ++j) {
       int32_t sum = int32_t(GetPixel(r + i, c + j - 2)) * filter.at(0) +
@@ -376,14 +400,19 @@ void InterpBlock(const Plane<C> &refer,
   for (size_t i = 0; i < C; ++i) {
     for (size_t j = 0; j < C; ++j) {
       MotionVector mv = mb.at(i).at(j).GetMotionVector();
-      if (mv == kZero) {
-        for (size_t x = 0; x < 4; ++x) {
-          for (size_t y = 0; y < 4; ++y)
-            mb.at(i).at(j).at(x).at(y) = refer.GetPixel(
-                (r << offset) | (i << 2) | x, (c << offset) | (j << 2) | y);
-        }
-        continue;
+#ifdef DEBUG
+      if (C == 4) {
+        std::cerr << "mv = " << mv.dr << ' ' << mv.dc << std::endl;
       }
+#endif
+      // if (mv == kZero) {
+        // for (size_t x = 0; x < 4; ++x) {
+          // for (size_t y = 0; y < 4; ++y)
+            // mb.at(i).at(j).at(x).at(y) = refer.GetPixel(
+                // (r << offset) | (i << 2) | x, (c << offset) | (j << 2) | y);
+        // }
+        // continue;
+      // }
 // #ifdef DEBUG
       // std::cerr << "mv.dr = " << int(mv.dr) << "mv.dr & 7 = " << int(mv.dr & 7)
                 // << ' ' << "mv.dc = " << int(mv.dc)
@@ -400,13 +429,13 @@ void InterpBlock(const Plane<C> &refer,
         col = std::clamp(col, 0, int32_t(refer.hsize()) - 1);
         return refer.GetPixel(size_t(row), size_t(col));
       };
-#ifdef DEBUG
-      for (size_t x = 0; x < 4; ++x) {
-        for (size_t y = 0; y < 4; ++y)
-          std::cout << GetPixel(tr + x, tc + y) << ' ';
-        std::cout << std::endl;
-      }
-#endif
+// #ifdef DEBUG
+      // for (size_t x = 0; x < 4; ++x) {
+        // for (size_t y = 0; y < 4; ++y)
+          // std::cout << GetPixel(tr + x, tc + y) << ' ';
+        // std::cout << std::endl;
+      // }
+// #endif
       if (mr | mc) {
         Sixtap(refer, tr, tc, mr, mc, filter, mb.at(i).at(j));
       } else {
@@ -468,6 +497,9 @@ void InterPredict(const FrameTag &tag, size_t r, size_t c,
   // std::cerr << "[Debug] ref_frame = " << int(ref_frame) << std::endl;
 // #endif
 
+#ifdef DEBUG
+  std::cerr << "inter" << std::endl;
+#endif
   InterpBlock(refs.at(ref_frame).Y, subpixel_filters, r, c,
               frame.Y.at(r).at(c));
   InterpBlock(refs.at(ref_frame).U, subpixel_filters, r, c,
@@ -477,21 +509,21 @@ void InterPredict(const FrameTag &tag, size_t r, size_t c,
 #ifdef DEBUG
   // std::cout << "mb_row = " << r << "mb_col = "  << c << std::endl;
   // std::cerr << "row = " << r << " col = " << c << std::endl;
-  // for (size_t i = 0; i < 16; ++i) {
-    // for (size_t j = 0; j < 16; ++j)
-      // std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-    // std::cerr << std::endl;
-  // }
-  // for (size_t i = 0; i < 8; ++i) {
-    // for (size_t j = 0; j < 8; ++j)
-      // std::cerr << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
-    // std::cerr << std::endl;
-  // }
-  // for (size_t i = 0; i < 8; ++i) {
-    // for (size_t j = 0; j < 8; ++j)
-      // std::cerr << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
-    // std::cerr << std::endl;
-  // }
+  for (size_t i = 0; i < 16; ++i) {
+    for (size_t j = 0; j < 16; ++j)
+      std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+    std::cerr << std::endl;
+  }
+  for (size_t i = 0; i < 8; ++i) {
+    for (size_t j = 0; j < 8; ++j)
+      std::cerr << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
+    std::cerr << std::endl;
+  }
+  for (size_t i = 0; i < 8; ++i) {
+    for (size_t j = 0; j < 8; ++j)
+      std::cerr << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
+    std::cerr << std::endl;
+  }
 #endif
 }
 
