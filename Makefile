@@ -1,6 +1,7 @@
 CXX := clang++
 DBGFLAGS := -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -DDEBUG -fsanitize=undefined -fsanitize=address -fsanitize-address-use-after-scope -fstack-protector-all -fprofile-instr-generate -fcoverage-mapping -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-switch-enum -Wno-undefined-func-template -std=c++17 -Og -g3 -Wno-padded -march=native
 CFLAGS := -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-switch-enum -Wno-undefined-func-template -std=c++17 -O3 -march=native
+OPENCV := -I/usr/include/opencv4/ -lopencv_core -lopencv_imgproc -lopencv_highgui
 CHECK := cppcheck --enable=all --inconclusive --check-config --suppress=missingIncludeSystem
 
 all: decode
@@ -11,6 +12,11 @@ debug: decode
 decode: src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/reconstruct.o src/yuv.o src/residual.o src/decode.cc 
 	$(CHECK) src/decode.cc
 	$(CXX) $(CFLAGS) -o decode src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/reconstruct.o src/yuv.o src/residual.o src/decode.cc
+
+
+display: src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/reconstruct.o src/yuv.o src/residual.o src/display.cc
+	$(CHECK) src/display.cc
+	$(CXX) $(CFLAGS) $(OPENCV) -o display src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/reconstruct.o src/yuv.o src/residual.o src/display.cc
 
 src/bool_decoder.o: src/bool_decoder.cc src/bool_decoder.h src/utils.h
 	$(CHECK) src/bool_decoder.cc
