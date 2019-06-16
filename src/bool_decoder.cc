@@ -5,7 +5,13 @@
 namespace vp8 {
 
 void BoolDecoder::Init() {
-  value_ = uint32_t(sp_.ReadByte()) << 8 | sp_.ReadByte();
+  uint8_t byte1 = sp_.ReadByte();
+  uint8_t byte2 = sp_.ReadByte();
+#ifdef DEBUG
+      std::cout << "byte = " << int(byte1) << std::endl;
+      std::cout << "byte = " << int(byte2) << std::endl;
+#endif
+  value_ = uint32_t(byte1) << 8 | uint32_t(byte2);
   range_ = 255;
   bit_count_ = 0;
 }
@@ -19,6 +25,8 @@ uint8_t BoolDecoder::Bool(uint8_t prob) {
   uint8_t res = 0;
   if (value_ >= (split << 8)) {
     res = 1;
+    assert(split <= range_);
+    assert((split << 8) <= value_);
     range_ -= split;
     value_ -= (split << 8);
   } else {
@@ -31,7 +39,11 @@ uint8_t BoolDecoder::Bool(uint8_t prob) {
     range_ <<= 1;
     if (++bit_count_ == 8) {
       bit_count_ = 0;
-      value_ |= sp_.ReadByte();
+      uint8_t byte = sp_.ReadByte();
+#ifdef DEBUG
+      std::cout << "byte = " << int(byte) << std::endl;
+#endif
+      value_ |= byte;
     }
   }
   return res;

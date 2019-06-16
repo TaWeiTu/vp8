@@ -24,7 +24,7 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
     MotionVector v = mb.at(r - 1).at(c).GetMotionVector();
     if (v != kZero) {
 #ifdef DEBUG
-      std::cout << "above mv = " << v.dr << ' ' << v.dc << std::endl;
+      // std::cout << "above mv = " << v.dr << ' ' << v.dc << std::endl;
 #endif
       v = Invert(v, context.at(r - 1).at(c).ref_frame, ref_frame, ref_frame_bias);
       mv.at(++ptr) = v;
@@ -36,7 +36,7 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
     MotionVector v = mb.at(r).at(c - 1).GetMotionVector();
     if (v != kZero) {
 #ifdef DEBUG
-      std::cout << "left mv = " << v.dr << ' ' << v.dc << std::endl;
+      // std::cout << "left mv = " << v.dr << ' ' << v.dc << std::endl;
 #endif
       v = Invert(v, context.at(r).at(c - 1).ref_frame, ref_frame, ref_frame_bias);
       if (mv.at(ptr) != v) mv.at(++ptr) = v;
@@ -50,7 +50,7 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
     MotionVector v = mb.at(r - 1).at(c - 1).GetMotionVector();
     if (v != kZero) {
 #ifdef DEBUG
-      std::cout << "above left mv = " << v.dr << ' ' << v.dc << std::endl;
+      // std::cout << "above left mv = " << v.dr << ' ' << v.dc << std::endl;
 #endif
       v = Invert(v, context.at(r - 1).at(c - 1).ref_frame, ref_frame,
           ref_frame_bias);
@@ -92,8 +92,8 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
   // #endif
   auto hd = ps.ReadInterMBHeader(cnt);
 #ifdef DEBUG
-  if (hd.mv_mode == MV_SPLIT)
-    std::cout << "cnt = " << int(cnt.at(0)) << ' ' << int(cnt.at(1)) << ' ' << int(cnt.at(2)) << ' ' << int(cnt.at(3)) << std::endl;
+  // if (hd.mv_mode == MV_SPLIT)
+    // std::cout << "cnt = " << int(cnt.at(0)) << ' ' << int(cnt.at(1)) << ' ' << int(cnt.at(2)) << ' ' << int(cnt.at(3)) << std::endl;
 #endif
   return hd;
 }
