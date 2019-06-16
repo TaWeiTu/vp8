@@ -498,7 +498,7 @@ void InterPredict(const FrameTag &tag, size_t r, size_t c,
 // #endif
 
 #ifdef DEBUG
-  std::cerr << "inter" << std::endl;
+  // std::cerr << "inter" << std::endl;
 #endif
   InterpBlock(refs.at(ref_frame).Y, subpixel_filters, r, c,
               frame.Y.at(r).at(c));
@@ -509,21 +509,21 @@ void InterPredict(const FrameTag &tag, size_t r, size_t c,
 #ifdef DEBUG
   // std::cout << "mb_row = " << r << "mb_col = "  << c << std::endl;
   // std::cerr << "row = " << r << " col = " << c << std::endl;
-  for (size_t i = 0; i < 16; ++i) {
-    for (size_t j = 0; j < 16; ++j)
-      std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-    std::cerr << std::endl;
-  }
-  for (size_t i = 0; i < 8; ++i) {
-    for (size_t j = 0; j < 8; ++j)
-      std::cerr << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
-    std::cerr << std::endl;
-  }
-  for (size_t i = 0; i < 8; ++i) {
-    for (size_t j = 0; j < 8; ++j)
-      std::cerr << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
-    std::cerr << std::endl;
-  }
+  // for (size_t i = 0; i < 16; ++i) {
+    // for (size_t j = 0; j < 16; ++j)
+      // std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+    // std::cerr << std::endl;
+  // }
+  // for (size_t i = 0; i < 8; ++i) {
+    // for (size_t j = 0; j < 8; ++j)
+      // std::cerr << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
+    // std::cerr << std::endl;
+  // }
+  // for (size_t i = 0; i < 8; ++i) {
+    // for (size_t j = 0; j < 8; ++j)
+      // std::cerr << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
+    // std::cerr << std::endl;
+  // }
 #endif
 }
 

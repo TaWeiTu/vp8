@@ -63,7 +63,7 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
       // #ifdef DEBUG
       // std::cerr << "ReadMacroBlockPreHeader()" << std::endl;
       // #endif
-      if (!pre.mb_skip_coeff) skip_lf.at(r).at(c) = 0;
+      // if (!pre.mb_skip_coeff) skip_lf.at(r).at(c) = 0;
       int16_t qp = header.quant_indices.y_ac_qi;
       if (header.segmentation_enabled)
         qp = header.segment_feature_mode == SEGMENT_MODE_ABSOLUTE
@@ -102,6 +102,9 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
         ResidualData rd = ps.ReadResidualData(ResidualParam(
             y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
 
+        if (!pre.mb_skip_coeff && !rd.is_zero)
+          skip_lf.at(r).at(c) = 0;
+
         lf.at(r).at(c) = rd.loop_filter_level;
         ResidualValue rv = DequantizeResidualData(rd, qp, header.quant_indices);
         UpdateNonzero(rv, rd.has_y2, r, c, y2_row, y2_col, y1_nonzero,
@@ -137,6 +140,8 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
 
         ResidualData rd = ps.ReadResidualData(ResidualParam(
             y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
+        if (!pre.mb_skip_coeff && !rd.is_zero)
+          skip_lf.at(r).at(c) = 0;
         lf.at(r).at(c) = rd.loop_filter_level;
         ResidualValue rv = DequantizeResidualData(rd, qp, header.quant_indices);
         UpdateNonzero(rv, rd.has_y2, r, c, y2_row, y2_col, y1_nonzero,

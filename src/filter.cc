@@ -26,7 +26,7 @@ bool LoopFilter::IsHighVariance(int16_t threshold) const {
   return abs(p1_ - p0_) > threshold || abs(q1_ - q0_) > threshold;
 }
 
-int16_t LoopFilter::Adjust(bool use_outer_taps) {
+void LoopFilter::Adjust(bool use_outer_taps) {
   int16_t a = int16_t(
       Clamp128((use_outer_taps ? Clamp128(p1_ - q1_) : 0) + 3 * (q0_ - p0_)));
 
@@ -41,8 +41,6 @@ int16_t LoopFilter::Adjust(bool use_outer_taps) {
     p1_ = Clamp255(int16_t(p1_ + a));
     q1_ = Clamp255(int16_t(q1_ - a));
   }
-
-  return a;
 }
 
 void LoopFilter::SubBlockFilter(int16_t hev_threshold, int16_t interior_limit,
@@ -170,6 +168,10 @@ void PlaneFilterNormal(const FrameHeader &header, size_t hblock, size_t vblock,
           (int16_t(loop_filter_level + 2) * 2) + int16_t(interior_limit);
       int16_t edge_limit_sb =
           (int16_t(loop_filter_level) * 2) + int16_t(interior_limit);
+
+#ifdef DEBUG
+      if (skip_lf.at(r).at(c)) std::cerr << "row = " << r << " col = " << c << std::endl;
+#endif
 
       if (c > 0) {
         MacroBlock<C> &lmb = frame.at(r).at(c - 1);
@@ -360,6 +362,29 @@ void FrameFilter(const FrameHeader &header, bool is_key_frame,
     PlaneFilterSimple(header, hblock, vblock, is_key_frame, lf,
                       skip_lf, frame.Y);
   }
+#ifdef DEBUG
+  // std::cout << "mb_row = " << r << "mb_col = "  << c << std::endl;
+  // std::cerr << "row = " << r << " col = " << c << std::endl;
+  // for (size_t r = 0; r < frame.vblock; ++r) {
+  // for (size_t c = 0; c < frame.hblock; ++c) {
+  // for (size_t i = 0; i < 16; ++i) {
+    // for (size_t j = 0; j < 16; ++j)
+      // std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+    // std::cerr << std::endl;
+  // }
+  // for (size_t i = 0; i < 8; ++i) {
+    // for (size_t j = 0; j < 8; ++j)
+      // std::cerr << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
+    // std::cerr << std::endl;
+  // }
+  // for (size_t i = 0; i < 8; ++i) {
+    // for (size_t j = 0; j < 8; ++j)
+      // std::cerr << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
+    // std::cerr << std::endl;
+  // }
+  // }
+  // }
+#endif
 }
 
 }  // namespace vp8

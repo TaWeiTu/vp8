@@ -24,7 +24,7 @@ class LoopFilter {
   bool IsFilterNormal(int16_t, const int16_t) const;
   bool IsFilterSimple(int16_t) const;
   bool IsHighVariance(int16_t) const;
-  int16_t Adjust(bool);
+  void Adjust(bool);
   void SubBlockFilter(int16_t, int16_t, int16_t);
   void MacroBlockFilter(int16_t, int16_t, int16_t);
 
