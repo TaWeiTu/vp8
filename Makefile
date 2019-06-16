@@ -63,8 +63,8 @@ test: test/main.cc test/dct_test.h src/dct.o test/yuv_test.h src/yuv.o src/utils
 	$(CXX) $(CFLAGS) src/dct.o src/yuv.o test/main.cc
 	@./a.out
 	@rm ./a.out
-	@echo '[Info] Start testing intra-coded test vectors'
-	@test/intra_test.py
-	@echo '[Info] Done testing intra-coded test vectors'
+	@echo '[Info] Start testing test vectors'
+	@test/test_vector.py
+	@echo '[Info] Done testing test vectors'
 	@rm ./tmp_split.yuv
 	@rm ./tmp_test.yuv

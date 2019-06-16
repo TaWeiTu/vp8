@@ -17,6 +17,8 @@ with open(prefix + 'test_case_14xx_descriptions.tsv') as f:
         # if dat[0] == 'vp80-05-sharpness-1428.ivf':
         test.append((dat[0], int(dat[3]), int(dat[4]), int(dat[5])))
 
+passed = True
+
 for file, frame, height, width in test:
     print('[Test] Testing %s' % file)
     os.system('%s %s tmp_test.yuv' % (binary, prefix + file))
@@ -58,6 +60,9 @@ for file, frame, height, width in test:
             if h != hashvalue[fr]:
                 print(file, fr, h, hashvalue[fr])
                 print('failed')
+                passed = False
                 break
+
+if not passed: exit(1)
 
 
