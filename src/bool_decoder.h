@@ -1,6 +1,7 @@
 #ifndef BOOL_DECODER_H_
 #define BOOL_DECODER_H_
 
+#include <cassert>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
