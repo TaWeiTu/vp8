@@ -521,6 +521,10 @@ ResidualData BitstreamParser::ReadResidualData(
       std::tie(result.dct_coeff.at(i), non_zero.at(i)) =
           ReadResidualBlock(2, above_nonzero + left_nonzero);
     }
+    result.is_zero = std::none_of(non_zero.begin(), non_zero.end(),
+                                  [](bool b) { return b; });
+  } else {
+    result.is_zero = true;
   }
   result.segment_id = (macroblock_metadata >> 2) & 0x3;
   int loop_filter_level = frame_header_.loop_filter_level;
