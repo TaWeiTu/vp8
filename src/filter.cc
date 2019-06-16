@@ -169,10 +169,6 @@ void PlaneFilterNormal(const FrameHeader &header, size_t hblock, size_t vblock,
       int16_t edge_limit_sb =
           (int16_t(loop_filter_level) * 2) + int16_t(interior_limit);
 
-#ifdef DEBUG
-      if (skip_lf.at(r).at(c)) std::cerr << "row = " << r << " col = " << c << std::endl;
-#endif
-
       if (c > 0) {
         MacroBlock<C> &lmb = frame.at(r).at(c - 1);
         for (size_t i = 0; i < C; i++) {
@@ -362,29 +358,6 @@ void FrameFilter(const FrameHeader &header, bool is_key_frame,
     PlaneFilterSimple(header, hblock, vblock, is_key_frame, lf,
                       skip_lf, frame.Y);
   }
-#ifdef DEBUG
-  // std::cout << "mb_row = " << r << "mb_col = "  << c << std::endl;
-  // std::cerr << "row = " << r << " col = " << c << std::endl;
-  // for (size_t r = 0; r < frame.vblock; ++r) {
-  // for (size_t c = 0; c < frame.hblock; ++c) {
-  // for (size_t i = 0; i < 16; ++i) {
-    // for (size_t j = 0; j < 16; ++j)
-      // std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-    // std::cerr << std::endl;
-  // }
-  // for (size_t i = 0; i < 8; ++i) {
-    // for (size_t j = 0; j < 8; ++j)
-      // std::cerr << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
-    // std::cerr << std::endl;
-  // }
-  // for (size_t i = 0; i < 8; ++i) {
-    // for (size_t j = 0; j < 8; ++j)
-      // std::cerr << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
-    // std::cerr << std::endl;
-  // }
-  // }
-  // }
-#endif
 }
 
 }  // namespace vp8

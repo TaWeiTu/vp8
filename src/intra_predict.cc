@@ -178,15 +178,6 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
       context.at(r << 2 | i).at(c << 2 | j) = IntraContext(true, mode);
       BPredSubBlock(above, left, p, mode, mb.at(r).at(c).at(i).at(j));
       ApplySBResidual(rv.y.at(i << 2 | j), mb.at(r).at(c).at(i).at(j));
-// #ifdef DEBUG
-      // std::cerr << "left:" << std::endl;
-      // for (size_t i = 0; i < 4; ++i) std::cerr << left.at(i) << ' '; 
-      // std::cerr << std::endl;
-      // std::cerr << "above:" << std::endl;
-      // for (size_t i = 0; i < 8; ++i) std::cerr << above.at(i) << ' '; 
-      // std::cerr << std::endl;
-      // std::cerr << "p: " << p << std::endl;
-// #endif
     }
   }
 }
@@ -360,9 +351,6 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
                   std::vector<std::vector<IntraContext>> &context,
                   std::vector<std::vector<uint8_t>> &skip_lf,
                   BitstreamParser &ps, Frame &frame) {
-// #ifdef DEBUG
-  // std::cerr << "mode = " << mh.intra_y_mode << std::endl;
-// #endif
   if (mh.intra_y_mode == B_PRED) skip_lf.at(r).at(c) = 0;
   switch (mh.intra_y_mode) {
     case V_PRED:
@@ -372,21 +360,7 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
           context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_VE_PRED);
       }
-// #ifdef DEBUG
-      // for (size_t i = 0; i < 16; ++i) {
-        // for (size_t j = 0; j < 16; ++j)
-          // std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-        // std::cerr << std::endl;
-      // }
-// #endif
       ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
-// #ifdef DEBUG
-      // for (size_t i = 0; i < 16; ++i) {
-        // for (size_t j = 0; j < 16; ++j)
-          // std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-        // std::cerr << std::endl;
-      // }
-// #endif
       break;
 
     case H_PRED:
@@ -396,21 +370,7 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
           context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_HE_PRED);
       }
-// #ifdef DEBUG
-      // for (size_t i = 0; i < 16; ++i) {
-        // for (size_t j = 0; j < 16; ++j)
-          // std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-        // std::cerr << std::endl;
-      // }
-// #endif
       ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
-// #ifdef DEBUG
-      // for (size_t i = 0; i < 16; ++i) {
-        // for (size_t j = 0; j < 16; ++j)
-          // std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-        // std::cerr << std::endl;
-      // }
-// #endif
       break;
 
     case DC_PRED:
@@ -420,21 +380,7 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
           context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_DC_PRED);
       }
-// #ifdef DEBUG
-      // for (size_t i = 0; i < 16; ++i) {
-        // for (size_t j = 0; j < 16; ++j)
-          // std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-        // std::cerr << std::endl;
-      // }
-// #endif
       ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
-// #ifdef DEBUG
-      // for (size_t i = 0; i < 16; ++i) {
-        // for (size_t j = 0; j < 16; ++j)
-          // std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-        // std::cerr << std::endl;
-      // }
-// #endif
       break;
 
     case TM_PRED:
@@ -444,32 +390,11 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
           context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_TM_PRED);
       }
-// #ifdef DEBUG
-      // for (size_t i = 0; i < 16; ++i) {
-        // for (size_t j = 0; j < 16; ++j)
-          // std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-        // std::cerr << std::endl;
-      // }
-// #endif
       ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
-// #ifdef DEBUG
-      // for (size_t i = 0; i < 16; ++i) {
-        // for (size_t j = 0; j < 16; ++j)
-          // std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-        // std::cerr << std::endl;
-      // }
-// #endif
       break;
 
     case B_PRED:
       BPredLuma(r, c, tag.key_frame, rv, context, ps, frame.Y);
-// #ifdef DEBUG
-      // for (size_t i = 0; i < 16; ++i) {
-        // for (size_t j = 0; j < 16; ++j)
-          // std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-        // std::cerr << std::endl;
-      // }
-// #endif
       break;
 
     default:
@@ -505,26 +430,6 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
   }
   ApplyMBResidual(rv.u, frame.U.at(r).at(c));
   ApplyMBResidual(rv.v, frame.V.at(r).at(c));
-
-#ifdef DEBUG
-  // std::cout << r << ' ' << c << std::endl;
-  // std::cerr << "intra" << std::endl;
-  // for (size_t i = 0; i < 16; ++i) {
-    // for (size_t j = 0; j < 16; ++j)
-      // std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-    // std::cerr << std::endl;
-  // }
-  // for (size_t i = 0; i < 8; ++i) {
-    // for (size_t j = 0; j < 8; ++j)
-      // std::cerr << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
-    // std::cerr << std::endl;
-  // }
-  // for (size_t i = 0; i < 8; ++i) {
-    // for (size_t j = 0; j < 8; ++j)
-      // std::cerr << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
-    // std::cerr << std::endl;
-  // }
-#endif
 }
 
 }  // namespace vp8

@@ -59,11 +59,6 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
       MacroBlockPreHeader pre = ps.ReadMacroBlockPreHeader();
-      // segment_id.at(r).at(c) = pre.segment_id;
-      // #ifdef DEBUG
-      // std::cerr << "ReadMacroBlockPreHeader()" << std::endl;
-      // #endif
-      // if (!pre.mb_skip_coeff) skip_lf.at(r).at(c) = 0;
       int16_t qp = header.quant_indices.y_ac_qi;
       if (header.segmentation_enabled)
         qp = header.segment_feature_mode == SEGMENT_MODE_ABSOLUTE
@@ -93,9 +88,6 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
       }
 
       if (pre.is_inter_mb) {
-#ifdef DEBUG
-        std::cout << "inter" << std::endl;
-#endif
         InterPredict(tag, r, c, refs, ref_frame_bias, pre.ref_frame, interc,
                      skip_lf, ps, frame);
 
@@ -113,28 +105,7 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
         ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
         ApplyMBResidual(rv.u, frame.U.at(r).at(c));
         ApplyMBResidual(rv.v, frame.V.at(r).at(c));
-
-// #ifdef DEBUG
-        // for (size_t i = 0; i < 16; ++i) {
-          // for (size_t j = 0; j < 16; ++j)
-            // std::cout << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-          // std::cout << std::endl;
-        // }
-        // for (size_t i = 0; i < 8; ++i) {
-          // for (size_t j = 0; j < 8; ++j)
-            // std::cout << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
-          // std::cout << std::endl;
-        // }
-        // for (size_t i = 0; i < 8; ++i) {
-          // for (size_t j = 0; j < 8; ++j)
-            // std::cout << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
-          // std::cout << std::endl;
-        // }
-// #endif
       } else {
-#ifdef DEBUG
-        std::cout << "intra" << std::endl;
-#endif
         IntraMBHeader mh = tag.key_frame ? ps.ReadIntraMBHeaderKF()
                                          : ps.ReadIntraMBHeaderNonKF();
 
@@ -149,23 +120,6 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
         InverseTransformResidual(rv, rd.has_y2);
         IntraPredict(tag, r, c, rv, mh, intrac, skip_lf, ps, frame);
       }
-#ifdef DEBUG
-  for (size_t i = 0; i < 16; ++i) {
-    for (size_t j = 0; j < 16; ++j)
-      std::cout << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
-    std::cout << std::endl;
-  }
-  for (size_t i = 0; i < 8; ++i) {
-    for (size_t j = 0; j < 8; ++j)
-      std::cout << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
-    std::cout << std::endl;
-  }
-  for (size_t i = 0; i < 8; ++i) {
-    for (size_t j = 0; j < 8; ++j)
-      std::cout << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
-    std::cout << std::endl;
-  }
-#endif
     }
   }
 }
