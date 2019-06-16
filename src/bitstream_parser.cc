@@ -158,7 +158,7 @@ void BitstreamParser::UpdateSegmentation() {
     for (unsigned i = 0; i < kMaxMacroBlockSegments; i++) {
       bool quantizer_update = bd_.LitU8(1);
       if (quantizer_update) {
-        int16_t quantizer_update_value = bd_.Prob7();
+        int16_t quantizer_update_value = bd_.LitU8(7);
         bool quantizer_update_sign = bd_.LitU8(1);
         context_.get().quantizer_segment.at(i) = quantizer_update_sign
                                                      ? -quantizer_update_value
