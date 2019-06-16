@@ -14,7 +14,7 @@ make
 ./decode [path to the compressed input video] [path to the output video]
 ```
 
-In decode mode, the input data is decoded into ```yuv``` format.
+In decode mode, the input data is decoded into ```yuv``` (I420p) format.
 
 
 * display
@@ -23,7 +23,7 @@ make display
 ./display [path to the compressed input video]
 ```
 
-In display mode, the decoded video is displayed simultaneously.
+In display mode, the decoded video is displayed simultaneously. Note that pressing the `Right` key allows the user to fast-forward (seek) the video.
 
 
 ## Test ## 
@@ -34,6 +34,9 @@ To test the decoder:
 ```
 VP8_TEST_VECTORS=[path to the test-vectors directory] make test
 ```
+
+## VP8 ##
+VP8 is a video codec that has a comparable compression rate and quality to H.264. However, unlike H.264, VP8 is royality-free, and can usually be decoded at a higher speed.
 
 
 ## References ##
