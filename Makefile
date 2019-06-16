@@ -1,6 +1,6 @@
 CXX := clang++
 DBGFLAGS := -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -DDEBUG -fsanitize=undefined -fsanitize=address -fsanitize-address-use-after-scope -fstack-protector-all -fprofile-instr-generate -fcoverage-mapping -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-switch-enum -Wno-undefined-func-template -std=c++17 -Og -g3 -Wno-padded -march=native
-CFLAGS := -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-switch-enum -Wno-undefined-func-template -std=c++17 -O3 -march=native
+CFLAGS := -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-switch-enum -Wno-undefined-func-template -Wno-missing-prototypes -std=c++17 -O3 -march=native
 OPENCV := -I/usr/include/opencv4/ -lopencv_core -lopencv_imgproc -lopencv_highgui
 CHECK := cppcheck --enable=all --inconclusive --check-config --suppress=missingIncludeSystem
 

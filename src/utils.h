@@ -88,7 +88,7 @@ class SpanReader {
     return SpanReader(begin_ + offset, end_);
   }
 
-  size_t size() { return end_ - begin_; }
+  size_t size() const { return size_t(end_ - begin_); }
 };
 
 }  // namespace vp8

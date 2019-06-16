@@ -60,9 +60,11 @@ int main(int argc, const char **argv) {
   assert(read_bytes(2) == 0);   // Version
   assert(read_bytes(2) == 32);  // Header length
   assert(read_bytes(4) == vp80);
-  auto width_ = read_bytes(2), height_ = read_bytes(2),
-       frame_rate = read_bytes(4), time_scale = read_bytes(4),
-       num_frames = read_bytes(4);
+  read_bytes(2); 
+  read_bytes(2); 
+  read_bytes(4); 
+  read_bytes(4); 
+  auto num_frames = read_bytes(4);
   read_bytes(4);  // Reserved bytes
 
   // Avoid unused function.
