@@ -74,7 +74,32 @@ int main(int argc, const char **argv) {
 
   cv::namedWindow("Video", cv::WINDOW_AUTOSIZE);
 
+  bool fast_forward = false;
+
   for (size_t frame_cnt = 0; frame_cnt < num_frames; frame_cnt++) {
+    if (fast_forward) {
+      auto cur_frame = frame_cnt;
+      while (true) {
+        long pos = fs.tellg();
+        auto frame_size = read_bytes(4);
+        read_bytes(4);
+        read_bytes(4);
+        buffer.resize(frame_size);
+        // TODO: (Improvement) This part is a bit ugly.
+        fs.read(reinterpret_cast<char *>(buffer.data()), frame_size);
+        vp8::BitstreamParser ps(
+            vp8::SpanReader(buffer.data(), buffer.data() + buffer.size()), ctx);
+        auto tag = ps.ReadFrameTag();
+        fs.seekg(pos);
+        if (tag.key_frame && cur_frame - frame_cnt > 30) {
+          break;
+        }
+        fs.seekg(4 + 4 + 4 + frame_size, std::ios::cur);
+        cur_frame++;
+      }
+      frame_cnt = cur_frame;
+      fast_forward = false;
+    }
     auto frame_size = read_bytes(4);
     read_bytes(4);
     read_bytes(4);
@@ -127,7 +152,9 @@ int main(int argc, const char **argv) {
     cv::Mat mRGB(height, width, CV_8UC3);
     cv::cvtColor(mYUV, mRGB, cv::COLOR_YUV2BGR_I420, 3);
     cv::imshow("Video", mRGB);
-    cv::waitKey(25);
+    if (cv::waitKey(25) == 83) {
+      fast_forward = true;
+    }
   }
   return 0;
 }

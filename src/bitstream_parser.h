@@ -218,8 +218,6 @@ class BitstreamParser {
   std::array<BoolDecoder, 8> residual_bd_;
   bool loop_filter_adj_enable_;
 
-  FrameTag ReadFrameTag();
-
   FrameHeader ReadFrameHeader();
 
   void UpdateSegmentation();
@@ -276,6 +274,8 @@ class BitstreamParser {
   IntraMBHeader ReadIntraMBHeaderNonKF();
 
   ResidualData ReadResidualData(const ResidualParam& residual_ctx);
+
+  FrameTag ReadFrameTag();
 
   const FrameTag& frame_tag() { return frame_tag_; }
 
