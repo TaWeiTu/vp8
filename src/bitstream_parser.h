@@ -129,8 +129,12 @@ struct ParserContext {
   // B_PRED)
   std::vector<uint16_t> mb_metadata;
   std::vector<uint8_t> segment_id;
-  std::array<uint8_t, kNumYModeProb> intra_16x16_prob;
-  std::array<uint8_t, kNumUVModeProb> intra_chroma_prob;
+  std::array<uint8_t, kNumYModeProb> intra_16x16_prob_persistent;
+  std::array<uint8_t, kNumYModeProb> intra_16x16_prob_temp;
+  std::reference_wrapper<std::array<uint8_t, kNumYModeProb>> intra_16x16_prob;
+  std::array<uint8_t, kNumUVModeProb> intra_chroma_prob_persistent;
+  std::array<uint8_t, kNumUVModeProb> intra_chroma_prob_temp;
+  std::reference_wrapper<std::array<uint8_t, kNumUVModeProb>> intra_chroma_prob;
   std::array<uint8_t, kNumMacroBlockSegmentProb> segment_prob;
   std::array<int8_t, kNumRefFrames> ref_frame_delta_lf;
   std::array<int8_t, kNumLfPredictionDelta> mb_mode_delta_lf;
@@ -142,7 +146,11 @@ struct ParserContext {
   CoeffProbs coeff_prob_persistent;
   CoeffProbs coeff_prob_temp;
   std::reference_wrapper<CoeffProbs> coeff_prob;
-  std::array<std::array<uint8_t, kMVPCount>, kNumMVDimen> mv_prob;
+  std::array<std::array<uint8_t, kMVPCount>, kNumMVDimen> mv_prob_persistent;
+  std::array<std::array<uint8_t, kMVPCount>, kNumMVDimen> mv_prob_temp;
+  std::reference_wrapper<
+      std::array<std::array<uint8_t, kMVPCount>, kNumMVDimen>>
+      mv_prob;
   SegmentMode segment_feature_mode;
   std::array<int16_t, kMaxMacroBlockSegments> quantizer_segment;
   std::array<int16_t, kMaxMacroBlockSegments> loop_filter_level_segment;
@@ -151,15 +159,21 @@ struct ParserContext {
   ParserContext()
       : mb_metadata(),
         segment_id(),
-        intra_16x16_prob(kYModeProb),
-        intra_chroma_prob(kUVModeProb),
+        intra_16x16_prob_persistent(kYModeProb),
+        intra_16x16_prob_temp(),  // Temporary buffer; normal to be zero
+        intra_16x16_prob(std::ref(intra_16x16_prob_persistent)),
+        intra_chroma_prob_persistent(kUVModeProb),
+        intra_chroma_prob_temp(),  // Temporary buffer; normal to be zero
+        intra_chroma_prob(std::ref(intra_chroma_prob_persistent)),
         segment_prob(),        // Set to 255 if not updated
         ref_frame_delta_lf(),  // Deltas; normal to be zero
         mb_mode_delta_lf(),    // Deltas; normal to be zero
         coeff_prob_persistent(kDefaultCoeffProbs),
         coeff_prob_temp(),  // Temporary buffer; normal to be zero
         coeff_prob(std::ref(coeff_prob_persistent)),
-        mv_prob(kDefaultMVContext),
+        mv_prob_persistent(kDefaultMVContext),
+        mv_prob_temp(),  // Temporary buffer; normal to be zero
+        mv_prob(std::ref(mv_prob_persistent)),
         segment_feature_mode(),
         quantizer_segment(),
         loop_filter_level_segment(),

@@ -50,7 +50,11 @@ class SpanReader {
 
  public:
   SpanReader(const T *begin, const T *end)
-      : begin_(begin), end_(end), cursor_(begin) {}
+      : begin_(begin), end_(end), cursor_(begin) {
+    if (begin > end) {
+      throw std::out_of_range("Out of range");
+    }
+  }
 
   SpanReader() : SpanReader(nullptr, nullptr) {}
 
@@ -83,6 +87,8 @@ class SpanReader {
     }
     return SpanReader(begin_ + offset, end_);
   }
+
+  size_t size() { return end_ - begin_; }
 };
 
 }  // namespace vp8

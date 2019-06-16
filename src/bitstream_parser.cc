@@ -55,6 +55,12 @@ FrameHeader BitstreamParser::ReadFrameHeader() {
     fill(context_.get().segment_id.begin(), context_.get().segment_id.end(), 0);
   }
   fill(context_.get().mb_metadata.begin(), context_.get().mb_metadata.end(), 0);
+  context_.get().intra_16x16_prob =
+      std::ref(context_.get().intra_16x16_prob_persistent);
+  context_.get().intra_chroma_prob =
+      std::ref(context_.get().intra_chroma_prob_persistent);
+  context_.get().coeff_prob = std::ref(context_.get().coeff_prob_persistent);
+  context_.get().mv_prob = std::ref(context_.get().mv_prob_persistent);
   frame_header_.segmentation_enabled = bd_.LitU8(1);
   if (frame_header_.segmentation_enabled) {
     UpdateSegmentation();
@@ -74,8 +80,10 @@ FrameHeader BitstreamParser::ReadFrameHeader() {
     residual_bd_.at(i) = BoolDecoder(buffer_.SubSpan(offset, count));
     offset += count;
   }
-  residual_bd_.at(nbr_of_dct_partitions_ - 1) =
-      BoolDecoder(buffer_.SubSpan(offset));
+  if (buffer_.size() - offset >= 2) {
+    residual_bd_.at(nbr_of_dct_partitions_ - 1) =
+        BoolDecoder(buffer_.SubSpan(offset));
+  }
   frame_header_.quant_indices = ReadQuantIndices();
   if (frame_tag_.key_frame) {
     frame_header_.refresh_entropy_probs = bd_.LitU8(1);
@@ -105,16 +113,36 @@ FrameHeader BitstreamParser::ReadFrameHeader() {
     frame_header_.prob_intra = bd_.Prob8();
     frame_header_.prob_last = bd_.Prob8();
     frame_header_.prob_gf = bd_.Prob8();
+    if (frame_header_.refresh_entropy_probs) {
+      context_.get().intra_16x16_prob =
+          std::ref(context_.get().intra_16x16_prob_persistent);
+    } else {
+      std::copy(context_.get().intra_16x16_prob_persistent.begin(),
+                context_.get().intra_16x16_prob_persistent.end(),
+                context_.get().intra_16x16_prob_temp.begin());
+      context_.get().intra_16x16_prob =
+          std::ref(context_.get().intra_16x16_prob_temp);
+    }
     bool intra_16x16_prob_update_flag = bd_.LitU8(1);
     if (intra_16x16_prob_update_flag) {
       for (unsigned i = 0; i < kNumYModeProb; i++) {
-        context_.get().intra_16x16_prob.at(i) = bd_.Prob8();
+        context_.get().intra_16x16_prob.get().at(i) = bd_.Prob8();
       }
+    }
+    if (frame_header_.refresh_entropy_probs) {
+      context_.get().intra_chroma_prob =
+          std::ref(context_.get().intra_chroma_prob_persistent);
+    } else {
+      std::copy(context_.get().intra_chroma_prob_persistent.begin(),
+                context_.get().intra_chroma_prob_persistent.end(),
+                context_.get().intra_chroma_prob_temp.begin());
+      context_.get().intra_chroma_prob =
+          std::ref(context_.get().intra_chroma_prob_temp);
     }
     bool intra_chroma_prob_update_flag = bd_.LitU8(1);
     if (intra_chroma_prob_update_flag) {
       for (unsigned i = 0; i < kNumUVModeProb; i++) {
-        context_.get().intra_chroma_prob.at(i) = bd_.Prob8();
+        context_.get().intra_chroma_prob.get().at(i) = bd_.Prob8();
       }
     }
     MVProbUpdate();
@@ -271,11 +299,19 @@ void BitstreamParser::TokenProbUpdate() {
 }
 
 void BitstreamParser::MVProbUpdate() {
+  if (frame_header_.refresh_entropy_probs) {
+    context_.get().mv_prob = std::ref(context_.get().mv_prob_persistent);
+  } else {
+    std::copy(context_.get().mv_prob_persistent.begin(),
+              context_.get().mv_prob_persistent.end(),
+              context_.get().mv_prob_temp.begin());
+    context_.get().mv_prob = std::ref(context_.get().mv_prob_temp);
+  }
   for (unsigned i = 0; i < kNumMVDimen; i++) {
     for (unsigned j = 0; j < kMVPCount; j++) {
       bool mv_prob_update_flag = bd_.Bool(kMVUpdateProbs.at(i).at(j));
       if (mv_prob_update_flag) {
-        context_.get().mv_prob.at(i).at(j) = bd_.Prob7();
+        context_.get().mv_prob.get().at(i).at(j) = bd_.Prob7();
       }
     }
   }
@@ -371,7 +407,7 @@ MacroBlockMode BitstreamParser::ReadIntraMB_UVModeKF() {
 
 MacroBlockMode BitstreamParser::ReadIntraMB_UVModeNonKF() {
   return MacroBlockMode(
-      bd_.Tree(context_.get().intra_chroma_prob, kUVModeTree));
+      bd_.Tree(context_.get().intra_chroma_prob.get(), kUVModeTree));
 }
 
 IntraMBHeader BitstreamParser::ReadIntraMBHeaderKF() {
@@ -390,8 +426,8 @@ IntraMBHeader BitstreamParser::ReadIntraMBHeaderKF() {
 
 IntraMBHeader BitstreamParser::ReadIntraMBHeaderNonKF() {
   IntraMBHeader result{};
-  result.intra_y_mode =
-      MacroBlockMode(bd_.Tree(context_.get().intra_16x16_prob, kYModeTree));
+  result.intra_y_mode = MacroBlockMode(
+      bd_.Tree(context_.get().intra_16x16_prob.get(), kYModeTree));
   // The rest is up to the caller to call ReadSubBlockBMode() &
   // ReadMB_UVMode().
   context_.get().mb_metadata.at(macroblock_metadata_idx_) |=
@@ -403,7 +439,7 @@ IntraMBHeader BitstreamParser::ReadIntraMBHeaderNonKF() {
 }
 
 int16_t BitstreamParser::ReadMVComponent(bool kind) {
-  auto p = context_.get().mv_prob.at(kind);
+  auto p = context_.get().mv_prob.get().at(kind);
   int16_t a = 0;
   if (bd_.Bool(p.at(MVP_IS_SHORT))) {
     for (unsigned i = 0; i < 3; i++) {
