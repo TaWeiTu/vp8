@@ -15,9 +15,6 @@ with open(prefix + 'test_case_14xx_descriptions.tsv') as f:
         dat = line.split('\t')
         if dat[0] in resize:
             continue
-        #  if dat[1].startswith('vp8_inter'):
-        # if dat[1] == 'vp8_inter':
-        # if dat[0] == 'vp80-05-sharpness-1428.ivf':
         test.append((dat[0], int(dat[3]), int(dat[4]), int(dat[5])))
 
 passed = True
