@@ -9,6 +9,8 @@ void UpdateNonzero(const ResidualValue &rv, bool has_y2, size_t r, size_t c,
                    std::vector<std::vector<uint8_t>> &u_nonzero,
                    std::vector<std::vector<uint8_t>> &v_nonzero) {
   if (has_y2) {
+    // If the current coefficients contain Y2 block, then update the most recent
+    // Y2 status.
     uint8_t nonzero = 0;
     for (size_t i = 0; i < 4; ++i) {
       for (size_t j = 0; j < 4; ++j) nonzero += rv.y2.at(i).at(j) != 0;
@@ -94,8 +96,7 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
         ResidualData rd = ps.ReadResidualData(ResidualParam(
             y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
 
-        if (!pre.mb_skip_coeff && !rd.is_zero)
-          skip_lf.at(r).at(c) = 0;
+        if (!pre.mb_skip_coeff && !rd.is_zero) skip_lf.at(r).at(c) = 0;
 
         lf.at(r).at(c) = rd.loop_filter_level;
         ResidualValue rv = DequantizeResidualData(rd, qp, header.quant_indices);
@@ -111,8 +112,7 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
 
         ResidualData rd = ps.ReadResidualData(ResidualParam(
             y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
-        if (!pre.mb_skip_coeff && !rd.is_zero)
-          skip_lf.at(r).at(c) = 0;
+        if (!pre.mb_skip_coeff && !rd.is_zero) skip_lf.at(r).at(c) = 0;
         lf.at(r).at(c) = rd.loop_filter_level;
         ResidualValue rv = DequantizeResidualData(rd, qp, header.quant_indices);
         UpdateNonzero(rv, rd.has_y2, r, c, y2_row, y2_col, y1_nonzero,

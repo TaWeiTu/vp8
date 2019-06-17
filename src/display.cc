@@ -8,6 +8,7 @@
 #include "bitstream_const.h"
 #include "reconstruct.h"
 
+// Set the sign-bias of both GOLDEN and ALTREF reference frame.
 void InitSignBias(const vp8::FrameHeader &header,
                   std::array<bool, 4> &ref_frame_bias) {
   ref_frame_bias.at(vp8::GOLDEN_FRAME) = header.sign_bias_golden;

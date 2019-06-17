@@ -20,7 +20,8 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
   if (r > 0 && context.at(r - 1).at(c).is_inter_mb) {
     MotionVector v = mb.at(r - 1).at(c).GetMotionVector();
     if (v != kZero) {
-      v = Invert(v, context.at(r - 1).at(c).ref_frame, ref_frame, ref_frame_bias);
+      v = Invert(v, context.at(r - 1).at(c).ref_frame, ref_frame,
+                 ref_frame_bias);
       mv.at(++ptr) = v;
     }
     cnt.at(ptr) += 2;
@@ -29,7 +30,8 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
   if (c > 0 && context.at(r).at(c - 1).is_inter_mb) {
     MotionVector v = mb.at(r).at(c - 1).GetMotionVector();
     if (v != kZero) {
-      v = Invert(v, context.at(r).at(c - 1).ref_frame, ref_frame, ref_frame_bias);
+      v = Invert(v, context.at(r).at(c - 1).ref_frame, ref_frame,
+                 ref_frame_bias);
       if (mv.at(ptr) != v) mv.at(++ptr) = v;
       cnt.at(ptr) += 2;
     } else {
@@ -41,7 +43,7 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
     MotionVector v = mb.at(r - 1).at(c - 1).GetMotionVector();
     if (v != kZero) {
       v = Invert(v, context.at(r - 1).at(c - 1).ref_frame, ref_frame,
-          ref_frame_bias);
+                 ref_frame_bias);
       if (mv.at(ptr) != v) mv.at(++ptr) = v;
       cnt.at(ptr) += 1;
     } else {
@@ -71,12 +73,25 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
   return ps.ReadInterMBHeader(cnt);
 }
 
+void ClampMV2(int16_t top, int16_t bottom, int16_t left, int16_t right,
+              MotionVector &mv) {
+  if (mv.dc < (left - (16 << 3)))
+    mv.dc = (left - (16 << 3));
+  else if (mv.dc > (right + (16 << 3)))
+    mv.dc = (right + (16 << 3));
+  if (mv.dr < (top - (16 << 3)))
+    mv.dr = (top - (16 << 3));
+  else if (mv.dr > (bottom + (16 << 3)))
+    mv.dr = (bottom + (16 << 3));
+}
+
 void ClampMV(int16_t top, int16_t bottom, int16_t left, int16_t right,
              MotionVector &mv) {
-  if (mv.dc < (left - (16 << 3))) mv.dc = (left - (16 << 3));
-  else if (mv.dc > (right + (16 << 3))) mv.dc = (right + (16 << 3));
-  if (mv.dr < (top - (16 << 3))) mv.dr = (top - (16 << 3));
-  else if (mv.dr > (bottom + (16 << 3))) mv.dr = (bottom + (16 << 3));
+  mv.dc = (2 * mv.dc < (left - (19 << 3))) ? (left - (16 << 3)) >> 1 : mv.dc;
+  mv.dc = (2 * mv.dc > (right + (18 << 3))) ? (right + (16 << 3)) >> 1 : mv.dc;
+  mv.dr = (2 * mv.dr < (top - (19 << 3))) ? (top - (16 << 3)) >> 1 : mv.dr;
+  mv.dr =
+      (2 * mv.dr > (bottom + (19 << 3))) ? (bottom + (16 << 3)) >> 1 : mv.dr;
 }
 
 MotionVector Invert(const MotionVector &mv, uint8_t ref_frame1,
@@ -99,8 +114,8 @@ uint8_t SubBlockContext(const MotionVector &left, const MotionVector &above) {
   return 0;
 }
 
-void ConfigureChromaMVs(const MacroBlock<4> &luma, bool trim,
-                        MacroBlock<2> &chroma) {
+void ConfigureChromaMVs(const MacroBlock<4> &luma, size_t vblock, size_t hblock,
+                        bool trim, MacroBlock<2> &chroma) {
   for (size_t r = 0; r < 2; ++r) {
     for (size_t c = 0; c < 2; ++c) {
       MotionVector ulv = luma.at(r << 1).at(c << 1).GetMotionVector(),
@@ -116,6 +131,13 @@ void ConfigureChromaMVs(const MacroBlock<4> &luma, bool trim,
         dr = dr & (~7);
         dc = dc & (~7);
       }
+      int16_t top = ((-int16_t(r) * 16) * 8);
+      int16_t bottom = ((int16_t(vblock) - 1 - int16_t(r)) * 16) * 8;
+      int16_t left = ((-int16_t(c) * 16) * 8);
+      int16_t right = ((int16_t(hblock) - 1 - int16_t(c)) * 16) * 8;
+
+      MotionVector mv = MotionVector(dr, dc);
+      ClampMV(left, right, top, bottom, mv);
       chroma.at(r).at(c).SetMotionVector(dr, dc);
     }
   }
@@ -218,9 +240,9 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
   InterMBHeader hd = SearchMVs(r, c, frame.Y, ref_frame_bias, ref_frame,
                                context, ps, best, nearest, near);
 
-  ClampMV(top, bottom, left, right, best);
-  ClampMV(top, bottom, left, right, nearest);
-  ClampMV(top, bottom, left, right, near);
+  ClampMV2(top, bottom, left, right, best);
+  ClampMV2(top, bottom, left, right, nearest);
+  ClampMV2(top, bottom, left, right, near);
 
   context.at(r).at(c) = InterContext(hd.mv_mode, ref_frame);
   if (hd.mv_mode == MV_SPLIT) skip_lf.at(r).at(c) = 0;
@@ -258,8 +280,8 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
       break;
   }
 
-  ConfigureChromaMVs(frame.Y.at(r).at(c), trim, frame.U.at(r).at(c));
-  ConfigureChromaMVs(frame.Y.at(r).at(c), trim, frame.V.at(r).at(c));
+  ConfigureChromaMVs(frame.Y.at(r).at(c), frame.vblock, frame.hblock, trim, frame.U.at(r).at(c));
+  ConfigureChromaMVs(frame.Y.at(r).at(c), frame.vblock, frame.hblock, trim, frame.V.at(r).at(c));
 }
 
 template <size_t C>

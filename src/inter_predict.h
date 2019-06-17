@@ -62,7 +62,9 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
                         MotionVector &nearest, MotionVector &near);
 
 // Make sure that the motion vector indeed point to a valid position.
-void ClampMV(int16_t left, int16_t right, int16_t up, int16_t down,
+void ClampMV2(int16_t left, int16_t right, int16_t top, int16_t bottom,
+              MotionVector &mb);
+void ClampMV(int16_t left, int16_t right, int16_t top, int16_t bottom,
              MotionVector &mb);
 
 // Invert the motion vector the sign bias is different in the reference frames
@@ -77,8 +79,8 @@ uint8_t SubBlockContext(const MotionVector &left, const MotionVector &above);
 
 // The motion vectors of chroma subblocks are the average value of the motion
 // vectors occupying the same position in the luma subblocks.
-void ConfigureChromaMVs(const MacroBlock<4> &luma, bool trim,
-                        MacroBlock<2> &chroma);
+void ConfigureChromaMVs(const MacroBlock<4> &luma, size_t vblock, size_t hblock,
+                        bool trim, MacroBlock<2> &chroma);
 
 // In case of mode MV_SPLIT, set the motion vectors of each subblock
 // independently.
