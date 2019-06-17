@@ -36,7 +36,7 @@ VP8_TEST_VECTORS=[path to the test-vectors directory] make test
 ```
 
 ## VP8 ##
-VP8 is a video codec that has a comparable compression rate and quality to H.264. However, unlike H.264, VP8 is royality-free, and can usually be decoded at a higher speed.
+VP8 is a video codec that is comparable to H.264 in terms of compression / quality. However, unlike H.264, VP8 is royality-free, and can usually be decoded at a higher speed. In addition, VP8, being in the VP family of codecs, can be said to be a predecessor of the new anticipated AV1 codec.
 
 
 ## References ##
