@@ -2,7 +2,6 @@
 *.o
 *.pdf
 *.out
-example/
 .DS_Store
 *.yuv
 *.mp4
@@ -10,3 +9,7 @@ decode
 decode.dSYM
 log*
 default.profraw
+example/vp8-test-vectors/*comprehensive*
+example/vp8-test-vectors/.git
+example/out
+example/out.ivf
