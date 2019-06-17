@@ -23,7 +23,11 @@ make display
 ./display [path to the compressed input video]
 ```
 
+(One may need to modify the OpenCV path `/usr/include/opencv4/` on a distro other than Arch Linux.)
+
 In display mode, the decoded video is displayed simultaneously. Note that pressing the `Right` key allows the user to fast-forward (seek) the video.
+
+For a longer video to try out the seeking feature, one can use <https://www.csie.ntu.edu.tw/~b07902134/aimer.ivf>.
 
 
 ## Test ## 
