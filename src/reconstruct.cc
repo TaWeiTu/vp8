@@ -60,6 +60,7 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
       frame.vblock << 1, std::vector<uint8_t>(frame.hblock << 1, 0));
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
+      // std::cerr << "row = " << r << " col = " << c << std::endl;
       MacroBlockPreHeader pre = ps.ReadMacroBlockPreHeader();
       int16_t qp = header.quant_indices.y_ac_qi;
       if (header.segmentation_enabled)
@@ -112,14 +113,66 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
 
         ResidualData rd = ps.ReadResidualData(ResidualParam(
             y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
+
+        // if (r == 2 && c == 6) {
+          // assert(rd.has_y2);
+          // for (size_t i = 1; i <= 6; ++i) {
+            // for (size_t j = 0; j < 16; ++j)
+              // assert(rd.dct_coeff.at(i).at(j) == 0);
+          // }
+          // for (size_t i = 0; i < 16; ++i) std::cerr << rd.dct_coeff.at(0).at(i) << ' ';
+          // std::cerr << std::endl;
+        // }
         if (!pre.mb_skip_coeff && !rd.is_zero) skip_lf.at(r).at(c) = 0;
         lf.at(r).at(c) = rd.loop_filter_level;
         ResidualValue rv = DequantizeResidualData(rd, qp, header.quant_indices);
+        // if (r == 2 && c == 6) {
+          // for (size_t i = 0; i < 4; ++i) {
+            // for (size_t j = 0; j < 4; ++j)
+              // std::cerr << rv.y2.at(i).at(j) << ' ';
+            // std::cerr << std::endl;
+          // }
+          // for (size_t i = 0; i < 4; ++i) {
+            // for (size_t j = 0; j < 4; ++j)
+              // std::cerr << rv.y.at(0).at(i).at(j) << ' ';
+            // std::cerr << std::endl;
+          // }
+        // }
         UpdateNonzero(rv, rd.has_y2, r, c, y2_row, y2_col, y1_nonzero,
                       u_nonzero, v_nonzero);
         InverseTransformResidual(rv, rd.has_y2);
+        // if (r == 2 && c == 6) {
+          // for (size_t i = 0; i < 4; ++i) {
+            // for (size_t j = 0; j < 4; ++j)
+              // std::cerr << rv.y2.at(i).at(j) << ' ';
+            // std::cerr << std::endl;
+          // }
+          // for (size_t i = 0; i < 4; ++i) {
+            // for (size_t j = 0; j < 4; ++j)
+              // std::cerr << rv.y.at(0).at(i).at(j) << ' ';
+            // std::cerr << std::endl;
+          // }
+          // std::cerr << "qp = " << qp << std::endl;
+        // }
         IntraPredict(tag, r, c, rv, mh, intrac, skip_lf, ps, frame);
       }
+      // if (pre.is_inter_mb) std::cerr << "inter" << std::endl;
+      // else std::cerr << "intra" << std::endl;
+      // for (size_t i = 0; i < 16; ++i) {
+        // for (size_t j = 0; j < 16; ++j)
+          // std::cerr << frame.Y.at(r).at(c).GetPixel(i, j) << ' ';
+        // std::cerr << std::endl;
+      // }
+      // for (size_t i = 0; i < 8; ++i) {
+        // for (size_t j = 0; j < 8; ++j)
+          // std::cerr << frame.U.at(r).at(c).GetPixel(i, j) << ' ';
+        // std::cerr << std::endl;
+      // }
+      // for (size_t i = 0; i < 8; ++i) {
+        // for (size_t j = 0; j < 8; ++j)
+          // std::cerr << frame.V.at(r).at(c).GetPixel(i, j) << ' ';
+        // std::cerr << std::endl;
+      // }
     }
   }
 }
@@ -144,6 +197,7 @@ void Reconstruct(const FrameHeader &header, const FrameTag &tag,
   Predict(header, tag, refs, ref_frame_bias, interc, intrac, lf, skip_lf, ps,
           frame);
   FrameFilter(header, tag.key_frame, lf, skip_lf, frame);
+  // exit(0);
 }
 
 }  // namespace vp8

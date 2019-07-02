@@ -52,10 +52,13 @@ void ApplyMBResidual(
     MacroBlock<C> &mb) {
   for (size_t r = 0; r < C; ++r) {
     for (size_t c = 0; c < C; ++c) {
+      // std::cerr << "coeff" << std::endl;
       for (size_t i = 0; i < 4; ++i) {
         for (size_t j = 0; j < 4; ++j)
+          // std::cerr << residual.at(r * C + c).at(i).at(j) << ' ',
           mb.at(r).at(c).at(i).at(j) = Clamp255(int16_t(
               mb.at(r).at(c).at(i).at(j) + residual.at(r * C + c).at(i).at(j)));
+        // std::cerr << std::endl;
       }
     }
   }
@@ -71,10 +74,13 @@ template void ApplyMBResidual<2>(
 
 void ApplySBResidual(const std::array<std::array<int16_t, 4>, 4> &residual,
                      SubBlock &sub) {
+  // std::cerr << "coeff" << std::endl;
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 4; ++j)
+      // std::cerr << residual.at(i).at(j) << ' ',
       sub.at(i).at(j) =
           Clamp255(int16_t(sub.at(i).at(j) + residual.at(i).at(j)));
+    // std::cerr << std::endl;
   }
 }
 

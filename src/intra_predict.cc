@@ -65,6 +65,12 @@ void HPredLuma(size_t r, size_t c, Plane<4> &mb) {
 void DCPredLuma(size_t r, size_t c, Plane<4> &mb) {
   if (r == 0 && c == 0) {
     mb.at(r).at(c).FillWith(128);
+    // std::cerr << "DC PRED" << std::endl;
+    // for (size_t i = 0; i < 16; ++i) {
+      // for (size_t j = 0; j < 16; ++j)
+        // std::cerr << mb.at(r).at(c).GetPixel(i, j) << ' ';
+      // std::cerr << std::endl;
+    // }
     return;
   }
 
@@ -80,6 +86,13 @@ void DCPredLuma(size_t r, size_t c, Plane<4> &mb) {
 
   int16_t avg = int16_t((sum + (1 << (shf - 1))) >> shf);
   mb.at(r).at(c).FillWith(avg);
+
+  // std::cerr << "DC PRED" << std::endl;
+  // for (size_t i = 0; i < 16; ++i) {
+    // for (size_t j = 0; j < 16; ++j)
+      // std::cerr << mb.at(r).at(c).GetPixel(i, j) << ' ';
+    // std::cerr << std::endl;
+  // }
 }
 
 void TMPredLuma(size_t r, size_t c, Plane<4> &mb) {
@@ -340,6 +353,12 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
       ensure(false, "[Error] BPredSubBlock: Unknown subblock mode.");
       break;
   }
+  // std::cerr << "subblock" << std::endl;
+  // for (size_t i = 0; i < 4; ++i) {
+    // for (size_t j = 0; j < 4; ++j)
+      // std::cerr << sub.at(i).at(j) << ' ';
+    // std::cerr << std::endl;
+  // }
 }
 
 }  // namespace internal
@@ -352,6 +371,7 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
                   std::vector<std::vector<uint8_t>> &skip_lf,
                   BitstreamParser &ps, Frame &frame) {
   if (mh.intra_y_mode == B_PRED) skip_lf.at(r).at(c) = 0;
+  // std::cerr << "mode = " << mh.intra_y_mode << std::endl;
   switch (mh.intra_y_mode) {
     case V_PRED:
       VPredLuma(r, c, frame.Y);
