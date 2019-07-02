@@ -13,3 +13,5 @@ example/vp8-test-vectors/*comprehensive*
 example/vp8-test-vectors/.git
 example/out
 example/out.ivf
+example/out-2.ivf
+example/output.avi
