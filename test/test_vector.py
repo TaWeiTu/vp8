@@ -8,7 +8,7 @@ if prefix[-1] != '/':
 binary = './decode'
 
 test = []
-resize = ['vp80-05-sharpness-1439.ivf', 'vp80-03-segmentation-1425.ivf'] 
+resize = ['vp80-03-segmentation-1425.ivf'] 
 
 with open(prefix + 'test_case_14xx_descriptions.tsv') as f:
     for line in f.readlines():

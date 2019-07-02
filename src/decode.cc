@@ -103,7 +103,7 @@ int main(int argc, const char **argv) {
     vp8::Reconstruct(header, tag, ref_frames, ref_frame_bias, ps, frame);
     RefreshRefFrames(header, ref_frames, frame);
 
-    yuv.WriteFrame(frame);
+    if (tag.show_frame) yuv.WriteFrame(frame);
   }
   return 0;
 }
