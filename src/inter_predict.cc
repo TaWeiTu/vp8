@@ -280,8 +280,10 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
       break;
   }
 
-  ConfigureChromaMVs(frame.Y.at(r).at(c), frame.vblock, frame.hblock, trim, frame.U.at(r).at(c));
-  ConfigureChromaMVs(frame.Y.at(r).at(c), frame.vblock, frame.hblock, trim, frame.V.at(r).at(c));
+  ConfigureChromaMVs(frame.Y.at(r).at(c), frame.vblock, frame.hblock, trim,
+                     frame.U.at(r).at(c));
+  ConfigureChromaMVs(frame.Y.at(r).at(c), frame.vblock, frame.hblock, trim,
+                     frame.V.at(r).at(c));
 }
 
 template <size_t C>
