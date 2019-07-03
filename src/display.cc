@@ -73,7 +73,7 @@ int main(int argc, const char **argv) {
 
   size_t height = 0, width = 0;
 
-  cv::namedWindow("Video", cv::WINDOW_AUTOSIZE);
+  cv::namedWindow(argv[1], cv::WINDOW_AUTOSIZE);
 
   bool fast_forward = false;
 
@@ -125,6 +125,7 @@ int main(int argc, const char **argv) {
     vp8::Reconstruct(header, tag, ref_frames, ref_frame_bias, ps, frame);
     RefreshRefFrames(header, ref_frames, frame);
 
+    if (!tag.show_frame) continue;
     cv::Mat mYUV((height + (height >> 1)), width, CV_8UC1);
     auto it = mYUV.begin<uint8_t>();
 
@@ -144,7 +145,7 @@ int main(int argc, const char **argv) {
     }
     for (size_t r = 0; r < frame.vsize; r += 2) {
       for (size_t c = 0; c < frame.hsize; c += 2) {
-        uint8_t v = uint8_t(
+        int8_t v = uint8_t(
             frame.V.at(r >> 4).at(c >> 4).GetPixel((r >> 1) & 7, (c >> 1) & 7));
         *it++ = v;
       }
@@ -152,7 +153,7 @@ int main(int argc, const char **argv) {
 
     cv::Mat mRGB(height, width, CV_8UC3);
     cv::cvtColor(mYUV, mRGB, cv::COLOR_YUV2BGR_I420, 3);
-    cv::imshow("Video", mRGB);
+    cv::imshow(argv[1], mRGB);
     if (cv::waitKey(25) == 83) {
       fast_forward = true;
     }

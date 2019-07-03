@@ -7,7 +7,7 @@ CHECK = cppcheck --enable=all --inconclusive --check-config --suppress=missingIn
 
 all: decode
 
-debug: CFLAGS := $(DBGFLAGS)
+debug: CFLAGS = $(DBGFLAGS)
 debug: decode
 	
 decode: src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/reconstruct.o src/yuv.o src/residual.o src/decode.cc 
