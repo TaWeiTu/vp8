@@ -12,7 +12,7 @@
 namespace vp8 {
 namespace internal {
 
-const std::array<int, 128> kDClookup = {
+constexpr std::array<int, 128> kDClookup = {
     4,   5,   6,   7,   8,   9,   10,  10,  11,  12,  13,  14,  15,  16,  17,
     17,  18,  19,  20,  20,  21,  21,  22,  22,  23,  23,  24,  25,  25,  26,
     27,  28,  29,  30,  31,  32,  33,  34,  35,  36,  37,  37,  38,  39,  40,
@@ -23,7 +23,7 @@ const std::array<int, 128> kDClookup = {
     106, 108, 110, 112, 114, 116, 118, 122, 124, 126, 128, 130, 132, 134, 136,
     138, 140, 143, 145, 148, 151, 154, 157};
 
-const std::array<int, 128> kAClookup = {
+constexpr std::array<int, 128> kAClookup = {
     4,   5,   6,   7,   8,   9,   10,  11,  12,  13,  14,  15,  16,  17,  18,
     19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31,  32,  33,
     34,  35,  36,  37,  38,  39,  40,  41,  42,  43,  44,  45,  46,  47,  48,
@@ -34,17 +34,25 @@ const std::array<int, 128> kAClookup = {
     185, 189, 193, 197, 201, 205, 209, 213, 217, 221, 225, 229, 234, 239, 245,
     249, 254, 259, 264, 269, 274, 279, 284};
 
-void Quantize(std::array<int16_t, 16> &, int16_t, int16_t);
-void Dequantize(std::array<int16_t, 16> &, int16_t, int16_t);
+void Quantize(std::array<int16_t, 16>& coefficients, int16_t DCfact,
+              int16_t ACfact);
+void Dequantize(std::array<int16_t, 16>& coefficients, int16_t DCfact,
+                int16_t ACfact);
 
 }  // namespace internal
 
-void QuantizeY(std::array<int16_t, 16> &, int16_t, const QuantIndices &);
-void QuantizeUV(std::array<int16_t, 16> &, int16_t, const QuantIndices &);
-void QuantizeY2(std::array<int16_t, 16> &, int16_t, const QuantIndices &);
-void DequantizeY(std::array<int16_t, 16> &, int16_t, const QuantIndices &);
-void DequantizeUV(std::array<int16_t, 16> &, int16_t, const QuantIndices &);
-void DequantizeY2(std::array<int16_t, 16> &, int16_t, const QuantIndices &);
+void QuantizeY(std::array<int16_t, 16>& coefficients, int16_t qp,
+               const QuantIndices& quantizer_header);
+void QuantizeUV(std::array<int16_t, 16>& coefficients, int16_t qp,
+                const QuantIndices& quantizer_header);
+void QuantizeY2(std::array<int16_t, 16>& coefficients, int16_t qp,
+                const QuantIndices& quantizer_header);
+void DequantizeY(std::array<int16_t, 16>& coefficients, int16_t qp,
+                 const QuantIndices& quantizer_header);
+void DequantizeUV(std::array<int16_t, 16>& coefficients, int16_t qp,
+                  const QuantIndices& quantizer_header);
+void DequantizeY2(std::array<int16_t, 16>& coefficients, int16_t qp,
+                  const QuantIndices& quantizer_header);
 
 }  // namespace vp8
 
