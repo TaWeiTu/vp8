@@ -29,9 +29,9 @@ class BoolDecoder {
   uint8_t Prob8();
   // Decode a 7-bit probability p and return p ? p << 1 : 1.
   uint8_t Prob7();
-  // Decode tokens from the tree
-  template <class P, class T>
-  uint16_t Tree(const P &prob, const T &tree) {
+  // Decode tokens from the tree.
+  template <class ProbType, class TreeType>
+  uint16_t Tree(const ProbType &prob, const TreeType &tree) {
     int16_t res = 0;
     while (true) {
       res = tree.at(size_t(res + Bool(prob.at(size_t(res >> 1)))));
@@ -48,7 +48,6 @@ class BoolDecoder {
 
   // Prepare the Boolean decoder to decode probability encoded data.
   void Init();
-
   bool has_init_;
 };
 

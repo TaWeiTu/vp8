@@ -15,7 +15,7 @@ void TestYuv() {
   static std::uniform_int_distribution<int16_t> kDis(0, 255);
   const size_t kH = 176, kW = 144, kF = 100;
 
-  vp8::YUV yuv = vp8::YUV("test.yuv");
+  vp8::YUV<vp8::WRITE> yuv("test.yuv");
   for (size_t k = 0; k < kF; ++k) {
     vp8::Frame f = vp8::Frame(kH, kW);
     for (size_t r = 0; r < kH / 16; ++r) {

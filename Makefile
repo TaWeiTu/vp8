@@ -59,6 +59,10 @@ src/residual.o: src/residual.cc src/residual.h src/quantizer.o src/dct.o
 	$(CHECK) src/residual.cc
 	$(CXX) $(CFLAGS) -c -o src/residual.o src/residual.cc
 
+src/bool_encoder.o: src/bool_encoder.cc src/bool_encoder.h
+	$(CHECK) src/bool_encoder.cc
+	$(CXX) $(CFLAGS) -c -o src/bool_encoder.o src/bool_encoder.cc
+
 .PHONY: clean
 clean: 
 	rm src/*.o

@@ -73,7 +73,7 @@ int main(int argc, const char **argv) {
 
   vp8::ParserContext ctx{};
 
-  vp8::YUV yuv(argv[2]);
+  vp8::YUV<vp8::WRITE> yuv(argv[2]);
 
   std::vector<uint8_t> buffer;
 

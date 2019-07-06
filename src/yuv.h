@@ -9,16 +9,21 @@
 
 namespace vp8 {
 
+enum IOMode { READ, WRITE };
+
+template <IOMode Mode>
 class YUV {
  public:
   YUV() = default;
   ~YUV();
-  explicit YUV(const std::string &filename);
   explicit YUV(const char *filename);
+
   void WriteFrame(const Frame &frame);
+  Frame ReadFrame(size_t height, size_t width);
 
  private:
-  std::ofstream fs_;
+  std::ifstream ifs_;
+  std::ofstream ofs_;
 };
 
 }  // namespace vp8
