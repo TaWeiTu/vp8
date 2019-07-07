@@ -103,15 +103,7 @@ MotionVector Invert(const MotionVector &mv, uint8_t ref_frame1,
 }
 
 uint8_t SubBlockContext(const MotionVector &left, const MotionVector &above) {
-  uint8_t lez = (left.dr == 0 && left.dc == 0);
-  uint8_t aez = (above.dr == 0 && above.dc == 0);
-  uint8_t lea = (left.dr == above.dr && left.dc == above.dc);
-
-  if (lea && lez) return 4;
-  if (lea) return 3;
-  if (aez) return 2;
-  if (lez) return 1;
-  return 0;
+  return kSubBlockContext.at(bool(left)).at(bool(above)).at(left == above);
 }
 
 void ConfigureChromaMVs(const MacroBlock<4> &luma, size_t vblock, size_t hblock,

@@ -4,9 +4,9 @@
 #include <iostream>
 
 int main() {
-  std::cout << "[Info] Start testing." << std::endl;
+  std::cout << "[Info] Start unit testing." << std::endl;
   vp8_test::TestDct();
   vp8_test::TestWht();
   // vp8_test::TestYuv();
-  std::cout << "[Info] All tests completed." << std::endl;
+  std::cout << "[Info] All unit tests completed." << std::endl;
 }

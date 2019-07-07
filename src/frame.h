@@ -24,6 +24,8 @@ struct MotionVector {
     return dr != rhs.dr || dc != rhs.dc;
   }
 
+  explicit operator bool() const { return dr != 0 || dc != 0; }
+
   MotionVector operator+(const MotionVector& rhs) const {
     return MotionVector(int16_t(dr + rhs.dr), int16_t(dc + rhs.dc));
   }

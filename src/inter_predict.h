@@ -32,7 +32,7 @@ namespace internal {
 
 static const MotionVector kZero = MotionVector(0, 0);
 
-static const std::array<std::array<int16_t, 6>, 8> kBicubicFilter = {
+constexpr std::array<std::array<int16_t, 6>, 8> kBicubicFilter = {
     {{0, 0, 128, 0, 0, 0},
      {0, -6, 123, 12, -1, 0},
      {2, -11, 108, 36, -8, 1},
@@ -42,7 +42,7 @@ static const std::array<std::array<int16_t, 6>, 8> kBicubicFilter = {
      {1, -8, 36, 108, -11, 2},
      {0, -1, 12, 123, -6, 0}}};
 
-static const std::array<std::array<int16_t, 6>, 8> kBilinearFilter = {
+constexpr std::array<std::array<int16_t, 6>, 8> kBilinearFilter = {
     {{0, 0, 128, 0, 0, 0},
      {0, 0, 112, 16, 0, 0},
      {0, 0, 96, 32, 0, 0},
@@ -51,6 +51,21 @@ static const std::array<std::array<int16_t, 6>, 8> kBilinearFilter = {
      {0, 0, 48, 80, 0, 0},
      {0, 0, 32, 96, 0, 0},
      {0, 0, 16, 112, 0, 0}}};
+
+constexpr std::array<std::array<std::array<uint8_t, 2>, 2>, 2>
+    kSubBlockContext = {{{{{2, 4}, {1, 3}}}, {{{2, 3}, {0, 3}}}}};
+
+// Pre-built table for fast partition of the macroblocks.
+constexpr std::array<uint8_t, 4> kNumPartition = {2, 2, 4, 16};
+
+constexpr std::array<uint64_t, 4> kHead = {128, 32, 43040,
+                                           18364758544493064720};
+
+constexpr std::array<std::array<int8_t, 16>, 4> kNext = {
+    {{1, 2, 3, 4, 5, 6, 7, -1, 9, 10, 11, 12, 13, 14, 15, -1},
+     {1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, -1, 15, -1},
+     {1, 4, 3, 6, 5, -1, 7, -1, 9, 12, 11, 14, 13, -1, 15, -1},
+     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}}};
 
 // Search for motion vectors in the left, above and upper-left macroblocks and
 // return the best, nearest and near motion vectors.
@@ -81,18 +96,6 @@ uint8_t SubBlockContext(const MotionVector &left, const MotionVector &above);
 // vectors occupying the same position in the luma subblocks.
 void ConfigureChromaMVs(const MacroBlock<4> &luma, size_t vblock, size_t hblock,
                         bool trim, MacroBlock<2> &U, MacroBlock<2> &V);
-
-// Pre-built table for fast partition of the macroblocks.
-constexpr std::array<uint8_t, 4> kNumPartition = {2, 2, 4, 16};
-
-constexpr std::array<uint64_t, 4> kHead = {128, 32, 43040,
-                                           18364758544493064720};
-
-constexpr std::array<std::array<int8_t, 16>, 4> kNext = {
-    {{1, 2, 3, 4, 5, 6, 7, -1, 9, 10, 11, 12, 13, 14, 15, -1},
-     {1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, -1, 15, -1},
-     {1, 4, 3, 6, 5, -1, 7, -1, 9, 12, 11, 14, 13, -1, 15, -1},
-     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}}};
 
 // In case of mode MV_SPLIT, set the motion vectors of each subblock
 // independently.
