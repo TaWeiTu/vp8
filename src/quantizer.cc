@@ -22,8 +22,8 @@ void Dequantize(std::array<int16_t, 16>& coefficients, int16_t DCfact,
 
 using namespace internal;
 
-static const int kClampLb = 0;
-static const int kClampUb = 127;
+static constexpr int kClampLb = 0;
+static constexpr int kClampUb = 127;
 
 void QuantizeY(std::array<int16_t, 16>& coefficients, int16_t qp,
                const QuantIndices& quantizer_header) {

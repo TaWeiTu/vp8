@@ -1,6 +1,6 @@
 CXX = clang++
 DBGFLAGS = -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -DDEBUG -fsanitize=undefined -fsanitize=address -fsanitize-address-use-after-scope -fstack-protector-all -fprofile-instr-generate -fcoverage-mapping -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-switch-enum -Wno-undefined-func-template -std=c++17 -Og -g3 -Wno-padded -march=native
-CFLAGS = -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-switch-enum -Wno-undefined-func-template -Wno-missing-prototypes -std=c++17 -O3 -march=native
+CFLAGS = -Weverything -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-switch-enum -Wno-undefined-func-template -Wno-missing-prototypes -Wno-implicitly-unsigned-literal -std=c++17 -O3 -march=native
 CVPATH ?= /usr/include/opencv4/
 OPENCV = -I$(CVPATH) -lopencv_core -lopencv_imgproc -lopencv_highgui
 CHECK = cppcheck --enable=all --inconclusive --check-config --suppress=missingIncludeSystem
@@ -77,5 +77,9 @@ test: test/main.cc test/dct_test.h src/dct.o test/yuv_test.h src/yuv.o src/utils
 	@echo '[Info] Start testing test vectors'
 	@test/test_vector.py
 	@echo '[Info] Done testing test vectors'
+	@echo '[Info] Start testing comprehensives'
+	@test/test_comprehensive.py
+	@echo '[Info] Done testing comprehensives'
 	@rm ./tmp_split.yuv
 	@rm ./tmp_test.yuv
+

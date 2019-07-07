@@ -4,8 +4,10 @@
 
 #include "bitstream_const.h"
 #include "reconstruct.h"
+#include "utils.h"
 #include "yuv.h"
 
+// Set the sign-bias of both GOLDEN and ALTREF reference frame.
 void InitSignBias(const vp8::FrameHeader &header,
                   std::array<bool, 4> &ref_frame_bias) {
   ref_frame_bias.at(vp8::GOLDEN_FRAME) = header.sign_bias_golden;
@@ -41,7 +43,7 @@ void RefreshRefFrames(const vp8::FrameHeader &header,
 }
 
 int main(int argc, const char **argv) {
-  assert(argc > 2);
+  ensure(argc == 3, "[Usage] ./decode [input] [output]");
 
   auto fs = std::ifstream(argv[1], std::ios::binary);
   auto read_bytes = [&fs](size_t n) {
@@ -60,10 +62,10 @@ int main(int argc, const char **argv) {
   assert(read_bytes(2) == 0);   // Version
   assert(read_bytes(2) == 32);  // Header length
   assert(read_bytes(4) == vp80);
-  read_bytes(2); 
-  read_bytes(2); 
-  read_bytes(4); 
-  read_bytes(4); 
+  read_bytes(2);
+  read_bytes(2);
+  read_bytes(4);
+  read_bytes(4);
   auto num_frames = read_bytes(4);
   read_bytes(4);  // Reserved bytes
 
@@ -93,8 +95,8 @@ int main(int argc, const char **argv) {
     vp8::FrameTag tag;
     std::tie(tag, header) = ps.ReadFrameTagHeader();
     if (tag.key_frame) {
-        height = tag.height;
-        width = tag.width;
+      height = tag.height;
+      width = tag.width;
     }
 
     vp8::Frame frame(height, width);

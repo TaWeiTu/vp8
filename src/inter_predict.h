@@ -61,7 +61,7 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
                         BitstreamParser &ps, MotionVector &best,
                         MotionVector &nearest, MotionVector &near);
 
-// Make sure that the motion vector indeed point to a valid position.
+// Make sure that the motion vector indeed points to a valid position.
 void ClampMV2(int16_t left, int16_t right, int16_t top, int16_t bottom,
               MotionVector &mb);
 void ClampMV(int16_t left, int16_t right, int16_t top, int16_t bottom,
@@ -80,7 +80,19 @@ uint8_t SubBlockContext(const MotionVector &left, const MotionVector &above);
 // The motion vectors of chroma subblocks are the average value of the motion
 // vectors occupying the same position in the luma subblocks.
 void ConfigureChromaMVs(const MacroBlock<4> &luma, size_t vblock, size_t hblock,
-                        bool trim, MacroBlock<2> &chroma);
+                        bool trim, MacroBlock<2> &U, MacroBlock<2> &V);
+
+// Pre-built table for fast partition of the macroblocks.
+constexpr std::array<uint8_t, 4> kNumPartition = {2, 2, 4, 16};
+
+constexpr std::array<uint64_t, 4> kHead = {128, 32, 43040,
+                                           18364758544493064720};
+
+constexpr std::array<std::array<int8_t, 16>, 4> kNext = {
+    {{1, 2, 3, 4, 5, 6, 7, -1, 9, 10, 11, 12, 13, 14, 15, -1},
+     {1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, -1, 15, -1},
+     {1, 4, 3, 6, 5, -1, 7, -1, 9, 12, 11, 14, 13, -1, 15, -1},
+     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}}};
 
 // In case of mode MV_SPLIT, set the motion vectors of each subblock
 // independently.

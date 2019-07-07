@@ -115,7 +115,7 @@ uint8_t SubBlockContext(const MotionVector &left, const MotionVector &above) {
 }
 
 void ConfigureChromaMVs(const MacroBlock<4> &luma, size_t vblock, size_t hblock,
-                        bool trim, MacroBlock<2> &chroma) {
+                        bool trim, MacroBlock<2> &U, MacroBlock<2> &V) {
   for (size_t r = 0; r < 2; ++r) {
     for (size_t c = 0; c < 2; ++c) {
       MotionVector ulv = luma.at(r << 1).at(c << 1).GetMotionVector(),
@@ -138,7 +138,8 @@ void ConfigureChromaMVs(const MacroBlock<4> &luma, size_t vblock, size_t hblock,
 
       MotionVector mv = MotionVector(dr, dc);
       ClampMV(left, right, top, bottom, mv);
-      chroma.at(r).at(c).SetMotionVector(dr, dc);
+      U.at(r).at(c).SetMotionVector(dr, dc);
+      V.at(r).at(c).SetMotionVector(dr, dc);
     }
   }
 }
@@ -146,34 +147,6 @@ void ConfigureChromaMVs(const MacroBlock<4> &luma, size_t vblock, size_t hblock,
 void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
                           MotionVector best, BitstreamParser &ps,
                           Plane<4> &mb) {
-  std::vector<std::vector<uint8_t>> part;
-  switch (hd.mv_split_mode) {
-    case MV_TOP_BOTTOM:
-      part.push_back({0, 1, 2, 3, 4, 5, 6, 7});
-      part.push_back({8, 9, 10, 11, 12, 13, 14, 15});
-      break;
-
-    case MV_LEFT_RIGHT:
-      part.push_back({0, 1, 4, 5, 8, 9, 12, 13});
-      part.push_back({2, 3, 6, 7, 10, 11, 14, 15});
-      break;
-
-    case MV_QUARTERS:
-      part.push_back({0, 1, 4, 5});
-      part.push_back({2, 3, 6, 7});
-      part.push_back({8, 9, 12, 13});
-      part.push_back({10, 11, 14, 15});
-      break;
-
-    case MV_16:
-      for (uint8_t i = 0; i < 16; ++i) part.push_back({i});
-      break;
-
-    default:
-      ensure(false, "[Error] Unknown subblock partition.");
-      break;
-  }
-
   auto LeftMotionVector = [&mb, r, c](size_t idx) {
     if ((idx & 3) == 0) {
       if (c == 0) return kZero;
@@ -190,9 +163,12 @@ void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
     return mb.at(r).at(c).GetSubBlockMV(idx - 4);
   };
 
-  for (size_t i = 0; i < part.size(); ++i) {
-    MotionVector left = LeftMotionVector(part.at(i).at(0));
-    MotionVector above = AboveMotionVector(part.at(i).at(0));
+  uint64_t mask = kHead.at(hd.mv_split_mode);
+  for (size_t i = 0; i < kNumPartition.at(hd.mv_split_mode); ++i) {
+    size_t head = mask & 15;
+    mask >>= 4;
+    MotionVector left = LeftMotionVector(head);
+    MotionVector above = AboveMotionVector(head);
     uint8_t context = SubBlockContext(left, above);
     SubBlockMVMode mode = ps.ReadSubBlockMVMode(context);
     MotionVector mv;
@@ -219,8 +195,9 @@ void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
                "mode.");
         break;
     }
-    for (size_t j = 0; j < part.at(i).size(); ++j) {
-      size_t ir = part.at(i).at(j) >> 2, ic = part.at(i).at(j) & 3;
+    for (int8_t ptr = int8_t(head); ptr != -1;
+         ptr = kNext.at(hd.mv_split_mode).at(size_t(ptr))) {
+      size_t ir = size_t(ptr) >> 2, ic = size_t(ptr) & 3;
       mb.at(r).at(c).at(ir).at(ic).SetMotionVector(mv);
     }
   }
@@ -281,9 +258,7 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
   }
 
   ConfigureChromaMVs(frame.Y.at(r).at(c), frame.vblock, frame.hblock, trim,
-                     frame.U.at(r).at(c));
-  ConfigureChromaMVs(frame.Y.at(r).at(c), frame.vblock, frame.hblock, trim,
-                     frame.V.at(r).at(c));
+                     frame.U.at(r).at(c), frame.V.at(r).at(c));
 }
 
 template <size_t C>

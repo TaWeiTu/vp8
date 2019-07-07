@@ -7,6 +7,7 @@
 
 #include "bitstream_const.h"
 #include "reconstruct.h"
+#include "utils.h"
 
 // Set the sign-bias of both GOLDEN and ALTREF reference frame.
 void InitSignBias(const vp8::FrameHeader &header,
@@ -40,7 +41,7 @@ void RefreshRefFrames(const vp8::FrameHeader &header,
 }
 
 int main(int argc, const char **argv) {
-  assert(argc > 1);
+  ensure(argc == 2, "[Usage] ./display [input]";
 
   auto fs = std::ifstream(argv[1], std::ios::binary);
   auto read_bytes = [&fs](size_t n) {

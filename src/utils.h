@@ -6,6 +6,12 @@
 #include <stdexcept>
 #include <string>
 
+inline void ensure(bool cond, const std::string &message) {
+  if (__builtin_expect(cond, true)) return;
+  if (!message.empty()) std::cerr << message << std::endl;
+  exit(1);
+}
+
 namespace vp8 {
 
 template <typename T>
@@ -16,12 +22,6 @@ inline T Clamp255(T x) {
 template <typename T>
 inline T Clamp128(T x) {
   return std::clamp(x, T(-128), T(127));
-}
-
-inline void ensure(bool cond, const std::string &message) {
-  if (__builtin_expect(cond, true)) return;
-  if (!message.empty()) std::cerr << message << std::endl;
-  exit(1);
 }
 
 template <class T>

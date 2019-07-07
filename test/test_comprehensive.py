@@ -15,8 +15,6 @@ size = [(176, 144), (176, 144), (176, 144), (176, 144), (176, 144), (175, 143), 
 
 frames = [29, 49, 49, 29, 49, 48, 29, 2, 49, 57, 29, 29, 29, 49, 260, 29, 29]
 
-print(len(size), len(frames))
-
 for i in range(1, 18):
     f = temp % i
     test.append((f, frames[i - 1], size[i - 1][0], size[i - 1][1]))
@@ -41,11 +39,11 @@ for file, frame, height, width in test:
                 b = f.read(1)
                 assert b != ''
                 y_byte.append(b)
-            for i in range(height // 2 * width // 2):
+            for i in range(((height + 1) // 2) * ((width + 1) // 2)):
                 b = f.read(1)
                 assert b != ''
                 u_byte.append(b)
-            for i in range(height // 2 * width // 2):
+            for i in range(((height + 1) // 2) * ((width + 1) // 2)):
                 b = f.read(1)
                 assert b != ''
                 v_byte.append(b)

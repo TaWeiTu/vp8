@@ -110,16 +110,16 @@ enum SubBlockMVMode {
   kNumSubBlockMVMode
 };
 
-static const std::array<TreeIndex, 8> kKeyFrameYModeTree = {
+constexpr std::array<TreeIndex, 8> kKeyFrameYModeTree = {
     -B_PRED, 2, 4, 6, -DC_PRED, -V_PRED, -H_PRED, -TM_PRED};
 
-static const std::array<TreeIndex, 8> kYModeTree = {
+constexpr std::array<TreeIndex, 8> kYModeTree = {
     -DC_PRED, 2, 4, 6, -V_PRED, -H_PRED, -TM_PRED, -B_PRED};
 
-static const std::array<TreeIndex, 6> kUVModeTree = {
-    -DC_PRED, 2, -V_PRED, 4, -H_PRED, -TM_PRED};
+constexpr std::array<TreeIndex, 6> kUVModeTree = {-DC_PRED, 2,       -V_PRED,
+                                                  4,        -H_PRED, -TM_PRED};
 
-static const std::array<TreeIndex, 18> kSubBlockModeTree{
+constexpr std::array<TreeIndex, 18> kSubBlockModeTree{
     -B_DC_PRED, 2,  -B_TM_PRED, 4,  -B_VE_PRED, 6,
     8,          12, -B_HE_PRED, 10, -B_RD_PRED, -B_VR_PRED,
     -B_LD_PRED, 14, -B_VL_PRED, 16, -B_HD_PRED, -B_HU_PRED};
