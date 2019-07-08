@@ -12,7 +12,7 @@
 #include "utils.h"
 
 int main(int argc, const char **argv) {
-  ensure(argc == 2, "[Usage] ./display [input]";
+  ensure(argc == 2, "[Usage] ./display [input]");
 
   auto fs = std::ifstream(argv[1], std::ios::binary);
   auto read_bytes = [&fs](size_t n) {
@@ -36,7 +36,7 @@ int main(int argc, const char **argv) {
        num_frames = read_bytes(4);
   read_bytes(4);  // Reserved bytes
 
-  std::array<vp8::Frame, 4> ref_frames{};
+  std::array<std::shared_ptr<vp8::Frame>, 4> ref_frames{};
   std::array<bool, 4> ref_frame_bias{};
 
   vp8::ParserContext ctx{};
@@ -91,34 +91,34 @@ int main(int argc, const char **argv) {
       width = tag.width;
     }
 
-    vp8::Frame frame(height, width);
-
+    std::shared_ptr<vp8::Frame> &frame = ref_frames.at(vp8::CURRENT_FRAME);
+    frame = std::make_shared<vp8::Frame>(height, width);
     vp8::InitSignBias(header, ref_frame_bias);
     vp8::Reconstruct(header, tag, ref_frames, ref_frame_bias, ps, frame);
-    vp8::RefreshRefFrames(header, ref_frames, frame);
+    vp8::RefreshRefFrames(header, ref_frames);
 
     if (!tag.show_frame) continue;
     cv::Mat mYUV((height + (height >> 1)), width, CV_8UC1);
     auto it = mYUV.begin<uint8_t>();
 
-    for (size_t r = 0; r < frame.vsize; ++r) {
-      for (size_t c = 0; c < frame.hsize; ++c) {
+    for (size_t r = 0; r < frame->vsize; ++r) {
+      for (size_t c = 0; c < frame->hsize; ++c) {
         uint8_t y =
-            uint8_t(frame.Y.at(r >> 4).at(c >> 4).GetPixel(r & 15, c & 15));
+            uint8_t(frame->Y.at(r >> 4).at(c >> 4).GetPixel(r & 15, c & 15));
         *it++ = y;
       }
     }
-    for (size_t r = 0; r < frame.vsize; r += 2) {
-      for (size_t c = 0; c < frame.hsize; c += 2) {
-        uint8_t u = uint8_t(
-            frame.U.at(r >> 4).at(c >> 4).GetPixel((r >> 1) & 7, (c >> 1) & 7));
+    for (size_t r = 0; r < frame->vsize; r += 2) {
+      for (size_t c = 0; c < frame->hsize; c += 2) {
+        uint8_t u = uint8_t(frame->U.at(r >> 4).at(c >> 4).GetPixel(
+            (r >> 1) & 7, (c >> 1) & 7));
         *it++ = u;
       }
     }
-    for (size_t r = 0; r < frame.vsize; r += 2) {
-      for (size_t c = 0; c < frame.hsize; c += 2) {
-        int8_t v = uint8_t(
-            frame.V.at(r >> 4).at(c >> 4).GetPixel((r >> 1) & 7, (c >> 1) & 7));
+    for (size_t r = 0; r < frame->vsize; r += 2) {
+      for (size_t c = 0; c < frame->hsize; c += 2) {
+        int8_t v = uint8_t(frame->V.at(r >> 4).at(c >> 4).GetPixel(
+            (r >> 1) & 7, (c >> 1) & 7));
         *it++ = v;
       }
     }

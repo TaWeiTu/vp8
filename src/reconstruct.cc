@@ -70,26 +70,26 @@ void UpdateDequantFactor(const QuantIndices &quant) {
 }
 
 void Predict(const FrameHeader &header, const FrameTag &tag,
-             const std::array<Frame, 4> &refs,
+             const std::array<std::shared_ptr<Frame>, 4> &refs,
              const std::array<bool, 4> &ref_frame_bias,
              std::vector<std::vector<InterContext>> &interc,
              std::vector<std::vector<IntraContext>> &intrac,
              std::vector<std::vector<uint8_t>> &lf,
              std::vector<std::vector<uint8_t>> &skip_lf, BitstreamParser &ps,
-             Frame &frame) {
-  std::vector<uint8_t> y2_row(frame.vblock, 0);
-  std::vector<uint8_t> y2_col(frame.hblock, 0);
+             const std::shared_ptr<Frame> &frame) {
+  std::vector<uint8_t> y2_row(frame->vblock, 0);
+  std::vector<uint8_t> y2_col(frame->hblock, 0);
   std::vector<std::vector<uint8_t>> y1_nonzero(
-      frame.vblock << 2, std::vector<uint8_t>(frame.hblock << 2, 0));
+      frame->vblock << 2, std::vector<uint8_t>(frame->hblock << 2, 0));
   std::vector<std::vector<uint8_t>> u_nonzero(
-      frame.vblock << 1, std::vector<uint8_t>(frame.hblock << 1, 0));
+      frame->vblock << 1, std::vector<uint8_t>(frame->hblock << 1, 0));
   std::vector<std::vector<uint8_t>> v_nonzero(
-      frame.vblock << 1, std::vector<uint8_t>(frame.hblock << 1, 0));
+      frame->vblock << 1, std::vector<uint8_t>(frame->hblock << 1, 0));
 
   UpdateDequantFactor(header.quant_indices);
 
-  for (size_t r = 0; r < frame.vblock; ++r) {
-    for (size_t c = 0; c < frame.hblock; ++c) {
+  for (size_t r = 0; r < frame->vblock; ++r) {
+    for (size_t c = 0; c < frame->hblock; ++c) {
       MacroBlockPreHeader pre = ps.ReadMacroBlockPreHeader();
       int16_t qp = header.quant_indices.y_ac_qi;
       if (header.segmentation_enabled) {
@@ -143,9 +143,9 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
       InverseTransformResidual(rv, rd.has_y2);
 
       if (pre.is_inter_mb) {
-        ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
-        ApplyMBResidual(rv.u, frame.U.at(r).at(c));
-        ApplyMBResidual(rv.v, frame.V.at(r).at(c));
+        ApplyMBResidual(rv.y, frame->Y.at(r).at(c));
+        ApplyMBResidual(rv.u, frame->U.at(r).at(c));
+        ApplyMBResidual(rv.v, frame->V.at(r).at(c));
       } else {
         IntraPredict(tag, r, c, rv, mh, intrac, skip_lf, ps, frame);
       }
@@ -158,17 +158,17 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
 using namespace internal;
 
 void Reconstruct(const FrameHeader &header, const FrameTag &tag,
-                 const std::array<Frame, 4> &refs,
+                 const std::array<std::shared_ptr<Frame>, 4> &refs,
                  const std::array<bool, 4> &ref_frame_bias, BitstreamParser &ps,
-                 Frame &frame) {
+                 const std::shared_ptr<Frame> &frame) {
   std::vector<std::vector<InterContext>> interc(
-      frame.vblock, std::vector<InterContext>(frame.hblock));
+      frame->vblock, std::vector<InterContext>(frame->hblock));
   std::vector<std::vector<IntraContext>> intrac(
-      frame.vblock << 2, std::vector<IntraContext>(frame.hblock << 2));
-  std::vector<std::vector<uint8_t>> lf(frame.vblock,
-                                       std::vector<uint8_t>(frame.hblock));
+      frame->vblock << 2, std::vector<IntraContext>(frame->hblock << 2));
+  std::vector<std::vector<uint8_t>> lf(frame->vblock,
+                                       std::vector<uint8_t>(frame->hblock));
   std::vector<std::vector<uint8_t>> skip_lf(
-      frame.vblock, std::vector<uint8_t>(frame.hblock, 1));
+      frame->vblock, std::vector<uint8_t>(frame->hblock, 1));
 
   Predict(header, tag, refs, ref_frame_bias, interc, intrac, lf, skip_lf, ps,
           frame);

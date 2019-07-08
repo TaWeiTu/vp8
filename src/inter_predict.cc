@@ -199,14 +199,14 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
                   const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
                   std::vector<std::vector<InterContext>> &context,
                   std::vector<std::vector<uint8_t>> &skip_lf,
-                  BitstreamParser &ps, Frame &frame) {
+                  BitstreamParser &ps, const std::shared_ptr<Frame> &frame) {
   int16_t top = ((-int16_t(r) * 16) * 8);
-  int16_t bottom = ((int16_t(frame.vblock) - 1 - int16_t(r)) * 16) * 8;
+  int16_t bottom = ((int16_t(frame->vblock) - 1 - int16_t(r)) * 16) * 8;
   int16_t left = ((-int16_t(c) * 16) * 8);
-  int16_t right = ((int16_t(frame.hblock) - 1 - int16_t(c)) * 16) * 8;
+  int16_t right = ((int16_t(frame->hblock) - 1 - int16_t(c)) * 16) * 8;
 
   MotionVector best, nearest, near, mv;
-  InterMBHeader hd = SearchMVs(r, c, frame.Y, ref_frame_bias, ref_frame,
+  InterMBHeader hd = SearchMVs(r, c, frame->Y, ref_frame_bias, ref_frame,
                                context, ps, best, nearest, near);
 
   ClampMV2(top, bottom, left, right, best);
@@ -218,30 +218,30 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
 
   switch (hd.mv_mode) {
     case MV_NEAREST:
-      frame.Y.at(r).at(c).SetSubBlockMVs(nearest);
-      frame.Y.at(r).at(c).SetMotionVector(nearest);
+      frame->Y.at(r).at(c).SetSubBlockMVs(nearest);
+      frame->Y.at(r).at(c).SetMotionVector(nearest);
       break;
 
     case MV_NEAR:
-      frame.Y.at(r).at(c).SetSubBlockMVs(near);
-      frame.Y.at(r).at(c).SetMotionVector(near);
+      frame->Y.at(r).at(c).SetSubBlockMVs(near);
+      frame->Y.at(r).at(c).SetMotionVector(near);
       break;
 
     case MV_ZERO:
-      frame.Y.at(r).at(c).SetSubBlockMVs(kZero);
-      frame.Y.at(r).at(c).SetMotionVector(kZero);
+      frame->Y.at(r).at(c).SetSubBlockMVs(kZero);
+      frame->Y.at(r).at(c).SetMotionVector(kZero);
       break;
 
     case MV_NEW:
       mv = hd.mv_new + best;
-      frame.Y.at(r).at(c).SetSubBlockMVs(mv);
-      frame.Y.at(r).at(c).SetMotionVector(mv);
+      frame->Y.at(r).at(c).SetSubBlockMVs(mv);
+      frame->Y.at(r).at(c).SetMotionVector(mv);
       break;
 
     case MV_SPLIT:
-      ConfigureSubBlockMVs(hd, r, c, best, ps, frame.Y);
-      mv = frame.Y.at(r).at(c).GetSubBlockMV(15);
-      frame.Y.at(r).at(c).SetMotionVector(mv);
+      ConfigureSubBlockMVs(hd, r, c, best, ps, frame->Y);
+      mv = frame->Y.at(r).at(c).GetSubBlockMV(15);
+      frame->Y.at(r).at(c).SetMotionVector(mv);
       break;
 
     default:
@@ -249,8 +249,8 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
       break;
   }
 
-  ConfigureChromaMVs(frame.Y.at(r).at(c), frame.vblock, frame.hblock, trim,
-                     frame.U.at(r).at(c), frame.V.at(r).at(c));
+  ConfigureChromaMVs(frame->Y.at(r).at(c), frame->vblock, frame->hblock, trim,
+                     frame->U.at(r).at(c), frame->V.at(r).at(c));
 }
 
 template <size_t C>
@@ -364,22 +364,22 @@ template void InterpBlock<2>(
 using namespace internal;
 
 void InterPredict(const FrameTag &tag, size_t r, size_t c,
-                  const std::array<Frame, 4> &refs,
+                  const std::array<std::shared_ptr<Frame>, 4> &refs,
                   const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
                   std::vector<std::vector<InterContext>> &context,
                   std::vector<std::vector<uint8_t>> &skip_lf,
-                  BitstreamParser &ps, Frame &frame) {
+                  BitstreamParser &ps, const std::shared_ptr<Frame> &frame) {
   ConfigureMVs(r, c, tag.version == 3, ref_frame_bias, ref_frame, context,
                skip_lf, ps, frame);
   std::array<std::array<int16_t, 6>, 8> subpixel_filters =
       tag.version == 0 ? kBicubicFilter : kBilinearFilter;
 
-  InterpBlock(refs.at(ref_frame).Y, subpixel_filters, r, c,
-              frame.Y.at(r).at(c));
-  InterpBlock(refs.at(ref_frame).U, subpixel_filters, r, c,
-              frame.U.at(r).at(c));
-  InterpBlock(refs.at(ref_frame).V, subpixel_filters, r, c,
-              frame.V.at(r).at(c));
+  InterpBlock(refs.at(ref_frame)->Y, subpixel_filters, r, c,
+              frame->Y.at(r).at(c));
+  InterpBlock(refs.at(ref_frame)->U, subpixel_filters, r, c,
+              frame->U.at(r).at(c));
+  InterpBlock(refs.at(ref_frame)->V, subpixel_filters, r, c,
+              frame->V.at(r).at(c));
 }
 
 }  // namespace vp8

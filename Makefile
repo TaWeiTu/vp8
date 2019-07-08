@@ -69,7 +69,6 @@ clean:
 	rm ./decode
 	rm ./display
 
-
 .PHONY: test
 test: test/main.cc test/dct_test.h src/dct.o test/yuv_test.h src/yuv.o src/utils.h test/intra_test.py decode
 	$(CXX) $(CFLAGS) src/dct.o src/yuv.o test/main.cc

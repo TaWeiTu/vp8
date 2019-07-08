@@ -2,6 +2,7 @@
 #define RECONSTRUCT_H_
 
 #include <array>
+#include <memory>
 #include <vector>
 
 #include "bitstream_parser.h"
@@ -29,20 +30,20 @@ void UpdateNonzero(const ResidualValue &rv, bool has_y2, size_t r, size_t c,
 void UpdateDequantFactor(const QuantIndices &quant);
 
 void Predict(const FrameHeader &header, const FrameTag &tag,
-             const std::array<Frame, 4> &refs,
+             const std::array<std::shared_ptr<Frame>, 4> &refs,
              const std::array<bool, 4> &ref_frame_bias,
              std::vector<std::vector<InterContext>> &interc,
              std::vector<std::vector<IntraContext>> &intrac,
              std::vector<std::vector<uint8_t>> &lf,
              std::vector<std::vector<uint8_t>> &skip_lf, BitstreamParser &ps,
-             Frame &frame);
+             const std::shared_ptr<Frame> &frame);
 
 }  // namespace internal
 
 void Reconstruct(const FrameHeader &header, const FrameTag &tag,
-                 const std::array<Frame, 4> &refs,
+                 const std::array<std::shared_ptr<Frame>, 4> &refs,
                  const std::array<bool, 4> &ref_frame_bias, BitstreamParser &ps,
-                 Frame &frame);
+                 const std::shared_ptr<Frame> &frame);
 
 }  // namespace vp8
 

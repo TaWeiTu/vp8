@@ -15,26 +15,25 @@ YUV<READ>::YUV(const char *filename) {
 }
 
 template <>
-void YUV<WRITE>::WriteFrame(const Frame &frame) {
-  for (size_t r = 0; r < frame.vsize; ++r) {
-    for (size_t c = 0; c < frame.hsize; ++c) {
+void YUV<WRITE>::WriteFrame(const std::shared_ptr<Frame> &frame) {
+  for (size_t r = 0; r < frame->vsize; ++r) {
+    for (size_t c = 0; c < frame->hsize; ++c) {
       uint8_t y =
-          uint8_t(frame.Y.at(r >> 4).at(c >> 4).GetPixel(r & 15, c & 15));
+          uint8_t(frame->Y.at(r >> 4).at(c >> 4).GetPixel(r & 15, c & 15));
       ofs_.write(reinterpret_cast<char *>(&y), sizeof(y));
     }
   }
-  // TODO: What if the dimensions are odd numbers?
-  for (size_t r = 0; r < frame.vsize; r += 2) {
-    for (size_t c = 0; c < frame.hsize; c += 2) {
+  for (size_t r = 0; r < frame->vsize; r += 2) {
+    for (size_t c = 0; c < frame->hsize; c += 2) {
       uint8_t u = uint8_t(
-          frame.U.at(r >> 4).at(c >> 4).GetPixel((r >> 1) & 7, (c >> 1) & 7));
+          frame->U.at(r >> 4).at(c >> 4).GetPixel((r >> 1) & 7, (c >> 1) & 7));
       ofs_.write(reinterpret_cast<char *>(&u), sizeof(u));
     }
   }
-  for (size_t r = 0; r < frame.vsize; r += 2) {
-    for (size_t c = 0; c < frame.hsize; c += 2) {
+  for (size_t r = 0; r < frame->vsize; r += 2) {
+    for (size_t c = 0; c < frame->hsize; c += 2) {
       uint8_t v = uint8_t(
-          frame.V.at(r >> 4).at(c >> 4).GetPixel((r >> 1) & 7, (c >> 1) & 7));
+          frame->V.at(r >> 4).at(c >> 4).GetPixel((r >> 1) & 7, (c >> 1) & 7));
       ofs_.write(reinterpret_cast<char *>(&v), sizeof(v));
     }
   }

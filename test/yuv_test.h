@@ -17,20 +17,20 @@ void TestYuv() {
 
   vp8::YUV<vp8::WRITE> yuv("test.yuv");
   for (size_t k = 0; k < kF; ++k) {
-    vp8::Frame f = vp8::Frame(kH, kW);
+    std::shared_ptr<vp8::Frame> f = std::make_unique<vp8::Frame>(kH, kW);
     for (size_t r = 0; r < kH / 16; ++r) {
       for (size_t c = 0; c < kW / 16; ++c) {
         for (size_t i = 0; i < 16; ++i) {
           for (size_t j = 0; j < 16; ++j)
-            f.Y.at(r).at(c).SetPixel(i, j, kDis(kRng));
+            f->Y.at(r).at(c).SetPixel(i, j, kDis(kRng));
         }
         for (size_t i = 0; i < 8; ++i) {
           for (size_t j = 0; j < 8; ++j)
-            f.U.at(r).at(c).SetPixel(i, j, kDis(kRng));
+            f->U.at(r).at(c).SetPixel(i, j, kDis(kRng));
         }
         for (size_t i = 0; i < 8; ++i) {
           for (size_t j = 0; j < 8; ++j)
-            f.V.at(r).at(c).SetPixel(i, j, kDis(kRng));
+            f->V.at(r).at(c).SetPixel(i, j, kDis(kRng));
         }
       }
     }
