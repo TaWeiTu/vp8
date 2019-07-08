@@ -92,10 +92,12 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
     for (size_t c = 0; c < frame.hblock; ++c) {
       MacroBlockPreHeader pre = ps.ReadMacroBlockPreHeader();
       int16_t qp = header.quant_indices.y_ac_qi;
-      if (header.segmentation_enabled)
+      if (header.segmentation_enabled) {
         qp = header.segment_feature_mode == SEGMENT_MODE_ABSOLUTE
                  ? header.quantizer_segment.at(pre.segment_id)
                  : header.quantizer_segment.at(pre.segment_id) + qp;
+      }
+
       size_t dq = size_t(std::clamp(qp, int16_t(0), int16_t(127)));
 
       uint8_t y2_nonzero = y2_row.at(r) + y2_col.at(c);

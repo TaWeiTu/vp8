@@ -9,8 +9,11 @@
 namespace vp8 {
 
 void DCT(std::array<std::array<int16_t, 4>, 4> &subblock);
+
 void IDCT(std::array<std::array<int16_t, 4>, 4> &subblock);
+
 void WHT(std::array<std::array<int16_t, 4>, 4> &subblock);
+
 void IWHT(std::array<std::array<int16_t, 4>, 4> &subblock);
 
 }  // namespace vp8

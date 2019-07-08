@@ -67,6 +67,7 @@ src/bool_encoder.o: src/bool_encoder.cc src/bool_encoder.h
 clean: 
 	rm src/*.o
 	rm ./decode
+	rm ./display
 
 
 .PHONY: test
