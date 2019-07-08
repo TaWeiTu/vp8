@@ -4,13 +4,15 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 #include "bitstream_parser.h"
 #include "utils.h"
 
 namespace vp8 {
-namespace internal {
+
+using QuantFactor = std::pair<int16_t, int16_t>;
 
 constexpr std::array<int, 128> kDClookup = {
     4,   5,   6,   7,   8,   9,   10,  10,  11,  12,  13,  14,  15,  16,  17,
@@ -34,25 +36,18 @@ constexpr std::array<int, 128> kAClookup = {
     185, 189, 193, 197, 201, 205, 209, 213, 217, 221, 225, 229, 234, 239, 245,
     249, 254, 259, 264, 269, 274, 279, 284};
 
-void Quantize(std::array<int16_t, 16>& coefficients, int16_t DCfact,
-              int16_t ACfact);
-void Dequantize(std::array<int16_t, 16>& coefficients, int16_t DCfact,
-                int16_t ACfact);
+void Quantize(std::array<int16_t, 16>& coefficients, const QuantFactor& qf);
 
-}  // namespace internal
+void Dequantize(std::array<int16_t, 16>& coefficients, const QuantFactor& dqf);
 
-void QuantizeY(std::array<int16_t, 16>& coefficients, int16_t qp,
-               const QuantIndices& quantizer_header);
-void QuantizeUV(std::array<int16_t, 16>& coefficients, int16_t qp,
-                const QuantIndices& quantizer_header);
-void QuantizeY2(std::array<int16_t, 16>& coefficients, int16_t qp,
-                const QuantIndices& quantizer_header);
-void DequantizeY(std::array<int16_t, 16>& coefficients, int16_t qp,
-                 const QuantIndices& quantizer_header);
-void DequantizeUV(std::array<int16_t, 16>& coefficients, int16_t qp,
-                  const QuantIndices& quantizer_header);
-void DequantizeY2(std::array<int16_t, 16>& coefficients, int16_t qp,
-                  const QuantIndices& quantizer_header);
+void BuildQuantFactorsY2(const QuantIndices& quant,
+                         std::array<QuantFactor, 128>& y2dqf);
+
+void BuildQuantFactorsY(const QuantIndices& quant,
+                        std::array<QuantFactor, 128>& ydqf);
+
+void BuildQuantFactorsUV(const QuantIndices& quant,
+                         std::array<QuantFactor, 128>& uvdqf);
 
 }  // namespace vp8
 

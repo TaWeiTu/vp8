@@ -2,8 +2,10 @@
 
 namespace vp8 {
 
-ResidualData QuantizeResidualValue(const ResidualValue &rv, int16_t qp,
-                                   const QuantIndices &quant, bool has_y2) {
+ResidualData QuantizeResidualValue(const ResidualValue &rv,
+                                   const QuantFactor &y2qf,
+                                   const QuantFactor &yqf,
+                                   const QuantFactor &uvqf, bool has_y2) {
   ResidualData rd{};
   if (has_y2) {
     rd.has_y2 = true;
@@ -11,58 +13,59 @@ ResidualData QuantizeResidualValue(const ResidualValue &rv, int16_t qp,
       for (size_t j = 0; j < 4; ++j)
         rd.dct_coeff.at(0).at(i << 2 | j) = rv.y2.at(i).at(j);
     }
-    QuantizeY2(rd.dct_coeff.at(0), qp, quant);
+    Quantize(rd.dct_coeff.at(0), y2qf);
   }
   for (size_t p = 1; p <= 16; ++p) {
     for (size_t i = 0; i < 4; ++i) {
       for (size_t j = 0; j < 4; ++j)
         rd.dct_coeff.at(p).at(i << 2 | j) = rv.y.at(p - 1).at(i).at(j);
     }
-    QuantizeY(rd.dct_coeff.at(p), qp, quant);
+    Quantize(rd.dct_coeff.at(p), yqf);
   }
   for (size_t p = 17; p <= 20; ++p) {
     for (size_t i = 0; i < 4; ++i) {
       for (size_t j = 0; j < 4; ++j)
         rd.dct_coeff.at(p).at(i << 2 | j) = rv.u.at(p - 17).at(i).at(j);
     }
-    QuantizeUV(rd.dct_coeff.at(p), qp, quant);
+    Quantize(rd.dct_coeff.at(p), uvqf);
   }
   for (size_t p = 21; p <= 24; ++p) {
     for (size_t i = 0; i < 4; ++i) {
       for (size_t j = 0; j < 4; ++j)
         rd.dct_coeff.at(p).at(i << 2 | j) = rv.v.at(p - 21).at(i).at(j);
     }
-    QuantizeUV(rd.dct_coeff.at(p), qp, quant);
+    Quantize(rd.dct_coeff.at(p), uvqf);
   }
   return rd;
 }
 
-ResidualValue DequantizeResidualData(ResidualData &rd, int16_t qp,
-                                     const QuantIndices &quant) {
+ResidualValue DequantizeResidualData(ResidualData &rd, const QuantFactor &y2dqf,
+                                     const QuantFactor &ydqf,
+                                     const QuantFactor &uvdqf) {
   ResidualValue rv;
   if (rd.has_y2) {
-    DequantizeY2(rd.dct_coeff.at(0), qp, quant);
+    Dequantize(rd.dct_coeff.at(0), y2dqf);
     for (size_t i = 0; i < 4; ++i) {
       for (size_t j = 0; j < 4; ++j)
         rv.y2.at(i).at(j) = rd.dct_coeff.at(0).at(i << 2 | j);
     }
   }
   for (size_t p = 1; p <= 16; ++p) {
-    DequantizeY(rd.dct_coeff.at(p), qp, quant);
+    Dequantize(rd.dct_coeff.at(p), ydqf);
     for (size_t i = 0; i < 4; ++i) {
       for (size_t j = 0; j < 4; ++j)
         rv.y.at(p - 1).at(i).at(j) = rd.dct_coeff.at(p).at(i << 2 | j);
     }
   }
   for (size_t p = 17; p <= 20; ++p) {
-    DequantizeUV(rd.dct_coeff.at(p), qp, quant);
+    Dequantize(rd.dct_coeff.at(p), uvdqf);
     for (size_t i = 0; i < 4; ++i) {
       for (size_t j = 0; j < 4; ++j)
         rv.u.at(p - 17).at(i).at(j) = rd.dct_coeff.at(p).at(i << 2 | j);
     }
   }
   for (size_t p = 21; p <= 24; ++p) {
-    DequantizeUV(rd.dct_coeff.at(p), qp, quant);
+    Dequantize(rd.dct_coeff.at(p), uvdqf);
     for (size_t i = 0; i < 4; ++i) {
       for (size_t j = 0; j < 4; ++j)
         rv.v.at(p - 21).at(i).at(j) = rd.dct_coeff.at(p).at(i << 2 | j);

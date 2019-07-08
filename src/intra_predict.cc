@@ -101,7 +101,8 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
     if ((idx & 3) == 0) {
       if (c == 0) return B_DC_PRED;
       ensure(context.at(r << 2 | (idx >> 2)).at((c - 1) << 2 | 3).is_intra_mb,
-             "[Read the spec] LeftSubBlockMode::Really?");
+             "[Read the spec] BPredLuma::LeftSubBlockMode: The left subblock "
+             "is not intra-coded.");
       return context.at(r << 2 | (idx >> 2)).at((c - 1) << 2 | 3).mode;
     }
     return context.at(r << 2 | (idx >> 2)).at(c << 2 | ((idx & 3) - 1)).mode;
@@ -111,7 +112,8 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
     if (idx < 4) {
       if (r == 0) return B_DC_PRED;
       ensure(context.at((r - 1) << 2 | 3).at(c << 2 | (idx & 3)).is_intra_mb,
-             "[Read the spec] AboveSubBlockMode::Really?");
+             "[Read the spec] BPredLuma::AboveSubBlockMode: The above subblock "
+             "is not intra-coded.");
       return context.at((r - 1) << 2 | 3).at(c << 2 | (idx & 3)).mode;
     }
     return context.at(r << 2 | ((idx >> 2) - 1)).at(c << 2 | (idx & 3)).mode;
@@ -124,37 +126,46 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
       std::array<int16_t, 4> row_above{};
       std::array<int16_t, 4> row_right{};
 
-      if (i == 0)
-        row_above = r == 0 ? std::array<int16_t, 4>{127, 127, 127, 127}
-                           : mb.at(r - 1).at(c).at(3).at(j).GetRow(3);
-      else
+      if (i > 0) {
         row_above = mb.at(r).at(c).at(i - 1).at(j).GetRow(3);
+      } else {
+        if (r == 0)
+          std::fill(row_above.begin(), row_above.end(), 127);
+        else
+          row_above = mb.at(r - 1).at(c).at(3).at(j).GetRow(3);
+      }
 
       if (j == 3) {
         if (r == 0) {
-          row_right = std::array<int16_t, 4>{127, 127, 127, 127};
+          std::fill(row_right.begin(), row_right.end(), 127);
         } else if (c + 1 == mb.at(r).size()) {
           int16_t x = mb.at(r - 1).at(c).at(3).at(3).at(3).at(3);
-          row_right = std::array<int16_t, 4>{x, x, x, x};
+          std::fill(row_right.begin(), row_right.end(), x);
         } else {
           row_right = mb.at(r - 1).at(c + 1).at(3).at(0).GetRow(3);
         }
       } else {
-        if (i == 0)
-          row_right = r == 0 ? std::array<int16_t, 4>{127, 127, 127, 127}
-                             : mb.at(r - 1).at(c).at(3).at(j + 1).GetRow(3);
-        else
+        if (i > 0) {
           row_right = mb.at(r).at(c).at(i - 1).at(j + 1).GetRow(3);
+        } else {
+          if (r == 0)
+            std::fill(row_right.begin(), row_right.end(), 127);
+          else
+            row_right = mb.at(r - 1).at(c).at(3).at(j + 1).GetRow(3);
+        }
       }
 
       std::copy(row_above.begin(), row_above.end(), above.begin());
       std::copy(row_right.begin(), row_right.end(), above.begin() + 4);
 
-      if (j == 0)
-        left = c == 0 ? std::array<int16_t, 4>{129, 129, 129, 129}
-                      : left = mb.at(r).at(c - 1).at(i).at(3).GetCol(3);
-      else
+      if (j > 0) {
         left = mb.at(r).at(c).at(i).at(j - 1).GetCol(3);
+      } else {
+        if (c == 0)
+          std::fill(left.begin(), left.end(), 129);
+        else
+          left = mb.at(r).at(c - 1).at(i).at(3).GetCol(3);
+      }
 
       int16_t p = 0;
       if (i > 0 && j > 0)
@@ -175,6 +186,7 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
           is_key_frame ? ps.ReadSubBlockBModeKF(AboveSubBlockMode(i << 2 | j),
                                                 LeftSubBlockMode(i << 2 | j))
                        : ps.ReadSubBlockBModeNonKF();
+
       context.at(r << 2 | i).at(c << 2 | j) = IntraContext(true, mode);
       BPredSubBlock(above, left, p, mode, mb.at(r).at(c).at(i).at(j));
       ApplySBResidual(rv.y.at(i << 2 | j), mb.at(r).at(c).at(i).at(j));

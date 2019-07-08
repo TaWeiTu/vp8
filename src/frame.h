@@ -11,8 +11,6 @@
 
 namespace vp8 {
 
-enum Component { LUMA = 4, CHROMA = 2 };
-
 struct MotionVector {
   MotionVector() : dr(0), dc(0) {}
   explicit MotionVector(int16_t dr_, int16_t dc_) : dr(dr_), dc(dc_) {}
@@ -69,7 +67,7 @@ class SubBlock {
 
   template <class Iterator>
   void FillCol(Iterator iter) {
-    for (size_t i = 0; i < 4; ++i) 
+    for (size_t i = 0; i < 4; ++i)
       std::fill(pixels_.at(i).begin(), pixels_.at(i).end(), *iter++);
   }
 
@@ -212,13 +210,24 @@ struct Frame {
   Frame() : vsize(0), hsize(0), vblock(0), hblock(0) {}
   explicit Frame(size_t h, size_t w)
       : vsize(h), hsize(w), vblock((h + 15) >> 4), hblock((w + 15) >> 4) {
-    Y = Plane<LUMA>(vblock, hblock);
-    U = Plane<CHROMA>(vblock, hblock);
-    V = Plane<CHROMA>(vblock, hblock);
+    Y = Plane<4>(vblock, hblock);
+    U = Plane<2>(vblock, hblock);
+    V = Plane<2>(vblock, hblock);
   }
+
+  void resize(size_t h, size_t w) {
+    vsize = h;
+    hsize = w;
+    vblock = (h + 15) >> 4;
+    hblock = (w + 15) >> 4;
+    Y = Plane<4>(vblock, hblock);
+    U = Plane<2>(vblock, hblock);
+    V = Plane<2>(vblock, hblock);
+  }
+
   size_t vsize, hsize, vblock, hblock;
-  Plane<LUMA> Y;
-  Plane<CHROMA> U, V;
+  Plane<4> Y;
+  Plane<2> U, V;
 };
 
 }  // namespace vp8

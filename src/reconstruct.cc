@@ -42,6 +42,33 @@ void UpdateNonzero(const ResidualValue &rv, bool has_y2, size_t r, size_t c,
   }
 }
 
+void UpdateDequantFactor(const QuantIndices &quant) {
+  static bool first_entry = true;
+  static QuantIndices config{};
+
+  if (first_entry) {
+    first_entry = false;
+    BuildQuantFactorsY2(quant, y2dqf);
+    BuildQuantFactorsY(quant, ydqf);
+    BuildQuantFactorsUV(quant, uvdqf);
+    config = quant;
+    return;
+  }
+
+  if (quant.y2_dc_delta_q != config.y2_dc_delta_q ||
+      quant.y2_ac_delta_q != config.y2_ac_delta_q)
+    BuildQuantFactorsY2(quant, y2dqf);
+
+  if (quant.y_dc_delta_q != config.y_dc_delta_q)
+    BuildQuantFactorsY(quant, ydqf);
+
+  if (quant.uv_dc_delta_q != config.uv_dc_delta_q ||
+      quant.uv_ac_delta_q != config.uv_ac_delta_q)
+    BuildQuantFactorsUV(quant, uvdqf);
+
+  config = quant;
+}
+
 void Predict(const FrameHeader &header, const FrameTag &tag,
              const std::array<Frame, 4> &refs,
              const std::array<bool, 4> &ref_frame_bias,
@@ -59,6 +86,8 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
   std::vector<std::vector<uint8_t>> v_nonzero(
       frame.vblock << 1, std::vector<uint8_t>(frame.hblock << 1, 0));
 
+  UpdateDequantFactor(header.quant_indices);
+
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
       MacroBlockPreHeader pre = ps.ReadMacroBlockPreHeader();
@@ -67,7 +96,7 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
         qp = header.segment_feature_mode == SEGMENT_MODE_ABSOLUTE
                  ? header.quantizer_segment.at(pre.segment_id)
                  : header.quantizer_segment.at(pre.segment_id) + qp;
-      qp = std::clamp(qp, int16_t(0), int16_t(127));
+      size_t dq = size_t(std::clamp(qp, int16_t(0), int16_t(127)));
 
       uint8_t y2_nonzero = y2_row.at(r) + y2_col.at(c);
       std::array<uint8_t, 4> y1_above{}, y1_left{};
@@ -105,7 +134,8 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
 
       if (!pre.mb_skip_coeff && !rd.is_zero) skip_lf.at(r).at(c) = 0;
       lf.at(r).at(c) = rd.loop_filter_level;
-      ResidualValue rv = DequantizeResidualData(rd, qp, header.quant_indices);
+      ResidualValue rv =
+          DequantizeResidualData(rd, y2dqf.at(dq), ydqf.at(dq), uvdqf.at(dq));
       UpdateNonzero(rv, rd.has_y2, r, c, y2_row, y2_col, y1_nonzero, u_nonzero,
                     v_nonzero);
       InverseTransformResidual(rv, rd.has_y2);

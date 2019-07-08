@@ -1,6 +1,8 @@
 #ifndef RESIDUAL_H_
 #define RESIDUAL_H_
 
+#include <array>
+
 #include "dct.h"
 #include "quantizer.h"
 
@@ -13,11 +15,14 @@ struct ResidualValue {
   std::array<std::array<std::array<int16_t, 4>, 4>, 4> v;
 };
 
-ResidualValue DequantizeResidualData(ResidualData &rd, int16_t qp,
-                                     const QuantIndices &quant);
+ResidualValue DequantizeResidualData(ResidualData &rd, const QuantFactor &y2dqf,
+                                     const QuantFactor &ydqf,
+                                     const QuantFactor &uvdqf);
 
-ResidualData QuantizeResidualValue(const ResidualValue &rv, int16_t qp,
-                                   const QuantIndices &quant, bool has_y2);
+ResidualData QuantizeResidualValue(const ResidualValue &rv,
+                                   const QuantFactor &y2qf,
+                                   const QuantFactor &yqf,
+                                   const QuantFactor &uvqf, bool has_y2);
 
 void TransformResidual(ResidualValue &rv, bool has_y2);
 
