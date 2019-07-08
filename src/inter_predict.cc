@@ -120,8 +120,8 @@ void ConfigureChromaMVs(const MacroBlock<4> &luma, size_t vblock, size_t hblock,
       int16_t dr = (sr >= 0 ? (sr + 4) / 8 : (sr - 4) / 8);
       int16_t dc = (sc >= 0 ? (sc + 4) / 8 : (sc - 4) / 8);
       if (trim) {
-        dr = dr & (~7);
-        dc = dc & (~7);
+        dr &= ~7;
+        dc &= ~7;
       }
       int16_t top = ((-int16_t(r) * 16) * 8);
       int16_t bottom = ((int16_t(vblock) - 1 - int16_t(r)) * 16) * 8;
@@ -258,6 +258,7 @@ std::array<std::array<int16_t, 4>, 9> HorizontalSixtap(
     const Plane<C> &refer, int32_t r, int32_t c,
     const std::array<int16_t, 6> &filter) {
   std::array<std::array<int16_t, 4>, 9> res;
+
   auto GetPixel = [&refer](int32_t row, int32_t col) -> int16_t {
     row = std::clamp(row, 0, int32_t(refer.vsize()) - 1);
     col = std::clamp(col, 0, int32_t(refer.hsize()) - 1);

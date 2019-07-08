@@ -20,6 +20,7 @@ struct MotionVector {
   bool operator==(const MotionVector& rhs) const {
     return dr == rhs.dr && dc == rhs.dc;
   }
+
   bool operator!=(const MotionVector& rhs) const {
     return dr != rhs.dr || dc != rhs.dc;
   }
@@ -43,8 +44,8 @@ class SubBlock {
   std::array<int16_t, 4> at(size_t i) const { return pixels_.at(i); }
 
   void FillWith(int16_t p) {
-    std::fill(pixels_.begin(), pixels_.end(),
-              std::array<int16_t, 4>{p, p, p, p});
+    for (size_t i = 0; i < 4; ++i)
+      std::fill(pixels_.at(i).begin(), pixels_.at(i).end(), p);
   }
 
   void FillRow(const std::array<int16_t, 4>& row) {
@@ -52,9 +53,24 @@ class SubBlock {
       std::copy(row.begin(), row.end(), pixels_.at(i).begin());
   }
 
+  template <class Iterator>
+  void FillRow(Iterator iter) {
+    for (size_t i = 0; i < 4; ++i) {
+      auto it1 = pixels_.at(i).begin();
+      auto it2 = iter;
+      for (size_t j = 0; j < 4; ++j) *it1++ = *it2++;
+    }
+  }
+
   void FillCol(const std::array<int16_t, 4>& col) {
     for (size_t i = 0; i < 4; ++i)
       std::fill(pixels_.at(i).begin(), pixels_.at(i).end(), col.at(i));
+  }
+
+  template <class Iterator>
+  void FillCol(Iterator iter) {
+    for (size_t i = 0; i < 4; ++i) 
+      std::fill(pixels_.at(i).begin(), pixels_.at(i).end(), *iter++);
   }
 
   std::array<int16_t, 4> GetRow(size_t i) const { return pixels_.at(i); }
@@ -93,18 +109,14 @@ class MacroBlock {
   void FillRow(const std::array<int16_t, C * 4>& row) {
     for (size_t i = 0; i < C; ++i) {
       for (size_t j = 0; j < C; ++j)
-        subs_.at(i).at(j).FillRow(
-            std::array<int16_t, 4>{row.at(j << 2), row.at(j << 2 | 1),
-                                   row.at(j << 2 | 2), row.at(j << 2 | 3)});
+        subs_.at(i).at(j).FillRow(row.begin() + (j << 2));
     }
   }
 
   void FillCol(const std::array<int16_t, C * 4>& col) {
     for (size_t i = 0; i < C; ++i) {
       for (size_t j = 0; j < C; ++j)
-        subs_.at(i).at(j).FillCol(
-            std::array<int16_t, 4>{col.at(i << 2), col.at(i << 2 | 1),
-                                   col.at(i << 2 | 2), col.at(i << 2 | 3)});
+        subs_.at(i).at(j).FillCol(col.begin() + (i << 2));
     }
   }
 
