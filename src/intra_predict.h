@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <functional>
+#include <memory>
 #include <vector>
 
 #include "bitstream_parser.h"
@@ -49,7 +50,7 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
                   const ResidualValue &rv, const IntraMBHeader &mh,
                   std::vector<std::vector<IntraContext>> &context,
                   std::vector<std::vector<uint8_t>> &skip_lf,
-                  BitstreamParser &ps, Frame &frame);
+                  BitstreamParser &ps, const std::shared_ptr<Frame> &frame);
 
 }  // namespace vp8
 

@@ -1,6 +1,7 @@
 #ifndef FILTER_H_
 #define FILTER_H_
 
+#include <memory>
 #include <vector>
 
 #include "frame.h"
@@ -72,7 +73,7 @@ void PlaneFilterSimple(const FrameHeader &header, size_t hblock, size_t vblock,
 void FrameFilter(const FrameHeader &header, bool is_key_frame,
                  const std::vector<std::vector<uint8_t>> &lf,
                  const std::vector<std::vector<uint8_t>> &skip_lf,
-                 Frame &frame);
+                 std::shared_ptr<Frame> frame);
 
 }  // namespace vp8
 

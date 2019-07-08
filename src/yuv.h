@@ -2,6 +2,7 @@
 #define YUV_H_
 
 #include <fstream>
+#include <memory>
 #include <string>
 
 #include "frame.h"
@@ -18,7 +19,7 @@ class YUV {
   ~YUV();
   explicit YUV(const char *filename);
 
-  void WriteFrame(const Frame &frame);
+  void WriteFrame(const std::shared_ptr<Frame> &frame);
   Frame ReadFrame(size_t height, size_t width);
 
  private:

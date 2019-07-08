@@ -1,5 +1,6 @@
 #include <array>
 #include <cassert>
+#include <memory>
 #include <utility>
 
 #include "bitstream_const.h"
@@ -35,7 +36,7 @@ int main(int argc, const char **argv) {
   auto num_frames = read_bytes(4);
   read_bytes(4);  // Reserved bytes
 
-  std::array<vp8::Frame, 4> ref_frames{};
+  std::array<std::shared_ptr<vp8::Frame>, 4> ref_frames;
   std::array<bool, 4> ref_frame_bias{};
 
   vp8::ParserContext ctx{};
@@ -64,13 +65,13 @@ int main(int argc, const char **argv) {
       width = tag.width;
     }
 
-    vp8::Frame &frame = ref_frames.at(vp8::CURRENT_FRAME);
-    frame.resize(height, width);
+    std::shared_ptr<vp8::Frame> &frame = ref_frames.at(vp8::CURRENT_FRAME);
+    frame = std::make_shared<vp8::Frame>(height, width);
 
     vp8::InitSignBias(header, ref_frame_bias);
     vp8::Reconstruct(header, tag, ref_frames, ref_frame_bias, ps, frame);
-    if (tag.show_frame) yuv.WriteFrame(frame);
     vp8::RefreshRefFrames(header, ref_frames);
+    if (tag.show_frame) yuv.WriteFrame(frame);
   }
   return 0;
 }

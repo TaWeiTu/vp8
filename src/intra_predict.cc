@@ -362,51 +362,51 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
                   const ResidualValue &rv, const IntraMBHeader &mh,
                   std::vector<std::vector<IntraContext>> &context,
                   std::vector<std::vector<uint8_t>> &skip_lf,
-                  BitstreamParser &ps, Frame &frame) {
+                  BitstreamParser &ps, const std::shared_ptr<Frame> &frame) {
   if (mh.intra_y_mode == B_PRED) skip_lf.at(r).at(c) = 0;
   switch (mh.intra_y_mode) {
     case V_PRED:
-      VPredLuma(r, c, frame.Y);
+      VPredLuma(r, c, frame->Y);
       for (size_t i = 0; i < 4; ++i) {
         for (size_t j = 0; j < 4; ++j)
           context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_VE_PRED);
       }
-      ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
+      ApplyMBResidual(rv.y, frame->Y.at(r).at(c));
       break;
 
     case H_PRED:
-      HPredLuma(r, c, frame.Y);
+      HPredLuma(r, c, frame->Y);
       for (size_t i = 0; i < 4; ++i) {
         for (size_t j = 0; j < 4; ++j)
           context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_HE_PRED);
       }
-      ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
+      ApplyMBResidual(rv.y, frame->Y.at(r).at(c));
       break;
 
     case DC_PRED:
-      DCPredLuma(r, c, frame.Y);
+      DCPredLuma(r, c, frame->Y);
       for (size_t i = 0; i < 4; ++i) {
         for (size_t j = 0; j < 4; ++j)
           context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_DC_PRED);
       }
-      ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
+      ApplyMBResidual(rv.y, frame->Y.at(r).at(c));
       break;
 
     case TM_PRED:
-      TMPredLuma(r, c, frame.Y);
+      TMPredLuma(r, c, frame->Y);
       for (size_t i = 0; i < 4; ++i) {
         for (size_t j = 0; j < 4; ++j)
           context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_TM_PRED);
       }
-      ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
+      ApplyMBResidual(rv.y, frame->Y.at(r).at(c));
       break;
 
     case B_PRED:
-      BPredLuma(r, c, tag.key_frame, rv, context, ps, frame.Y);
+      BPredLuma(r, c, tag.key_frame, rv, context, ps, frame->Y);
       break;
 
     default:
@@ -417,31 +417,31 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
       tag.key_frame ? ps.ReadIntraMB_UVModeKF() : ps.ReadIntraMB_UVModeNonKF();
   switch (intra_uv_mode) {
     case V_PRED:
-      VPredChroma(r, c, frame.U);
-      VPredChroma(r, c, frame.V);
+      VPredChroma(r, c, frame->U);
+      VPredChroma(r, c, frame->V);
       break;
 
     case H_PRED:
-      HPredChroma(r, c, frame.U);
-      HPredChroma(r, c, frame.V);
+      HPredChroma(r, c, frame->U);
+      HPredChroma(r, c, frame->V);
       break;
 
     case DC_PRED:
-      DCPredChroma(r, c, frame.U);
-      DCPredChroma(r, c, frame.V);
+      DCPredChroma(r, c, frame->U);
+      DCPredChroma(r, c, frame->V);
       break;
 
     case TM_PRED:
-      TMPredChroma(r, c, frame.U);
-      TMPredChroma(r, c, frame.V);
+      TMPredChroma(r, c, frame->U);
+      TMPredChroma(r, c, frame->V);
       break;
 
     default:
       ensure(false, "[Error] IntraPredict: Unknown UV mode.");
       break;
   }
-  ApplyMBResidual(rv.u, frame.U.at(r).at(c));
-  ApplyMBResidual(rv.v, frame.V.at(r).at(c));
+  ApplyMBResidual(rv.u, frame->U.at(r).at(c));
+  ApplyMBResidual(rv.v, frame->V.at(r).at(c));
 }
 
 }  // namespace vp8

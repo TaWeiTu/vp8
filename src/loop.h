@@ -1,6 +1,8 @@
 #ifndef LOOP_H_
 #define LOOP_H_
 
+#include <memory>
+
 #include "bitstream_const.h"
 #include "bitstream_parser.h"
 #include "frame.h"
@@ -15,7 +17,7 @@ void InitSignBias(const FrameHeader &header,
 }
 
 void RefreshRefFrames(const FrameHeader &header,
-                      std::array<Frame, 4> &ref_frames) {
+                      std::array<std::shared_ptr<Frame>, 4> &ref_frames) {
   bool golden_to_altref =
       !header.refresh_alternate_frame && header.copy_buffer_to_alternate == 2;
   bool altref_to_golden =

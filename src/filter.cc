@@ -324,18 +324,18 @@ using namespace internal;
 void FrameFilter(const FrameHeader &header, bool is_key_frame,
                  const std::vector<std::vector<uint8_t>> &lf,
                  const std::vector<std::vector<uint8_t>> &skip_lf,
-                 Frame &frame) {
-  size_t hblock = frame.hblock, vblock = frame.vblock;
+                 std::shared_ptr<Frame> frame) {
+  size_t hblock = frame->hblock, vblock = frame->vblock;
   if (!header.filter_type) {
     PlaneFilterNormal(header, hblock, vblock, is_key_frame, lf, skip_lf,
-                      frame.Y);
+                      frame->Y);
     PlaneFilterNormal(header, hblock, vblock, is_key_frame, lf, skip_lf,
-                      frame.U);
+                      frame->U);
     PlaneFilterNormal(header, hblock, vblock, is_key_frame, lf, skip_lf,
-                      frame.V);
+                      frame->V);
   } else {
     PlaneFilterSimple(header, hblock, vblock, is_key_frame, lf, skip_lf,
-                      frame.Y);
+                      frame->Y);
   }
 }
 

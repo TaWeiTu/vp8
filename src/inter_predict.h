@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <functional>
+#include <memory>
 #include <vector>
 
 #include "bitstream_parser.h"
@@ -108,7 +109,7 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
                   const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
                   std::vector<std::vector<InterContext>> &context,
                   std::vector<std::vector<uint8_t>> &skip_lf,
-                  BitstreamParser &ps, Frame &frame);
+                  BitstreamParser &ps, const std::shared_ptr<Frame> &frame);
 
 // Horizontal pixel interpolation, this should return a 9x4 temporary matrix for
 // the vertical pixel interpolation later.
@@ -136,11 +137,11 @@ void InterpBlock(const Plane<C> &refer,
 }  // namespace internal
 
 void InterPredict(const FrameTag &tag, size_t r, size_t c,
-                  const std::array<Frame, 4> &refs,
+                  const std::array<std::shared_ptr<Frame>, 4> &refs,
                   const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
                   std::vector<std::vector<InterContext>> &context,
                   std::vector<std::vector<uint8_t>> &skip_lf,
-                  BitstreamParser &ps, Frame &frame);
+                  BitstreamParser &ps, const std::shared_ptr<Frame> &frame);
 
 }  // namespace vp8
 
