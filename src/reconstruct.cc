@@ -50,14 +50,15 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
              std::vector<std::vector<uint8_t>> &lf,
              std::vector<std::vector<uint8_t>> &skip_lf, BitstreamParser &ps,
              Frame &frame) {
-  std::vector<uint8_t> y2_row(frame.vblock, false);
-  std::vector<uint8_t> y2_col(frame.hblock, false);
+  std::vector<uint8_t> y2_row(frame.vblock, 0);
+  std::vector<uint8_t> y2_col(frame.hblock, 0);
   std::vector<std::vector<uint8_t>> y1_nonzero(
       frame.vblock << 2, std::vector<uint8_t>(frame.hblock << 2, 0));
   std::vector<std::vector<uint8_t>> u_nonzero(
       frame.vblock << 1, std::vector<uint8_t>(frame.hblock << 1, 0));
   std::vector<std::vector<uint8_t>> v_nonzero(
       frame.vblock << 1, std::vector<uint8_t>(frame.hblock << 1, 0));
+
   for (size_t r = 0; r < frame.vblock; ++r) {
     for (size_t c = 0; c < frame.hblock; ++c) {
       MacroBlockPreHeader pre = ps.ReadMacroBlockPreHeader();
@@ -89,36 +90,31 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
         }
       }
 
+      IntraMBHeader mh;
+
       if (pre.is_inter_mb) {
         InterPredict(tag, r, c, refs, ref_frame_bias, pre.ref_frame, interc,
                      skip_lf, ps, frame);
+      } else {
+        mh = tag.key_frame ? ps.ReadIntraMBHeaderKF()
+                           : ps.ReadIntraMBHeaderNonKF();
+      }
 
-        ResidualData rd = ps.ReadResidualData(ResidualParam(
-            y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
+      ResidualData rd = ps.ReadResidualData(ResidualParam(
+          y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
 
-        if (!pre.mb_skip_coeff && !rd.is_zero) skip_lf.at(r).at(c) = 0;
+      if (!pre.mb_skip_coeff && !rd.is_zero) skip_lf.at(r).at(c) = 0;
+      lf.at(r).at(c) = rd.loop_filter_level;
+      ResidualValue rv = DequantizeResidualData(rd, qp, header.quant_indices);
+      UpdateNonzero(rv, rd.has_y2, r, c, y2_row, y2_col, y1_nonzero, u_nonzero,
+                    v_nonzero);
+      InverseTransformResidual(rv, rd.has_y2);
 
-        lf.at(r).at(c) = rd.loop_filter_level;
-        ResidualValue rv = DequantizeResidualData(rd, qp, header.quant_indices);
-        UpdateNonzero(rv, rd.has_y2, r, c, y2_row, y2_col, y1_nonzero,
-                      u_nonzero, v_nonzero);
-        InverseTransformResidual(rv, rd.has_y2);
+      if (pre.is_inter_mb) {
         ApplyMBResidual(rv.y, frame.Y.at(r).at(c));
         ApplyMBResidual(rv.u, frame.U.at(r).at(c));
         ApplyMBResidual(rv.v, frame.V.at(r).at(c));
       } else {
-        IntraMBHeader mh = tag.key_frame ? ps.ReadIntraMBHeaderKF()
-                                         : ps.ReadIntraMBHeaderNonKF();
-
-        ResidualData rd = ps.ReadResidualData(ResidualParam(
-            y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
-
-        if (!pre.mb_skip_coeff && !rd.is_zero) skip_lf.at(r).at(c) = 0;
-        lf.at(r).at(c) = rd.loop_filter_level;
-        ResidualValue rv = DequantizeResidualData(rd, qp, header.quant_indices);
-        UpdateNonzero(rv, rd.has_y2, r, c, y2_row, y2_col, y1_nonzero,
-                      u_nonzero, v_nonzero);
-        InverseTransformResidual(rv, rd.has_y2);
         IntraPredict(tag, r, c, rv, mh, intrac, skip_lf, ps, frame);
       }
     }
@@ -145,7 +141,6 @@ void Reconstruct(const FrameHeader &header, const FrameTag &tag,
   Predict(header, tag, refs, ref_frame_bias, interc, intrac, lf, skip_lf, ps,
           frame);
   FrameFilter(header, tag.key_frame, lf, skip_lf, frame);
-  // exit(0);
 }
 
 }  // namespace vp8

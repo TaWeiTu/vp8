@@ -32,7 +32,8 @@ class IteratorArray {
   IterT it_begin_, it_end_;
 
  public:
-  IteratorArray(IterT _begin, IterT _end) : it_begin_(_begin), it_end_(_end) {}
+  explicit IteratorArray(IterT _begin, IterT _end)
+      : it_begin_(_begin), it_end_(_end) {}
   ObjT at(const size_t idx) const {
     if (ptrdiff_t(idx) >= std::distance(it_begin_, it_end_)) {
       throw std::out_of_range("Out of range");
@@ -49,7 +50,7 @@ class SpanReader {
   const T *begin_, *end_, *cursor_;
 
  public:
-  SpanReader(const T *begin, const T *end)
+  explicit SpanReader(const T *begin, const T *end)
       : begin_(begin), end_(end), cursor_(begin) {
     if (begin > end) {
       throw std::out_of_range("Out of range");

@@ -69,7 +69,6 @@ int main(int argc, const char **argv) {
   auto num_frames = read_bytes(4);
   read_bytes(4);  // Reserved bytes
 
-  // Avoid unused function.
   std::array<vp8::Frame, 4> ref_frames{};
   std::array<bool, 4> ref_frame_bias{};
 
