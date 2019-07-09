@@ -101,23 +101,23 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
       size_t dq = size_t(std::clamp(qp, int16_t(0), int16_t(127)));
 
       uint8_t y2_nonzero = y2_row.at(r) + y2_col.at(c);
-      std::array<uint8_t, 4> y1_above{}, y1_left{};
-      std::array<uint8_t, 2> u_above{}, u_left{}, v_above{}, v_left{};
+      uint8_t y1_above = 0, y1_left = 0;
+      uint8_t u_above = 0, u_left = 0, v_above = 0, v_left = 0;
 
       for (size_t i = 0; i < 4; ++i) {
         if (r > 0)
-          y1_above.at(i) = y1_nonzero.at((r - 1) << 2 | 3).at(c << 2 | i);
+          y1_above |= y1_nonzero.at((r - 1) << 2 | 3).at(c << 2 | i) << i;
         if (c > 0)
-          y1_left.at(i) = y1_nonzero.at(r << 2 | i).at((c - 1) << 2 | 3);
+          y1_left |= y1_nonzero.at(r << 2 | i).at((c - 1) << 2 | 3) << i;
       }
       for (size_t i = 0; i < 2; ++i) {
         if (r > 0) {
-          u_above.at(i) = u_nonzero.at((r - 1) << 1 | 1).at(c << 1 | i);
-          v_above.at(i) = v_nonzero.at((r - 1) << 1 | 1).at(c << 1 | i);
+          u_above |= u_nonzero.at((r - 1) << 1 | 1).at(c << 1 | i) << i;
+          v_above |= v_nonzero.at((r - 1) << 1 | 1).at(c << 1 | i) << i;
         }
         if (c > 0) {
-          u_left.at(i) = u_nonzero.at(r << 1 | i).at((c - 1) << 1 | 1);
-          v_left.at(i) = v_nonzero.at(r << 1 | i).at((c - 1) << 1 | 1);
+          u_left |= u_nonzero.at(r << 1 | i).at((c - 1) << 1 | 1) << i;
+          v_left |= v_nonzero.at(r << 1 | i).at((c - 1) << 1 | 1) << i;
         }
       }
 

@@ -488,41 +488,51 @@ ResidualData BitstreamParser::ReadResidualData(
   result.has_y2 = first_coeff;
   residual_macroblock_idx_++;
   if (!((macroblock_metadata >> 1) & 0x1)) {
-    std::array<bool, 25> non_zero{};
+    // std::array<bool, 25> non_zero{};
+    uint32_t non_zero = 0;
     if (macroblock_metadata & 0x1) {
-      tie(result.dct_coeff.at(0), non_zero.at(0)) =
+      bool p = false;
+      tie(result.dct_coeff.at(0), p) =
           ReadResidualBlock(1, residual_ctx.y2_nonzero);
+      if (p) non_zero |= 1;
     }
     unsigned block_type_y = first_coeff ? 0 : 3;
     for (unsigned i = 1; i <= 16; i++) {
-      unsigned above_nonzero =
-          (i <= 4) ? residual_ctx.y1_above.at(i - 1) : non_zero.at(i - 4);
-      unsigned left_nonzero = ((i - 1) & 3)
-                                  ? non_zero.at(i - 1)
-                                  : residual_ctx.y1_left.at((i - 1) >> 2);
-      std::tie(result.dct_coeff.at(i), non_zero.at(i)) =
+      unsigned above_nonzero = (i <= 4) ? (residual_ctx.y1_above >> (i - 1)) & 1
+                                        : (non_zero >> (i - 4) & 1);
+      unsigned left_nonzero =
+          ((i - 1) & 3) ? (non_zero >> (i - 1)) & 1
+                        : (residual_ctx.y1_left >> ((i - 1) >> 2)) & 1;
+      bool p = false;
+      std::tie(result.dct_coeff.at(i), p) =
           ReadResidualBlock(block_type_y, above_nonzero + left_nonzero);
+      if (p) non_zero |= (1 << i);
     }
     for (unsigned i = 17; i <= 20; i++) {
-      unsigned above_nonzero =
-          (i <= 18) ? residual_ctx.u_above.at(i - 17) : non_zero.at(i - 2);
-      unsigned left_nonzero = ((i - 17) & 1)
-                                  ? non_zero.at(i - 1)
-                                  : residual_ctx.u_left.at((i - 17) >> 1);
-      std::tie(result.dct_coeff.at(i), non_zero.at(i)) =
+      unsigned above_nonzero = (i <= 18)
+                                   ? (residual_ctx.u_above >> (i - 17)) & 1
+                                   : (non_zero >> (i - 2)) & 1;
+      unsigned left_nonzero =
+          ((i - 17) & 1) ? (non_zero >> (i - 1)) & 1
+                         : (residual_ctx.u_left >> ((i - 17) >> 1)) & 1;
+      bool p = false;
+      std::tie(result.dct_coeff.at(i), p) =
           ReadResidualBlock(2, above_nonzero + left_nonzero);
+      if (p) non_zero |= (1 << i);
     }
     for (unsigned i = 21; i <= 24; i++) {
-      unsigned above_nonzero =
-          (i <= 22) ? residual_ctx.v_above.at(i - 21) : non_zero.at(i - 2);
-      unsigned left_nonzero = ((i - 21) & 1)
-                                  ? non_zero.at(i - 1)
-                                  : residual_ctx.v_left.at((i - 21) >> 1);
-      std::tie(result.dct_coeff.at(i), non_zero.at(i)) =
+      unsigned above_nonzero = (i <= 22)
+                                   ? (residual_ctx.v_above >> (i - 21)) & 1
+                                   : (non_zero >> (i - 2)) & 1;
+      unsigned left_nonzero =
+          ((i - 21) & 1) ? (non_zero >> (i - 1)) & 1
+                         : (residual_ctx.v_left >> ((i - 21) >> 1)) & 1;
+      bool p = false;
+      std::tie(result.dct_coeff.at(i), p) =
           ReadResidualBlock(2, above_nonzero + left_nonzero);
+      if (p) non_zero |= (1 << i);
     }
-    result.is_zero = std::none_of(non_zero.begin(), non_zero.end(),
-                                  [](bool b) { return b; });
+    result.is_zero = non_zero == 0;
   } else {
     result.is_zero = true;
   }
