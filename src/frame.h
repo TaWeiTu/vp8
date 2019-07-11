@@ -136,6 +136,7 @@ class MacroBlock {
     return res;
   }
 
+  __attribute__((always_inline))
   int16_t GetPixel(size_t r, size_t c) const {
     return subs_.at(r >> 2).at(c >> 2).at(r & 3).at(c & 3);
   }

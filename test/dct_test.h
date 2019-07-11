@@ -33,6 +33,17 @@ void TestDct() {
         assert(abs(clone[i][j] - input[i][j]) <= kDiff);
     }
   }
+  for (size_t t = 0; t < kTest; ++t) {
+    std::array<std::array<int16_t, 4>, 4> input{};
+    input[0][0] = kDis(kRng);
+    std::array<std::array<int16_t, 4>, 4> clone = input;
+    vp8::IDCT(input);
+    for (size_t i = 0; i < 4; ++i) {
+      for (size_t j = 0; j < 4; ++j) {
+        assert(input[i][j] == (clone[0][0] + 4) >> 3);
+      }
+    }
+  }
   std::cout << "[Test] DCT test completed." << std::endl;
 }
 

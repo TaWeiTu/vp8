@@ -113,6 +113,7 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
       row_mode.at(i) = context.at(r << 2 | i).at((c - 1) << 2 | 3).mode;
   }
 
+  uint32_t zero = rv.zero;
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 4; ++j) {
       std::array<int16_t, 8> above{};
@@ -183,7 +184,9 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
       context.at(r << 2 | i).at(c << 2 | j) = IntraContext(true, mode);
       col_mode.at(j) = row_mode.at(i) = mode;
       BPredSubBlock(above, left, p, mode, mb.at(r).at(c).at(i).at(j));
-      ApplySBResidual(rv.y.at(i << 2 | j), mb.at(r).at(c).at(i).at(j));
+      ApplySBResidual(rv.y.at(i << 2 | j), zero & 1,
+                      mb.at(r).at(c).at(i).at(j));
+      zero >>= 1;
     }
   }
 }
@@ -366,7 +369,7 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
           context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_VE_PRED);
       }
-      ApplyMBResidual(rv.y, frame->Y.at(r).at(c));
+      ApplyMBResidual(rv.y, rv.zero, frame->Y.at(r).at(c));
       break;
 
     case H_PRED:
@@ -376,7 +379,7 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
           context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_HE_PRED);
       }
-      ApplyMBResidual(rv.y, frame->Y.at(r).at(c));
+      ApplyMBResidual(rv.y, rv.zero, frame->Y.at(r).at(c));
       break;
 
     case DC_PRED:
@@ -386,7 +389,7 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
           context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_DC_PRED);
       }
-      ApplyMBResidual(rv.y, frame->Y.at(r).at(c));
+      ApplyMBResidual(rv.y, rv.zero, frame->Y.at(r).at(c));
       break;
 
     case TM_PRED:
@@ -396,7 +399,7 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
           context.at(r << 2 | i).at(c << 2 | j) =
               IntraContext(false, B_TM_PRED);
       }
-      ApplyMBResidual(rv.y, frame->Y.at(r).at(c));
+      ApplyMBResidual(rv.y, rv.zero, frame->Y.at(r).at(c));
       break;
 
     case B_PRED:
@@ -434,8 +437,8 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
       ensure(false, "[Error] IntraPredict: Unknown UV mode.");
       break;
   }
-  ApplyMBResidual(rv.u, frame->U.at(r).at(c));
-  ApplyMBResidual(rv.v, frame->V.at(r).at(c));
+  ApplyMBResidual(rv.u, rv.zero >> 16, frame->U.at(r).at(c));
+  ApplyMBResidual(rv.v, rv.zero >> 20, frame->V.at(r).at(c));
 }
 
 }  // namespace vp8

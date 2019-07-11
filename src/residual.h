@@ -13,6 +13,7 @@ struct ResidualValue {
   std::array<std::array<std::array<int16_t, 4>, 4>, 16> y;
   std::array<std::array<std::array<int16_t, 4>, 4>, 4> u;
   std::array<std::array<std::array<int16_t, 4>, 4>, 4> v;
+  uint32_t zero;
 };
 
 ResidualValue DequantizeResidualData(ResidualData &rd, const QuantFactor &y2dqf,
@@ -36,11 +37,12 @@ void InverseTransformResidual(ResidualValue &rv, bool has_y2);
 template <size_t C>
 void ApplyMBResidual(
     const std::array<std::array<std::array<int16_t, 4>, 4>, C * C> &residual,
+    uint32_t zero, 
     MacroBlock<C> &mb);
 
 // Apply residuals to the subblock and clamp each pixel to range [0, 255].
 void ApplySBResidual(const std::array<std::array<int16_t, 4>, 4> &residual,
-                     SubBlock &sub);
+                     uint8_t zero, SubBlock &sub);
 
 template <size_t C>
 std::array<std::array<std::array<int16_t, 4>, 4>, C * C> ComputeMBResidual(

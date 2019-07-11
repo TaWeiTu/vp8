@@ -143,9 +143,9 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
       InverseTransformResidual(rv, rd.has_y2);
 
       if (pre.is_inter_mb) {
-        ApplyMBResidual(rv.y, frame->Y.at(r).at(c));
-        ApplyMBResidual(rv.u, frame->U.at(r).at(c));
-        ApplyMBResidual(rv.v, frame->V.at(r).at(c));
+        ApplyMBResidual(rv.y, rv.zero, frame->Y.at(r).at(c));
+        ApplyMBResidual(rv.u, rv.zero >> 16, frame->U.at(r).at(c));
+        ApplyMBResidual(rv.v, rv.zero >> 20, frame->V.at(r).at(c));
       } else {
         IntraPredict(tag, r, c, rv, mh, intrac, skip_lf, ps, frame);
       }
