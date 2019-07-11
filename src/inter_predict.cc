@@ -330,10 +330,9 @@ void InterpBlock(const Plane<C> &refer,
           col = std::clamp(col, 0, int32_t(refer.hsize()) - 1);
           return refer.GetPixel(size_t(row), size_t(col));
         };
-        for (int32_t x = 0; x < 4; ++x) {
-          for (int32_t y = 0; y < 4; ++y)
-            mb.at(i).at(j).at(size_t(x)).at(size_t(y)) =
-                GetPixel(tr + x, tc + y);
+        for (uint8_t x = 0; x < 4; ++x) {
+          for (uint8_t y = 0; y < 4; ++y)
+            mb.at(i).at(j).at(x).at(y) = GetPixel(tr + x, tc + y);
         }
       }
     }
@@ -371,7 +370,7 @@ void InterPredict(const FrameTag &tag, size_t r, size_t c,
                   BitstreamParser &ps, const std::shared_ptr<Frame> &frame) {
   ConfigureMVs(r, c, tag.version == 3, ref_frame_bias, ref_frame, context,
                skip_lf, ps, frame);
-  std::array<std::array<int16_t, 6>, 8> subpixel_filters =
+  const std::array<std::array<int16_t, 6>, 8> &subpixel_filters =
       tag.version == 0 ? kBicubicFilter : kBilinearFilter;
 
   InterpBlock(refs.at(ref_frame)->Y, subpixel_filters, r, c,

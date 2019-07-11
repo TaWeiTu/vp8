@@ -97,27 +97,21 @@ void TMPredLuma(size_t r, size_t c, Plane<4> &mb) {
 void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
                std::vector<std::vector<IntraContext>> &context,
                BitstreamParser &ps, Plane<4> &mb) {
-  auto LeftSubBlockMode = [&context, r, c](size_t idx) {
-    if ((idx & 3) == 0) {
-      if (c == 0) return B_DC_PRED;
-      ensure(context.at(r << 2 | (idx >> 2)).at((c - 1) << 2 | 3).is_intra_mb,
-             "[Read the spec] BPredLuma::LeftSubBlockMode: The left subblock "
-             "is not intra-coded.");
-      return context.at(r << 2 | (idx >> 2)).at((c - 1) << 2 | 3).mode;
-    }
-    return context.at(r << 2 | (idx >> 2)).at(c << 2 | ((idx & 3) - 1)).mode;
-  };
+  std::array<SubBlockMode, 4> row_mode;
+  std::array<SubBlockMode, 4> col_mode;
 
-  auto AboveSubBlockMode = [&context, r, c](size_t idx) {
-    if (idx < 4) {
-      if (r == 0) return B_DC_PRED;
-      ensure(context.at((r - 1) << 2 | 3).at(c << 2 | (idx & 3)).is_intra_mb,
-             "[Read the spec] BPredLuma::AboveSubBlockMode: The above subblock "
-             "is not intra-coded.");
-      return context.at((r - 1) << 2 | 3).at(c << 2 | (idx & 3)).mode;
-    }
-    return context.at(r << 2 | ((idx >> 2) - 1)).at(c << 2 | (idx & 3)).mode;
-  };
+  if (r == 0) {
+    std::fill(col_mode.begin(), col_mode.end(), B_DC_PRED);
+  } else {
+    for (size_t i = 0; i < 4; ++i)
+      col_mode.at(i) = context.at((r - 1) << 2 | 3).at(c << 2 | i).mode;
+  }
+  if (c == 0) {
+    std::fill(row_mode.begin(), row_mode.end(), B_DC_PRED);
+  } else {
+    for (size_t i = 0; i < 4; ++i)
+      row_mode.at(i) = context.at(r << 2 | i).at((c - 1) << 2 | 3).mode;
+  }
 
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 4; ++j) {
@@ -183,11 +177,11 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
                                : mb.at(r - 1).at(c - 1).at(3).at(3).at(3).at(3);
 
       SubBlockMode mode =
-          is_key_frame ? ps.ReadSubBlockBModeKF(AboveSubBlockMode(i << 2 | j),
-                                                LeftSubBlockMode(i << 2 | j))
+          is_key_frame ? ps.ReadSubBlockBModeKF(col_mode.at(j), row_mode.at(i))
                        : ps.ReadSubBlockBModeNonKF();
 
       context.at(r << 2 | i).at(c << 2 | j) = IntraContext(true, mode);
+      col_mode.at(j) = row_mode.at(i) = mode;
       BPredSubBlock(above, left, p, mode, mb.at(r).at(c).at(i).at(j));
       ApplySBResidual(rv.y.at(i << 2 | j), mb.at(r).at(c).at(i).at(j));
     }

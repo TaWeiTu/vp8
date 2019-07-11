@@ -3,15 +3,24 @@
 namespace vp8 {
 
 template <>
-YUV<WRITE>::YUV(const char *filename) {
+YUV<WRITE>::YUV(const char *filename) : ptr_(0) {
   ofs_.open(filename, std::ios::binary);
   ensure(!ofs_.fail(), "[Error] YUV::YUV: Fail to open file.");
 }
 
 template <>
-YUV<READ>::YUV(const char *filename) {
+YUV<READ>::YUV(const char *filename) : ptr_(0) {
   ifs_.open(filename, std::ios::binary);
   ensure(!ifs_.fail(), "[Error] YUV::YUV: Fail to open file.");
+}
+
+template <>
+void YUV<WRITE>::WriteByte(uint8_t byte) {
+  buf_[ptr_++] = byte;
+  if (ptr_ == kYuvBufsize) {
+    ofs_.write(reinterpret_cast<char *>(buf_), kYuvBufsize);
+    ptr_ = 0;
+  }
 }
 
 template <>
@@ -20,21 +29,21 @@ void YUV<WRITE>::WriteFrame(const std::shared_ptr<Frame> &frame) {
     for (size_t c = 0; c < frame->hsize; ++c) {
       uint8_t y =
           uint8_t(frame->Y.at(r >> 4).at(c >> 4).GetPixel(r & 15, c & 15));
-      ofs_.write(reinterpret_cast<char *>(&y), sizeof(y));
+      WriteByte(y);
     }
   }
   for (size_t r = 0; r < frame->vsize; r += 2) {
     for (size_t c = 0; c < frame->hsize; c += 2) {
       uint8_t u = uint8_t(
           frame->U.at(r >> 4).at(c >> 4).GetPixel((r >> 1) & 7, (c >> 1) & 7));
-      ofs_.write(reinterpret_cast<char *>(&u), sizeof(u));
+      WriteByte(u);
     }
   }
   for (size_t r = 0; r < frame->vsize; r += 2) {
     for (size_t c = 0; c < frame->hsize; c += 2) {
       uint8_t v = uint8_t(
           frame->V.at(r >> 4).at(c >> 4).GetPixel((r >> 1) & 7, (c >> 1) & 7));
-      ofs_.write(reinterpret_cast<char *>(&v), sizeof(v));
+      WriteByte(v);
     }
   }
 }
@@ -68,6 +77,9 @@ Frame YUV<READ>::ReadFrame(size_t height, size_t width) {
 
 template <>
 YUV<WRITE>::~YUV() {
+  if (ptr_ > 0) {
+    ofs_.write(reinterpret_cast<char *>(buf_), long(ptr_));
+  }
   if (ofs_.is_open()) ofs_.close();
 }
 

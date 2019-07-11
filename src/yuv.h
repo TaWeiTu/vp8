@@ -12,6 +12,8 @@ namespace vp8 {
 
 enum IOMode { READ, WRITE };
 
+static const size_t kYuvBufsize = 1048576;
+
 template <IOMode Mode>
 class YUV {
  public:
@@ -23,8 +25,12 @@ class YUV {
   Frame ReadFrame(size_t height, size_t width);
 
  private:
+  void WriteByte(uint8_t byte);
+
   std::ifstream ifs_;
   std::ofstream ofs_;
+  uint8_t buf_[kYuvBufsize];
+  size_t ptr_;
 };
 
 }  // namespace vp8
