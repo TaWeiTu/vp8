@@ -37,9 +37,9 @@ class SubBlock {
  public:
   SubBlock() = default;
 
-  std::array<int16_t, 4>& at(size_t i) { return pixels_.at(i); }
+  inline std::array<int16_t, 4>& at(size_t i) { return pixels_.at(i); }
 
-  std::array<int16_t, 4> at(size_t i) const { return pixels_.at(i); }
+  inline std::array<int16_t, 4> at(size_t i) const { return pixels_.at(i); }
 
   void FillWith(int16_t p) {
     for (size_t i = 0; i < 4; ++i)
@@ -94,9 +94,9 @@ class MacroBlock {
  public:
   MacroBlock() : offset_(C == 4 ? 2 : 1), mask_((1 << offset_) - 1) {}
 
-  std::array<SubBlock, C>& at(size_t i) { return subs_.at(i); }
+  inline std::array<SubBlock, C>& at(size_t i) { return subs_.at(i); }
 
-  std::array<SubBlock, C> at(size_t i) const { return subs_.at(i); }
+  inline std::array<SubBlock, C> at(size_t i) const { return subs_.at(i); }
 
   void FillWith(int16_t p) {
     for (size_t i = 0; i < C; ++i) {
@@ -137,15 +137,15 @@ class MacroBlock {
   }
 
   __attribute__((always_inline))
-  int16_t GetPixel(size_t r, size_t c) const {
+  inline int16_t GetPixel(size_t r, size_t c) const {
     return subs_.at(r >> 2).at(c >> 2).at(r & 3).at(c & 3);
   }
 
-  void SetPixel(size_t r, size_t c, int16_t v) {
+  inline void SetPixel(size_t r, size_t c, int16_t v) {
     subs_.at(r >> 2).at(c >> 2).at(r & 3).at(c & 3) = v;
   }
 
-  void IncrementPixel(size_t r, size_t c, int16_t v) {
+  inline void IncrementPixel(size_t r, size_t c, int16_t v) {
     subs_.at(r >> 2).at(c >> 2).at(r & 3).at(c & 3) += v;
   }
 
@@ -186,7 +186,7 @@ class Plane {
     blocks_.resize(h, std::vector<MacroBlock<C>>(w));
   }
 
-  int16_t GetPixel(size_t r, size_t c) const {
+  inline int16_t GetPixel(size_t r, size_t c) const {
     return blocks_.at(r >> offset_)
         .at(c >> offset_)
         .GetPixel(r & mask_, c & mask_);

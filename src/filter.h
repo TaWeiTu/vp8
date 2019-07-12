@@ -24,11 +24,11 @@ namespace filter {
 static int16_t p3_, p2_, p1_, p0_;
 static int16_t q0_, q1_, q2_, q3_;
 
-bool IsFilterNormal(int16_t interior, int16_t edge);
+inline bool IsFilterNormal(int16_t interior, int16_t edge);
 
-bool IsFilterSimple(int16_t edge);
+inline bool IsFilterSimple(int16_t edge);
 
-bool IsHighVariance(int16_t threshold);
+inline bool IsHighVariance(int16_t threshold);
 
 void Adjust(bool use_outer_taps);
 

@@ -4,18 +4,18 @@ namespace vp8 {
 namespace internal {
 namespace filter {
 
-bool IsFilterNormal(int16_t interior, int16_t edge) {
+inline bool IsFilterNormal(int16_t interior, int16_t edge) {
   return ((abs(p0_ - q0_) << 1) + (abs(p1_ - q1_) >> 1)) <= edge &&
          abs(p3_ - p2_) <= interior && abs(p2_ - p1_) <= interior &&
          abs(p1_ - p0_) <= interior && abs(q0_ - q1_) <= interior &&
          abs(q1_ - q2_) <= interior && abs(q2_ - q3_) <= interior;
 }
 
-bool IsFilterSimple(int16_t edge) {
+inline bool IsFilterSimple(int16_t edge) {
   return (abs(p0_ - q0_) << 1) + (abs(p1_ - q1_) >> 1) <= edge;
 }
 
-bool IsHighVariance(int16_t threshold) {
+inline bool IsHighVariance(int16_t threshold) {
   return abs(p1_ - p0_) > threshold || abs(q1_ - q0_) > threshold;
 }
 
