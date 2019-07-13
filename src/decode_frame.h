@@ -1,5 +1,5 @@
-#ifndef RECONSTRUCT_H_
-#define RECONSTRUCT_H_
+#ifndef DECODE_FRAME_H_
+#define DECODE_FRAME_H_
 
 #include <array>
 #include <memory>
@@ -41,7 +41,7 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
 
 }  // namespace internal
 
-void Reconstruct(const FrameHeader &header, const FrameTag &tag,
+void DecodeFrame(const FrameHeader &header, const FrameTag &tag,
                  const std::array<std::shared_ptr<Frame>, 4> &refs,
                  const std::array<bool, 4> &ref_frame_bias,
                  const std::unique_ptr<BitstreamParser> &ps,

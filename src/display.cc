@@ -8,7 +8,7 @@
 
 #include "bitstream_const.h"
 #include "loop.h"
-#include "reconstruct.h"
+#include "decode_frame.h"
 #include "utils.h"
 
 int main(int argc, const char **argv) {
@@ -95,7 +95,7 @@ int main(int argc, const char **argv) {
     std::shared_ptr<vp8::Frame> &frame = ref_frames.at(vp8::CURRENT_FRAME);
     frame = std::make_shared<vp8::Frame>(height, width);
     vp8::InitSignBias(header, ref_frame_bias);
-    vp8::Reconstruct(header, tag, ref_frames, ref_frame_bias, ps, frame);
+    vp8::DecodeFrame(header, tag, ref_frames, ref_frame_bias, ps, frame);
     vp8::RefreshRefFrames(header, ref_frames);
 
     if (!tag.show_frame) continue;

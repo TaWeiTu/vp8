@@ -1,11 +1,12 @@
 #include <array>
 #include <cassert>
+#include <fstream>
 #include <memory>
 #include <utility>
 
 #include "bitstream_const.h"
 #include "loop.h"
-#include "reconstruct.h"
+#include "decode_frame.h"
 #include "utils.h"
 #include "yuv.h"
 
@@ -70,7 +71,7 @@ int main(int argc, const char **argv) {
     frame = std::make_shared<vp8::Frame>(height, width);
 
     vp8::InitSignBias(header, ref_frame_bias);
-    vp8::Reconstruct(header, tag, ref_frames, ref_frame_bias, ps, frame);
+    vp8::DecodeFrame(header, tag, ref_frames, ref_frame_bias, ps, frame);
     vp8::RefreshRefFrames(header, ref_frames);
     if (tag.show_frame) yuv.WriteFrame(frame);
   }

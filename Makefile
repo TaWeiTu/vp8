@@ -10,14 +10,14 @@ all: decode
 debug: CFLAGS = $(DBGFLAGS)
 debug: decode
 	
-decode: src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/reconstruct.o src/yuv.o src/residual.o src/decode.cc 
+decode: src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/decode_frame.o src/yuv.o src/residual.o src/decode.cc 
 	$(CHECK) src/decode.cc
-	$(CXX) $(CFLAGS) -o decode src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/reconstruct.o src/yuv.o src/residual.o src/decode.cc
+	$(CXX) $(CFLAGS) -o decode src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/decode_frame.o src/yuv.o src/residual.o src/decode.cc
 
 
-display: src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/reconstruct.o src/yuv.o src/residual.o src/display.cc
+display: src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/decode_frame.o src/yuv.o src/residual.o src/display.cc
 	$(CHECK) src/display.cc
-	$(CXX) $(CFLAGS) $(OPENCV) -o display src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/reconstruct.o src/yuv.o src/residual.o src/display.cc
+	$(CXX) $(CFLAGS) $(OPENCV) -o display src/bool_decoder.o src/intra_predict.o src/inter_predict.o src/dct.o src/quantizer.o src/filter.o src/bitstream_parser.o src/decode_frame.o src/yuv.o src/residual.o src/display.cc
 
 src/bool_decoder.o: src/bool_decoder.cc src/bool_decoder.h src/utils.h
 	$(CHECK) src/bool_decoder.cc
@@ -51,9 +51,9 @@ src/bitstream_parser.o: src/bitstream_parser.cc src/bitstream_parser.h src/bitst
 	$(CHECK) src/bitstream_parser.cc
 	$(CXX) $(CFLAGS) -c -o src/bitstream_parser.o src/bitstream_parser.cc 
 
-src/reconstruct.o: src/reconstruct.cc src/reconstruct.h src/bitstream_parser.o src/intra_predict.o src/inter_predict.o src/filter.o
-	$(CHECK) src/reconstruct.cc
-	$(CXX) $(CFLAGS) -c -o src/reconstruct.o src/reconstruct.cc 
+src/decode_frame.o: src/decode_frame.cc src/decode_frame.h src/bitstream_parser.o src/intra_predict.o src/inter_predict.o src/filter.o
+	$(CHECK) src/decode_frame.cc
+	$(CXX) $(CFLAGS) -c -o src/decode_frame.o src/decode_frame.cc 
 
 src/residual.o: src/residual.cc src/residual.h src/quantizer.o src/dct.o
 	$(CHECK) src/residual.cc
@@ -62,6 +62,10 @@ src/residual.o: src/residual.cc src/residual.h src/quantizer.o src/dct.o
 src/bool_encoder.o: src/bool_encoder.cc src/bool_encoder.h
 	$(CHECK) src/bool_encoder.cc
 	$(CXX) $(CFLAGS) -c -o src/bool_encoder.o src/bool_encoder.cc
+	
+src/encode_frame.o: src/encode_frame.cc src/encode_frame.h src/intra_predict.o src/inter_predict.o
+	$(CHECK) src/encode_frame.cc
+	$(CXX) $(CFLAGS) -c -o src/encode_frame.o src/encode_frame.cc
 
 .PHONY: clean
 clean: 

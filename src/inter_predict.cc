@@ -368,8 +368,6 @@ template void InterpBlock<2>(
 
 }  // namespace internal
 
-using namespace internal;
-
 void InterPredict(const FrameTag &tag, size_t r, size_t c,
                   const std::array<std::shared_ptr<Frame>, 4> &refs,
                   const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
@@ -377,17 +375,17 @@ void InterPredict(const FrameTag &tag, size_t r, size_t c,
                   std::vector<std::vector<uint8_t>> &skip_lf,
                   const std::unique_ptr<BitstreamParser> &ps,
                   const std::shared_ptr<Frame> &frame) {
-  ConfigureMVs(r, c, tag.version == 3, ref_frame_bias, ref_frame, context,
+  internal::ConfigureMVs(r, c, tag.version == 3, ref_frame_bias, ref_frame, context,
                skip_lf, ps, frame);
 
   const std::array<std::array<int16_t, 6>, 8> &subpixel_filters =
       tag.version == 0 ? kBicubicFilter : kBilinearFilter;
 
-  InterpBlock(refs.at(ref_frame)->Y, subpixel_filters, r, c,
+  internal::InterpBlock(refs.at(ref_frame)->Y, subpixel_filters, r, c,
               frame->Y.at(r).at(c));
-  InterpBlock(refs.at(ref_frame)->U, subpixel_filters, r, c,
+  internal::InterpBlock(refs.at(ref_frame)->U, subpixel_filters, r, c,
               frame->U.at(r).at(c));
-  InterpBlock(refs.at(ref_frame)->V, subpixel_filters, r, c,
+  internal::InterpBlock(refs.at(ref_frame)->V, subpixel_filters, r, c,
               frame->V.at(r).at(c));
 }
 

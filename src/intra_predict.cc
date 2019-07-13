@@ -9,6 +9,7 @@ void VPredChroma(size_t r, size_t c, Plane<2> &mb) {
   else
     mb.at(r).at(c).FillRow(mb.at(r - 1).at(c).GetRow(7));
 }
+
 void HPredChroma(size_t r, size_t c, Plane<2> &mb) {
   if (c == 0)
     mb.at(r).at(c).FillWith(129);
@@ -353,8 +354,6 @@ void BPredSubBlock(const std::array<int16_t, 8> &above,
 
 }  // namespace internal
 
-using namespace internal;
-
 void IntraPredict(const FrameTag &tag, size_t r, size_t c,
                   const ResidualValue &rv, const IntraMBHeader &mh,
                   std::vector<std::vector<IntraContext>> &context,
@@ -364,7 +363,7 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
   if (mh.intra_y_mode == B_PRED) skip_lf.at(r).at(c) = 0;
   switch (mh.intra_y_mode) {
     case V_PRED:
-      VPredLuma(r, c, frame->Y);
+      internal::VPredLuma(r, c, frame->Y);
       for (size_t i = 0; i < 4; ++i) {
         for (size_t j = 0; j < 4; ++j)
           context.at(r << 2 | i).at(c << 2 | j) =
@@ -374,7 +373,7 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
       break;
 
     case H_PRED:
-      HPredLuma(r, c, frame->Y);
+      internal::HPredLuma(r, c, frame->Y);
       for (size_t i = 0; i < 4; ++i) {
         for (size_t j = 0; j < 4; ++j)
           context.at(r << 2 | i).at(c << 2 | j) =
@@ -384,7 +383,7 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
       break;
 
     case DC_PRED:
-      DCPredLuma(r, c, frame->Y);
+      internal::DCPredLuma(r, c, frame->Y);
       for (size_t i = 0; i < 4; ++i) {
         for (size_t j = 0; j < 4; ++j)
           context.at(r << 2 | i).at(c << 2 | j) =
@@ -394,7 +393,7 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
       break;
 
     case TM_PRED:
-      TMPredLuma(r, c, frame->Y);
+      internal::TMPredLuma(r, c, frame->Y);
       for (size_t i = 0; i < 4; ++i) {
         for (size_t j = 0; j < 4; ++j)
           context.at(r << 2 | i).at(c << 2 | j) =
@@ -404,7 +403,7 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
       break;
 
     case B_PRED:
-      BPredLuma(r, c, tag.key_frame, rv, context, ps, frame->Y);
+      internal::BPredLuma(r, c, tag.key_frame, rv, context, ps, frame->Y);
       break;
 
     default:
@@ -415,23 +414,23 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
                                                : ps->ReadIntraMB_UVModeNonKF();
   switch (intra_uv_mode) {
     case V_PRED:
-      VPredChroma(r, c, frame->U);
-      VPredChroma(r, c, frame->V);
+      internal::VPredChroma(r, c, frame->U);
+      internal::VPredChroma(r, c, frame->V);
       break;
 
     case H_PRED:
-      HPredChroma(r, c, frame->U);
-      HPredChroma(r, c, frame->V);
+      internal::HPredChroma(r, c, frame->U);
+      internal::HPredChroma(r, c, frame->V);
       break;
 
     case DC_PRED:
-      DCPredChroma(r, c, frame->U);
-      DCPredChroma(r, c, frame->V);
+      internal::DCPredChroma(r, c, frame->U);
+      internal::DCPredChroma(r, c, frame->V);
       break;
 
     case TM_PRED:
-      TMPredChroma(r, c, frame->U);
-      TMPredChroma(r, c, frame->V);
+      internal::TMPredChroma(r, c, frame->U);
+      internal::TMPredChroma(r, c, frame->V);
       break;
 
     default:

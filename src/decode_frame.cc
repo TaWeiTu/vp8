@@ -1,4 +1,4 @@
-#include "reconstruct.h"
+#include "decode_frame.h"
 
 namespace vp8 {
 namespace internal {
@@ -156,9 +156,7 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
 
 }  // namespace internal
 
-using namespace internal;
-
-void Reconstruct(const FrameHeader &header, const FrameTag &tag,
+void DecodeFrame(const FrameHeader &header, const FrameTag &tag,
                  const std::array<std::shared_ptr<Frame>, 4> &refs,
                  const std::array<bool, 4> &ref_frame_bias, 
                  const std::unique_ptr<BitstreamParser> &ps,
@@ -172,7 +170,7 @@ void Reconstruct(const FrameHeader &header, const FrameTag &tag,
   std::vector<std::vector<uint8_t>> skip_lf(
       frame->vblock, std::vector<uint8_t>(frame->hblock, 1));
 
-  Predict(header, tag, refs, ref_frame_bias, interc, intrac, lf, skip_lf, ps,
+  internal::Predict(header, tag, refs, ref_frame_bias, interc, intrac, lf, skip_lf, ps,
           frame);
   FrameFilter(header, tag.key_frame, lf, skip_lf, frame);
 }

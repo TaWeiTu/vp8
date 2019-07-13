@@ -29,10 +29,6 @@ struct InterContext {
       : is_inter_mb(is_inter_mb_), mv_mode(mv_mode_), ref_frame(ref_frame_) {}
 };
 
-namespace internal {
-
-static const MotionVector kZero = MotionVector(0, 0);
-
 constexpr std::array<std::array<int16_t, 6>, 8> kBicubicFilter = {
     {{0, 0, 128, 0, 0, 0},
      {0, -6, 123, 12, -1, 0},
@@ -52,6 +48,10 @@ constexpr std::array<std::array<int16_t, 6>, 8> kBilinearFilter = {
      {0, 0, 48, 80, 0, 0},
      {0, 0, 32, 96, 0, 0},
      {0, 0, 16, 112, 0, 0}}};
+
+namespace internal {
+
+static const MotionVector kZero = MotionVector(0, 0);
 
 constexpr std::array<std::array<std::array<uint8_t, 2>, 2>, 2>
     kSubBlockContext = {{{{{2, 4}, {1, 3}}}, {{{2, 3}, {0, 3}}}}};
