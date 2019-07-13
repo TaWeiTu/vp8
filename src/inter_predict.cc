@@ -9,8 +9,9 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
                         const std::array<bool, 4> &ref_frame_bias,
                         uint8_t ref_frame,
                         const std::vector<std::vector<InterContext>> &context,
-                        BitstreamParser &ps, MotionVector &best,
-                        MotionVector &nearest, MotionVector &near) {
+                        const std::unique_ptr<BitstreamParser> &ps,
+                        MotionVector &best, MotionVector &nearest,
+                        MotionVector &near) {
   std::array<uint8_t, 4> cnt{};
   std::array<MotionVector, 4> mv{};
   uint8_t ptr = 0;
@@ -70,7 +71,7 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
   nearest = mv.at(CNT_NEAREST);
   near = mv.at(CNT_NEAR);
 
-  return ps.ReadInterMBHeader(cnt);
+  return ps->ReadInterMBHeader(cnt);
 }
 
 void ClampMV2(int16_t top, int16_t bottom, int16_t left, int16_t right,
@@ -137,7 +138,8 @@ void ConfigureChromaMVs(const MacroBlock<4> &luma, size_t vblock, size_t hblock,
 }
 
 void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
-                          MotionVector best, BitstreamParser &ps,
+                          MotionVector best,
+                          const std::unique_ptr<BitstreamParser> &ps,
                           Plane<4> &mb) {
   auto LeftMotionVector = [&mb, r, c](size_t idx) {
     if ((idx & 3) == 0) {
@@ -162,7 +164,7 @@ void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
     MotionVector left = LeftMotionVector(head);
     MotionVector above = AboveMotionVector(head);
     uint8_t context = SubBlockContext(left, above);
-    SubBlockMVMode mode = ps.ReadSubBlockMVMode(context);
+    SubBlockMVMode mode = ps->ReadSubBlockMVMode(context);
     MotionVector mv;
     switch (mode) {
       case LEFT_4x4:
@@ -178,7 +180,7 @@ void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
         break;
 
       case NEW_4x4:
-        mv = ps.ReadSubBlockMV() + best;
+        mv = ps->ReadSubBlockMV() + best;
         break;
 
       default:
@@ -199,7 +201,8 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
                   const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
                   std::vector<std::vector<InterContext>> &context,
                   std::vector<std::vector<uint8_t>> &skip_lf,
-                  BitstreamParser &ps, const std::shared_ptr<Frame> &frame) {
+                  const std::unique_ptr<BitstreamParser> &ps,
+                  const std::shared_ptr<Frame> &frame) {
   int16_t top = ((-int16_t(r) * 16) * 8);
   int16_t bottom = ((int16_t(frame->vblock) - 1 - int16_t(r)) * 16) * 8;
   int16_t left = ((-int16_t(c) * 16) * 8);
@@ -265,15 +268,17 @@ std::array<std::array<int16_t, 4>, 9> HorizontalSixtap(
     return refer.GetPixel(size_t(row), size_t(col));
   };
 
+  std::array<int32_t, 9> cache;
+
   for (int32_t i = 0; i < 9; ++i) {
-    for (int32_t j = 0; j < 4; ++j) {
-      int32_t sum = int32_t(GetPixel(r + i, c + j - 2)) * filter.at(0) +
-                    int32_t(GetPixel(r + i, c + j - 1)) * filter.at(1) +
-                    int32_t(GetPixel(r + i, c + j + 0)) * filter.at(2) +
-                    int32_t(GetPixel(r + i, c + j + 1)) * filter.at(3) +
-                    int32_t(GetPixel(r + i, c + j + 2)) * filter.at(4) +
-                    int32_t(GetPixel(r + i, c + j + 3)) * filter.at(5);
-      res.at(size_t(i)).at(size_t(j)) = Clamp255(int16_t((sum + 64) >> 7));
+    for (size_t j = 0; j < 9; ++j)
+      cache.at(j) = GetPixel(r + i, c - 2 + int32_t(j));
+    for (size_t j = 0; j < 4; ++j) {
+      int32_t sum =
+          cache.at(j + 0) * filter.at(0) + cache.at(j + 1) * filter.at(1) +
+          cache.at(j + 2) * filter.at(2) + cache.at(j + 3) * filter.at(3) +
+          cache.at(j + 4) * filter.at(4) + cache.at(j + 5) * filter.at(5);
+      res.at(size_t(i)).at(j) = Clamp255(int16_t((sum + 64) >> 7));
     }
   }
   return res;
@@ -341,12 +346,14 @@ void InterpBlock(const Plane<C> &refer,
 
 template std::array<std::array<int16_t, 4>, 9> HorizontalSixtap<4>(
     const Plane<4> &, int32_t, int32_t, const std::array<int16_t, 6> &);
+
 template std::array<std::array<int16_t, 4>, 9> HorizontalSixtap<2>(
     const Plane<2> &, int32_t, int32_t, const std::array<int16_t, 6> &);
 
 template void Sixtap<4>(const Plane<4> &, int32_t, int32_t, uint8_t, uint8_t,
                         const std::array<std::array<int16_t, 6>, 8> &,
                         SubBlock &);
+
 template void Sixtap<2>(const Plane<2> &, int32_t, int32_t, uint8_t, uint8_t,
                         const std::array<std::array<int16_t, 6>, 8> &,
                         SubBlock &);
@@ -354,6 +361,7 @@ template void Sixtap<2>(const Plane<2> &, int32_t, int32_t, uint8_t, uint8_t,
 template void InterpBlock<4>(
     const Plane<4> &refer, const std::array<std::array<int16_t, 6>, 8> &filter,
     size_t r, size_t c, MacroBlock<4> &mb);
+
 template void InterpBlock<2>(
     const Plane<2> &refer, const std::array<std::array<int16_t, 6>, 8> &filter,
     size_t r, size_t c, MacroBlock<2> &mb);
@@ -367,9 +375,11 @@ void InterPredict(const FrameTag &tag, size_t r, size_t c,
                   const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
                   std::vector<std::vector<InterContext>> &context,
                   std::vector<std::vector<uint8_t>> &skip_lf,
-                  BitstreamParser &ps, const std::shared_ptr<Frame> &frame) {
+                  const std::unique_ptr<BitstreamParser> &ps,
+                  const std::shared_ptr<Frame> &frame) {
   ConfigureMVs(r, c, tag.version == 3, ref_frame_bias, ref_frame, context,
                skip_lf, ps, frame);
+
   const std::array<std::array<int16_t, 6>, 8> &subpixel_filters =
       tag.version == 0 ? kBicubicFilter : kBilinearFilter;
 

@@ -35,14 +35,16 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
              std::vector<std::vector<InterContext>> &interc,
              std::vector<std::vector<IntraContext>> &intrac,
              std::vector<std::vector<uint8_t>> &lf,
-             std::vector<std::vector<uint8_t>> &skip_lf, BitstreamParser &ps,
+             std::vector<std::vector<uint8_t>> &skip_lf,
+             const std::unique_ptr<BitstreamParser> &ps,
              const std::shared_ptr<Frame> &frame);
 
 }  // namespace internal
 
 void Reconstruct(const FrameHeader &header, const FrameTag &tag,
                  const std::array<std::shared_ptr<Frame>, 4> &refs,
-                 const std::array<bool, 4> &ref_frame_bias, BitstreamParser &ps,
+                 const std::array<bool, 4> &ref_frame_bias,
+                 const std::unique_ptr<BitstreamParser> &ps,
                  const std::shared_ptr<Frame> &frame);
 
 }  // namespace vp8

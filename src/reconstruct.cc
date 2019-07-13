@@ -75,7 +75,8 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
              std::vector<std::vector<InterContext>> &interc,
              std::vector<std::vector<IntraContext>> &intrac,
              std::vector<std::vector<uint8_t>> &lf,
-             std::vector<std::vector<uint8_t>> &skip_lf, BitstreamParser &ps,
+             std::vector<std::vector<uint8_t>> &skip_lf, 
+             const std::unique_ptr<BitstreamParser> &ps,
              const std::shared_ptr<Frame> &frame) {
   std::vector<uint8_t> y2_row(frame->vblock, 0);
   std::vector<uint8_t> y2_col(frame->hblock, 0);
@@ -90,7 +91,7 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
 
   for (size_t r = 0; r < frame->vblock; ++r) {
     for (size_t c = 0; c < frame->hblock; ++c) {
-      MacroBlockPreHeader pre = ps.ReadMacroBlockPreHeader();
+      MacroBlockPreHeader pre = ps->ReadMacroBlockPreHeader();
       int16_t qp = header.quant_indices.y_ac_qi;
       if (header.segmentation_enabled) {
         qp = header.segment_feature_mode == SEGMENT_MODE_ABSOLUTE
@@ -127,11 +128,11 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
         InterPredict(tag, r, c, refs, ref_frame_bias, pre.ref_frame, interc,
                      skip_lf, ps, frame);
       } else {
-        mh = tag.key_frame ? ps.ReadIntraMBHeaderKF()
-                           : ps.ReadIntraMBHeaderNonKF();
+        mh = tag.key_frame ? ps->ReadIntraMBHeaderKF()
+                           : ps->ReadIntraMBHeaderNonKF();
       }
 
-      ResidualData rd = ps.ReadResidualData(ResidualParam(
+      ResidualData rd = ps->ReadResidualData(ResidualParam(
           y2_nonzero, y1_above, y1_left, u_above, u_left, v_above, v_left));
 
       if (!pre.mb_skip_coeff && !rd.is_zero) skip_lf.at(r).at(c) = 0;
@@ -159,7 +160,8 @@ using namespace internal;
 
 void Reconstruct(const FrameHeader &header, const FrameTag &tag,
                  const std::array<std::shared_ptr<Frame>, 4> &refs,
-                 const std::array<bool, 4> &ref_frame_bias, BitstreamParser &ps,
+                 const std::array<bool, 4> &ref_frame_bias, 
+                 const std::unique_ptr<BitstreamParser> &ps,
                  const std::shared_ptr<Frame> &frame) {
   std::vector<std::vector<InterContext>> interc(
       frame->vblock, std::vector<InterContext>(frame->hblock));

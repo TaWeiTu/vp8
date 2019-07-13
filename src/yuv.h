@@ -21,7 +21,8 @@ class YUV {
   YUV() = default;
   ~YUV();
   explicit YUV(const char *filename)
-      : ptr_(0), buf_(std::make_unique<uint8_t[]>(kBufSize)) {
+      : ptr_(Mode == WRITE ? 0 : kBufSize),
+        buf_(std::make_unique<uint8_t[]>(kBufSize)) {
     fs_.open(filename, std::ios::binary);
     ensure(!fs_.fail(), "[Error] YUV::YUV: Fail to open file.");
   }

@@ -55,11 +55,12 @@ int main(int argc, const char **argv) {
     buffer.resize(frame_size);
     // TODO: (Improvement) This part is a bit ugly.
     fs.read(reinterpret_cast<char *>(buffer.data()), frame_size);
-    vp8::BitstreamParser ps(
-        vp8::SpanReader(buffer.data(), buffer.data() + buffer.size()), ctx);
+    std::unique_ptr<vp8::BitstreamParser> ps =
+        std::make_unique<vp8::BitstreamParser>(
+            vp8::SpanReader(buffer.data(), buffer.data() + buffer.size()), ctx);
     vp8::FrameHeader header;
     vp8::FrameTag tag;
-    std::tie(tag, header) = ps.ReadFrameTagHeader();
+    std::tie(tag, header) = ps->ReadFrameTagHeader();
     if (tag.key_frame) {
       height = tag.height;
       width = tag.width;

@@ -39,7 +39,7 @@ void TMPredLuma(size_t r, size_t c, Plane<4> &mb);
 
 void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
                std::vector<std::vector<IntraContext>> &context,
-               BitstreamParser &ps, Plane<4> &mb);
+               const std::unique_ptr<BitstreamParser> &ps, Plane<4> &mb);
 
 void BPredSubBlock(const std::array<int16_t, 8> &above,
                    const std::array<int16_t, 4> &left, int16_t p,
@@ -50,7 +50,8 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
                   const ResidualValue &rv, const IntraMBHeader &mh,
                   std::vector<std::vector<IntraContext>> &context,
                   std::vector<std::vector<uint8_t>> &skip_lf,
-                  BitstreamParser &ps, const std::shared_ptr<Frame> &frame);
+                  const std::unique_ptr<BitstreamParser> &ps,
+                  const std::shared_ptr<Frame> &frame);
 
 }  // namespace vp8
 

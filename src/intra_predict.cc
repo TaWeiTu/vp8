@@ -96,7 +96,7 @@ void TMPredLuma(size_t r, size_t c, Plane<4> &mb) {
 
 void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
                std::vector<std::vector<IntraContext>> &context,
-               BitstreamParser &ps, Plane<4> &mb) {
+               const std::unique_ptr<BitstreamParser> &ps, Plane<4> &mb) {
   std::array<SubBlockMode, 4> row_mode;
   std::array<SubBlockMode, 4> col_mode;
 
@@ -178,8 +178,8 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
                                : mb.at(r - 1).at(c - 1).at(3).at(3).at(3).at(3);
 
       SubBlockMode mode =
-          is_key_frame ? ps.ReadSubBlockBModeKF(col_mode.at(j), row_mode.at(i))
-                       : ps.ReadSubBlockBModeNonKF();
+          is_key_frame ? ps->ReadSubBlockBModeKF(col_mode.at(j), row_mode.at(i))
+                       : ps->ReadSubBlockBModeNonKF();
 
       context.at(r << 2 | i).at(c << 2 | j) = IntraContext(true, mode);
       col_mode.at(j) = row_mode.at(i) = mode;
@@ -359,7 +359,8 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
                   const ResidualValue &rv, const IntraMBHeader &mh,
                   std::vector<std::vector<IntraContext>> &context,
                   std::vector<std::vector<uint8_t>> &skip_lf,
-                  BitstreamParser &ps, const std::shared_ptr<Frame> &frame) {
+                  const std::unique_ptr<BitstreamParser> &ps,
+                  const std::shared_ptr<Frame> &frame) {
   if (mh.intra_y_mode == B_PRED) skip_lf.at(r).at(c) = 0;
   switch (mh.intra_y_mode) {
     case V_PRED:
@@ -410,8 +411,8 @@ void IntraPredict(const FrameTag &tag, size_t r, size_t c,
       ensure(false, "[Error] IntraPredict: Unknown Y mode.");
       break;
   }
-  MacroBlockMode intra_uv_mode =
-      tag.key_frame ? ps.ReadIntraMB_UVModeKF() : ps.ReadIntraMB_UVModeNonKF();
+  MacroBlockMode intra_uv_mode = tag.key_frame ? ps->ReadIntraMB_UVModeKF()
+                                               : ps->ReadIntraMB_UVModeNonKF();
   switch (intra_uv_mode) {
     case V_PRED:
       VPredChroma(r, c, frame->U);

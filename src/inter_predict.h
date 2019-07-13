@@ -74,8 +74,9 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
                         const std::array<bool, 4> &ref_frame_bias,
                         uint8_t ref_frame,
                         const std::vector<std::vector<InterContext>> &context,
-                        BitstreamParser &ps, MotionVector &best,
-                        MotionVector &nearest, MotionVector &near);
+                        const std::unique_ptr<BitstreamParser> &ps,
+                        MotionVector &best, MotionVector &nearest,
+                        MotionVector &near);
 
 // Make sure that the motion vector indeed points to a valid position.
 void ClampMV2(int16_t left, int16_t right, int16_t top, int16_t bottom,
@@ -101,7 +102,9 @@ void ConfigureChromaMVs(const MacroBlock<4> &luma, size_t vblock, size_t hblock,
 // In case of mode MV_SPLIT, set the motion vectors of each subblock
 // independently.
 void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
-                          MotionVector best, BitstreamParser &ps, Plane<4> &mb);
+                          MotionVector best,
+                          const std::unique_ptr<BitstreamParser> &ps,
+                          Plane<4> &mb);
 
 // For each (luma or chroma) macroblocks, configure their motion vectors (if
 // needed).
@@ -109,7 +112,8 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
                   const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
                   std::vector<std::vector<InterContext>> &context,
                   std::vector<std::vector<uint8_t>> &skip_lf,
-                  BitstreamParser &ps, const std::shared_ptr<Frame> &frame);
+                  const std::unique_ptr<BitstreamParser> &ps,
+                  const std::shared_ptr<Frame> &frame);
 
 // Horizontal pixel interpolation, this should return a 9x4 temporary matrix for
 // the vertical pixel interpolation later.
@@ -141,7 +145,8 @@ void InterPredict(const FrameTag &tag, size_t r, size_t c,
                   const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
                   std::vector<std::vector<InterContext>> &context,
                   std::vector<std::vector<uint8_t>> &skip_lf,
-                  BitstreamParser &ps, const std::shared_ptr<Frame> &frame);
+                  const std::unique_ptr<BitstreamParser> &ps,
+                  const std::shared_ptr<Frame> &frame);
 
 }  // namespace vp8
 
