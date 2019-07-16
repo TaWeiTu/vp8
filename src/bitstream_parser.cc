@@ -189,7 +189,7 @@ void BitstreamParser::UpdateSegmentation() {
       }
     }
   }
-  // TODO: This is fucking slow.
+  // TODO(willypillow): This is fucking slow.
   frame_header_.segment_feature_mode = context_.get().segment_feature_mode;
   std::copy(context_.get().quantizer_segment.begin(),
             context_.get().quantizer_segment.end(),
@@ -276,7 +276,7 @@ void BitstreamParser::TokenProbUpdate() {
   if (frame_header_.refresh_entropy_probs) {
     context_.get().coeff_prob = std::ref(context_.get().coeff_prob_persistent);
   } else {
-    // TODO: (Improvement) Write a safe_copy with bounds checking
+    // TODO(willypillow): (Improvement) Write a safe_copy with bounds checking
     std::copy(context_.get().coeff_prob_persistent.begin(),
               context_.get().coeff_prob_persistent.end(),
               context_.get().coeff_prob_temp.begin());

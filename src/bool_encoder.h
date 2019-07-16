@@ -11,7 +11,7 @@ namespace vp8 {
 class BoolEncoder {
  public:
   BoolEncoder() = default;
-  // TODO: Non-trivial constructor.
+  // TODO(waynetu): Non-trivial constructor.
   ~BoolEncoder();
 
   // Encode a 1-bit boolean value.
@@ -68,7 +68,7 @@ class BoolEncoder {
   uint32_t bottom_;
   uint8_t bit_count_;
 
-  // TODO:
+  // TODO(waynetu):
   void AddOne();
   void WriteByte(uint8_t byte);
 };

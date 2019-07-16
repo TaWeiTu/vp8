@@ -27,6 +27,10 @@ struct IntraContext {
 
 namespace internal {
 
+static constexpr int16_t kUpperPixel = 127;
+static constexpr int16_t kUpperLeftPixel = 128;
+static constexpr int16_t kLeftPixel = 129;
+
 void VPredChroma(size_t r, size_t c, Plane<2> &mb);
 void HPredChroma(size_t r, size_t c, Plane<2> &mb);
 void DCPredChroma(size_t r, size_t c, Plane<2> &mb);

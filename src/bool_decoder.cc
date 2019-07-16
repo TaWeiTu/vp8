@@ -49,10 +49,10 @@ uint16_t BoolDecoder::Lit(size_t n) {
 }
 
 int16_t BoolDecoder::SignedLit(size_t n) {
-  if (!n) return 0;
+  if (n == 0u) return 0;
 
   int16_t res = 0;
-  uint8_t sign = Bool(128);
+  bool sign = Bool(128) == 1;
   for (size_t i = 0; i + 1 < n; ++i) res = int16_t(res << 1) | Bool(128);
 
   if (sign) res = -res;

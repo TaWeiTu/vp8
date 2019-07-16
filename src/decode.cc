@@ -54,7 +54,7 @@ int main(int argc, const char **argv) {
     // Decoding loop: reconstruct the frame and update the golden/altref frame
     // (if necessary).
     buffer.resize(frame_size);
-    // TODO: (Improvement) This part is a bit ugly.
+    // TODO(willypillow): (Improvement) This part is a bit ugly.
     fs.read(reinterpret_cast<char *>(buffer.data()), frame_size);
     std::unique_ptr<vp8::BitstreamParser> ps =
         std::make_unique<vp8::BitstreamParser>(

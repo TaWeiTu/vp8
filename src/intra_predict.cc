@@ -5,21 +5,21 @@ namespace internal {
 
 void VPredChroma(size_t r, size_t c, Plane<2> &mb) {
   if (r == 0)
-    mb.at(r).at(c).FillWith(127);
+    mb.at(r).at(c).FillWith(kUpperPixel);
   else
     mb.at(r).at(c).FillRow(mb.at(r - 1).at(c).GetRow(7));
 }
 
 void HPredChroma(size_t r, size_t c, Plane<2> &mb) {
   if (c == 0)
-    mb.at(r).at(c).FillWith(129);
+    mb.at(r).at(c).FillWith(kLeftPixel);
   else
     mb.at(r).at(c).FillCol(mb.at(r).at(c - 1).GetCol(7));
 }
 
 void DCPredChroma(size_t r, size_t c, Plane<2> &mb) {
   if (r == 0 && c == 0) {
-    mb.at(r).at(c).FillWith(128);
+    mb.at(r).at(c).FillWith(kUpperLeftPixel);
     return;
   }
 
@@ -39,11 +39,11 @@ void DCPredChroma(size_t r, size_t c, Plane<2> &mb) {
 
 void TMPredChroma(size_t r, size_t c, Plane<2> &mb) {
   int16_t p =
-      (r == 0 ? 127 : c == 0 ? 129 : mb.at(r - 1).at(c - 1).GetPixel(7, 7));
+      (r == 0 ? kUpperPixel : c == 0 ? kLeftPixel : mb.at(r - 1).at(c - 1).GetPixel(7, 7));
   for (size_t i = 0; i < 8; ++i) {
     for (size_t j = 0; j < 8; ++j) {
-      int16_t x = (c == 0 ? 129 : mb.at(r).at(c - 1).GetPixel(i, 7));
-      int16_t y = (r == 0 ? 127 : mb.at(r - 1).at(c).GetPixel(7, j));
+      int16_t x = (c == 0 ? kLeftPixel : mb.at(r).at(c - 1).GetPixel(i, 7));
+      int16_t y = (r == 0 ? kUpperPixel : mb.at(r - 1).at(c).GetPixel(7, j));
       mb.at(r).at(c).SetPixel(i, j, Clamp255(int16_t(x + y - p)));
     }
   }
@@ -51,14 +51,14 @@ void TMPredChroma(size_t r, size_t c, Plane<2> &mb) {
 
 void VPredLuma(size_t r, size_t c, Plane<4> &mb) {
   if (r == 0)
-    mb.at(r).at(c).FillWith(127);
+    mb.at(r).at(c).FillWith(kUpperPixel);
   else
     mb.at(r).at(c).FillRow(mb.at(r - 1).at(c).GetRow(15));
 }
 
 void HPredLuma(size_t r, size_t c, Plane<4> &mb) {
   if (c == 0)
-    mb.at(r).at(c).FillWith(129);
+    mb.at(r).at(c).FillWith(kLeftPixel);
   else
     mb.at(r).at(c).FillCol(mb.at(r).at(c - 1).GetCol(15));
 }
@@ -85,11 +85,11 @@ void DCPredLuma(size_t r, size_t c, Plane<4> &mb) {
 
 void TMPredLuma(size_t r, size_t c, Plane<4> &mb) {
   int16_t p =
-      (r == 0 ? 127 : c == 0 ? 129 : mb.at(r - 1).at(c - 1).GetPixel(15, 15));
+      (r == 0 ? kUpperPixel : c == 0 ? kLeftPixel : mb.at(r - 1).at(c - 1).GetPixel(15, 15));
   for (size_t i = 0; i < 16; ++i) {
     for (size_t j = 0; j < 16; ++j) {
-      int16_t x = (c == 0 ? 129 : mb.at(r).at(c - 1).GetPixel(i, 15));
-      int16_t y = (r == 0 ? 127 : mb.at(r - 1).at(c).GetPixel(15, j));
+      int16_t x = (c == 0 ? kLeftPixel : mb.at(r).at(c - 1).GetPixel(i, 15));
+      int16_t y = (r == 0 ? kUpperPixel : mb.at(r - 1).at(c).GetPixel(15, j));
       mb.at(r).at(c).SetPixel(i, j, Clamp255(int16_t(x + y - p)));
     }
   }
@@ -126,14 +126,14 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
         row_above = mb.at(r).at(c).at(i - 1).at(j).GetRow(3);
       } else {
         if (r == 0)
-          std::fill(row_above.begin(), row_above.end(), 127);
+          std::fill(row_above.begin(), row_above.end(), kUpperPixel);
         else
           row_above = mb.at(r - 1).at(c).at(3).at(j).GetRow(3);
       }
 
       if (j == 3) {
         if (r == 0) {
-          std::fill(row_right.begin(), row_right.end(), 127);
+          std::fill(row_right.begin(), row_right.end(), kUpperPixel);
         } else if (c + 1 == mb.at(r).size()) {
           int16_t x = mb.at(r - 1).at(c).at(3).at(3).at(3).at(3);
           std::fill(row_right.begin(), row_right.end(), x);
@@ -145,7 +145,7 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
           row_right = mb.at(r).at(c).at(i - 1).at(j + 1).GetRow(3);
         } else {
           if (r == 0)
-            std::fill(row_right.begin(), row_right.end(), 127);
+            std::fill(row_right.begin(), row_right.end(), kUpperPixel);
           else
             row_right = mb.at(r - 1).at(c).at(3).at(j + 1).GetRow(3);
         }
@@ -158,7 +158,7 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
         left = mb.at(r).at(c).at(i).at(j - 1).GetCol(3);
       } else {
         if (c == 0)
-          std::fill(left.begin(), left.end(), 129);
+          std::fill(left.begin(), left.end(), kLeftPixel);
         else
           left = mb.at(r).at(c - 1).at(i).at(3).GetCol(3);
       }
@@ -167,15 +167,15 @@ void BPredLuma(size_t r, size_t c, bool is_key_frame, const ResidualValue &rv,
       if (i > 0 && j > 0)
         p = mb.at(r).at(c).at(i - 1).at(j - 1).at(3).at(3);
       else if (i > 0)
-        p = c == 0 ? 129 : mb.at(r).at(c - 1).at(i - 1).at(3).at(3).at(3);
+        p = c == 0 ? kLeftPixel : mb.at(r).at(c - 1).at(i - 1).at(3).at(3).at(3);
       else if (j > 0)
-        p = r == 0 ? 127 : mb.at(r - 1).at(c).at(3).at(j - 1).at(3).at(3);
+        p = r == 0 ? kUpperPixel : mb.at(r - 1).at(c).at(3).at(j - 1).at(3).at(3);
       else
         p = r == 0 && c == 0
-                ? 127
+                ? kUpperPixel
                 : r == 0
-                      ? 127
-                      : c == 0 ? 129
+                      ? kUpperPixel
+                      : c == 0 ? kLeftPixel
                                : mb.at(r - 1).at(c - 1).at(3).at(3).at(3).at(3);
 
       SubBlockMode mode =
