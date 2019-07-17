@@ -11,6 +11,9 @@
 
 namespace vp8 {
 
+constexpr uint8_t kNumYPerBlock = 16;
+constexpr uint8_t kNumUVPerBlock = 4;
+
 struct MotionVector {
   MotionVector() : dr(0), dc(0) {}
   explicit MotionVector(int16_t dr_, int16_t dc_) : dr(dr_), dc(dc_) {}

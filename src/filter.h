@@ -56,10 +56,8 @@ void CalculateCoeffs(uint8_t loop_filter_level, uint8_t sharpness_level,
 template <size_t C>
 void PlaneFilterNormal(const FrameHeader &header, size_t hblock, size_t vblock,
                        bool is_key_frame,
-                       const std::vector<std::vector<InterContext>> &interc,
-                       const std::vector<std::vector<IntraContext>> &intrac,
                        const std::vector<std::vector<uint8_t>> &lf,
-                       const std::vector<std::vector<uint8_t>> &nonzero,
+                       const std::vector<std::vector<uint8_t>> &skip_lf,
                        Plane<C> &frame);
 
 void PlaneFilterSimple(const FrameHeader &header, size_t hblock, size_t vblock,

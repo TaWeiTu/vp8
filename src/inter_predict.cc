@@ -6,9 +6,9 @@ namespace vp8 {
 namespace internal {
 
 InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
-                        const std::array<bool, 4> &ref_frame_bias,
+                        const std::array<bool, kNumRefFrames> &ref_frame_bias,
                         uint8_t ref_frame,
-                        const std::vector<std::vector<InterContext>> &context,
+                        const std::array<Context, 3> &context,
                         const std::unique_ptr<BitstreamParser> &ps,
                         MotionVector &best, MotionVector &nearest,
                         MotionVector &near) {
@@ -16,22 +16,23 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
   std::array<MotionVector, 4> mv{};
   uint8_t ptr = 0;
 
-  enum { CNT_ZERO, CNT_NEAREST, CNT_NEAR, CNT_SPLIT };
+  enum { CNT_ZERO = 0, CNT_NEAREST = 1, CNT_NEAR = 2, CNT_SPLIT = 3 };
+  enum { UPPER_CTX = 0, LEFT_CTX = 1, UPPER_LEFT_CTX = 2 };
 
-  if (r > 0 && context.at(r - 1).at(c).is_inter_mb) {
+  if (r > 0 && context.at(UPPER_CTX).is_inter_mb) {
     MotionVector v = mb.at(r - 1).at(c).GetMotionVector();
     if (v != kZero) {
-      v = Invert(v, context.at(r - 1).at(c).ref_frame, ref_frame,
+      v = Invert(v, context.at(UPPER_CTX).ctx.as_inter.ref_frame, ref_frame,
                  ref_frame_bias);
       mv.at(++ptr) = v;
     }
     cnt.at(ptr) += 2;
   }
 
-  if (c > 0 && context.at(r).at(c - 1).is_inter_mb) {
+  if (c > 0 && context.at(LEFT_CTX).is_inter_mb) {
     MotionVector v = mb.at(r).at(c - 1).GetMotionVector();
     if (v != kZero) {
-      v = Invert(v, context.at(r).at(c - 1).ref_frame, ref_frame,
+      v = Invert(v, context.at(LEFT_CTX).ctx.as_inter.ref_frame, ref_frame,
                  ref_frame_bias);
       if (mv.at(ptr) != v) mv.at(++ptr) = v;
       cnt.at(ptr) += 2;
@@ -40,11 +41,11 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
     }
   }
 
-  if (r > 0 && c > 0 && context.at(r - 1).at(c - 1).is_inter_mb) {
+  if (r > 0 && c > 0 && context.at(UPPER_LEFT_CTX).is_inter_mb) {
     MotionVector v = mb.at(r - 1).at(c - 1).GetMotionVector();
     if (v != kZero) {
-      v = Invert(v, context.at(r - 1).at(c - 1).ref_frame, ref_frame,
-                 ref_frame_bias);
+      v = Invert(v, context.at(UPPER_LEFT_CTX).ctx.as_inter.ref_frame,
+                 ref_frame, ref_frame_bias);
       if (mv.at(ptr) != v) mv.at(++ptr) = v;
       cnt.at(ptr) += 1;
     } else {
@@ -57,9 +58,14 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
     ++cnt.at(CNT_NEAREST);
 
   cnt.at(CNT_SPLIT) =
-      (r > 0 && context.at(r - 1).at(c).mv_mode == MV_SPLIT) * 2 +
-      (c > 0 && context.at(r).at(c - 1).mv_mode == MV_SPLIT) * 2 +
-      (r > 0 && c > 0 && context.at(r - 1).at(c - 1).mv_mode == MV_SPLIT);
+      (r > 0 && context.at(UPPER_CTX).is_inter_mb &&
+       context.at(UPPER_CTX).ctx.as_inter.mv_mode == MV_SPLIT) *
+          2 +
+      (c > 0 && context.at(LEFT_CTX).is_inter_mb &&
+       context.at(LEFT_CTX).ctx.as_inter.mv_mode == MV_SPLIT) *
+          2 +
+      (r > 0 && c > 0 && context.at(UPPER_LEFT_CTX).is_inter_mb &&
+       context.at(UPPER_LEFT_CTX).ctx.as_inter.mv_mode == MV_SPLIT);
 
   if (cnt.at(CNT_NEAR) > cnt.at(CNT_NEAREST)) {
     std::swap(cnt.at(CNT_NEAR), cnt.at(CNT_NEAREST));
@@ -97,7 +103,7 @@ void ClampMV(int16_t top, int16_t bottom, int16_t left, int16_t right,
 
 MotionVector Invert(const MotionVector &mv, uint8_t ref_frame1,
                     uint8_t ref_frame2,
-                    const std::array<bool, 4> &ref_frame_bias) {
+                    const std::array<bool, kNumRefFrames> &ref_frame_bias) {
   if (ref_frame_bias[ref_frame1] != ref_frame_bias[ref_frame2])
     return MotionVector(-mv.dr, -mv.dc);
   return mv;
@@ -197,12 +203,12 @@ void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
   }
 }
 
-void ConfigureMVs(size_t r, size_t c, bool trim,
-                  const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
-                  std::vector<std::vector<InterContext>> &context,
-                  std::vector<std::vector<uint8_t>> &skip_lf,
-                  const std::unique_ptr<BitstreamParser> &ps,
-                  const std::shared_ptr<Frame> &frame) {
+Context ConfigureMVs(size_t r, size_t c, bool trim,
+                     const std::array<bool, 4> &ref_frame_bias,
+                     uint8_t ref_frame, const std::array<Context, 3> &context,
+                     std::vector<std::vector<uint8_t>> &skip_lf,
+                     const std::unique_ptr<BitstreamParser> &ps,
+                     const std::shared_ptr<Frame> &frame) {
   int16_t top = ((-int16_t(r) * 16) * 8);
   int16_t bottom = ((int16_t(frame->vblock) - 1 - int16_t(r)) * 16) * 8;
   int16_t left = ((-int16_t(c) * 16) * 8);
@@ -216,7 +222,7 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
   ClampMV2(top, bottom, left, right, nearest);
   ClampMV2(top, bottom, left, right, near);
 
-  context.at(r).at(c) = InterContext(hd.mv_mode, ref_frame);
+  Context ctx(hd.mv_mode, ref_frame);
   if (hd.mv_mode == MV_SPLIT) skip_lf.at(r).at(c) = 0;
 
   switch (hd.mv_mode) {
@@ -254,6 +260,7 @@ void ConfigureMVs(size_t r, size_t c, bool trim,
 
   ConfigureChromaMVs(frame->Y.at(r).at(c), frame->vblock, frame->hblock, trim,
                      frame->U.at(r).at(c), frame->V.at(r).at(c));
+  return ctx;
 }
 
 template <size_t C>
@@ -368,25 +375,27 @@ template void InterpBlock<2>(
 
 }  // namespace internal
 
-void InterPredict(const FrameTag &tag, size_t r, size_t c,
-                  const std::array<std::shared_ptr<Frame>, 4> &refs,
-                  const std::array<bool, 4> &ref_frame_bias, uint8_t ref_frame,
-                  std::vector<std::vector<InterContext>> &context,
-                  std::vector<std::vector<uint8_t>> &skip_lf,
-                  const std::unique_ptr<BitstreamParser> &ps,
-                  const std::shared_ptr<Frame> &frame) {
-  internal::ConfigureMVs(r, c, tag.version == 3, ref_frame_bias, ref_frame, context,
-               skip_lf, ps, frame);
+Context InterPredict(
+    const FrameTag &tag, size_t r, size_t c,
+    const std::array<std::shared_ptr<Frame>, kNumRefFrames> &refs,
+    const std::array<bool, kNumRefFrames> &ref_frame_bias, uint8_t ref_frame,
+    const std::array<Context, 3> &context,
+    std::vector<std::vector<uint8_t>> &skip_lf,
+    const std::unique_ptr<BitstreamParser> &ps,
+    const std::shared_ptr<Frame> &frame) {
+  Context ctx = internal::ConfigureMVs(r, c, tag.version == 3, ref_frame_bias,
+                                       ref_frame, context, skip_lf, ps, frame);
 
   const std::array<std::array<int16_t, 6>, 8> &subpixel_filters =
       tag.version == 0 ? kBicubicFilter : kBilinearFilter;
 
   internal::InterpBlock(refs.at(ref_frame)->Y, subpixel_filters, r, c,
-              frame->Y.at(r).at(c));
+                        frame->Y.at(r).at(c));
   internal::InterpBlock(refs.at(ref_frame)->U, subpixel_filters, r, c,
-              frame->U.at(r).at(c));
+                        frame->U.at(r).at(c));
   internal::InterpBlock(refs.at(ref_frame)->V, subpixel_filters, r, c,
-              frame->V.at(r).at(c));
+                        frame->V.at(r).at(c));
+  return ctx;
 }
 
 }  // namespace vp8
