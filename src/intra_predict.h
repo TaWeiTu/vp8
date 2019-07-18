@@ -15,17 +15,6 @@
 
 namespace vp8 {
 
-/* struct IntraContext {
-  bool is_intra_mb;
-  bool is_b_pred;
-  SubBlockMode mode;
-
-  IntraContext() : is_intra_mb(false) {}
-
-  explicit IntraContext(bool is_b_pred_, SubBlockMode mode_)
-      : is_intra_mb(true), is_b_pred(is_b_pred_), mode(mode_) {}
-}; */
-
 constexpr uint16_t kAllVPred =
   (B_VE_PRED << 12) | (B_VE_PRED << 8) | (B_VE_PRED << 4) | B_VE_PRED;
 constexpr uint16_t kAllHPred =

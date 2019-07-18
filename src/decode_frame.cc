@@ -86,13 +86,13 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
   std::vector<std::vector<uint8_t>> v_nonzero(
       frame->vblock << 1, std::vector<uint8_t>(frame->hblock << 1, 0));
 
-  std::vector<Context> ctx(frame->hblock, Context(kAllDCPred));
+  std::vector<Context> ctx(frame->hblock);
   Context ctx_left, ctx_upper_left;
 
   UpdateDequantFactor(header.quant_indices);
 
   for (size_t r = 0; r < frame->vblock; ++r) {
-    ctx_left = Context(kAllDCPred);
+    ctx_left = Context(false);
     for (size_t c = 0; c < frame->hblock; ++c) {
       MacroBlockPreHeader pre = ps->ReadMacroBlockPreHeader();
       int16_t qp = header.quant_indices.y_ac_qi;
@@ -162,8 +162,6 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
         ctx_upper_left = ctx.at(c);
         ctx.at(c) = res.at(0);
         ctx_left = res.at(1);
-        assert(!ctx.at(c).is_inter_mb);
-        assert(!ctx_left.is_inter_mb);
       }
     }
   }

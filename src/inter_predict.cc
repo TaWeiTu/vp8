@@ -22,7 +22,7 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
   if (r > 0 && context.at(UPPER_CTX).is_inter_mb) {
     MotionVector v = mb.at(r - 1).at(c).GetMotionVector();
     if (v != kZero) {
-      v = Invert(v, context.at(UPPER_CTX).ctx.as_inter.ref_frame, ref_frame,
+      v = Invert(v, context.at(UPPER_CTX).ref_frame(), ref_frame,
                  ref_frame_bias);
       mv.at(++ptr) = v;
     }
@@ -32,7 +32,7 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
   if (c > 0 && context.at(LEFT_CTX).is_inter_mb) {
     MotionVector v = mb.at(r).at(c - 1).GetMotionVector();
     if (v != kZero) {
-      v = Invert(v, context.at(LEFT_CTX).ctx.as_inter.ref_frame, ref_frame,
+      v = Invert(v, context.at(LEFT_CTX).ref_frame(), ref_frame,
                  ref_frame_bias);
       if (mv.at(ptr) != v) mv.at(++ptr) = v;
       cnt.at(ptr) += 2;
@@ -44,8 +44,8 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
   if (r > 0 && c > 0 && context.at(UPPER_LEFT_CTX).is_inter_mb) {
     MotionVector v = mb.at(r - 1).at(c - 1).GetMotionVector();
     if (v != kZero) {
-      v = Invert(v, context.at(UPPER_LEFT_CTX).ctx.as_inter.ref_frame,
-                 ref_frame, ref_frame_bias);
+      v = Invert(v, context.at(UPPER_LEFT_CTX).ref_frame(), ref_frame,
+                 ref_frame_bias);
       if (mv.at(ptr) != v) mv.at(++ptr) = v;
       cnt.at(ptr) += 1;
     } else {
@@ -59,13 +59,13 @@ InterMBHeader SearchMVs(size_t r, size_t c, const Plane<4> &mb,
 
   cnt.at(CNT_SPLIT) =
       (r > 0 && context.at(UPPER_CTX).is_inter_mb &&
-       context.at(UPPER_CTX).ctx.as_inter.mv_mode == MV_SPLIT) *
+       context.at(UPPER_CTX).mv_mode() == MV_SPLIT) *
           2 +
       (c > 0 && context.at(LEFT_CTX).is_inter_mb &&
-       context.at(LEFT_CTX).ctx.as_inter.mv_mode == MV_SPLIT) *
+       context.at(LEFT_CTX).mv_mode() == MV_SPLIT) *
           2 +
       (r > 0 && c > 0 && context.at(UPPER_LEFT_CTX).is_inter_mb &&
-       context.at(UPPER_LEFT_CTX).ctx.as_inter.mv_mode == MV_SPLIT);
+       context.at(UPPER_LEFT_CTX).mv_mode() == MV_SPLIT);
 
   if (cnt.at(CNT_NEAR) > cnt.at(CNT_NEAREST)) {
     std::swap(cnt.at(CNT_NEAR), cnt.at(CNT_NEAREST));
@@ -104,7 +104,7 @@ void ClampMV(int16_t top, int16_t bottom, int16_t left, int16_t right,
 MotionVector Invert(const MotionVector &mv, uint8_t ref_frame1,
                     uint8_t ref_frame2,
                     const std::array<bool, kNumRefFrames> &ref_frame_bias) {
-  if (ref_frame_bias[ref_frame1] != ref_frame_bias[ref_frame2])
+  if (ref_frame_bias.at(ref_frame1) != ref_frame_bias.at(ref_frame2))
     return MotionVector(-mv.dr, -mv.dc);
   return mv;
 }
@@ -280,6 +280,7 @@ std::array<std::array<int16_t, 4>, 9> HorizontalSixtap(
   for (int32_t i = 0; i < 9; ++i) {
     for (size_t j = 0; j < 9; ++j)
       cache.at(j) = GetPixel(r + i, c - 2 + int32_t(j));
+
     for (size_t j = 0; j < 4; ++j) {
       int32_t sum =
           cache.at(j + 0) * filter.at(0) + cache.at(j + 1) * filter.at(1) +

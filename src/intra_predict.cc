@@ -102,11 +102,11 @@ std::array<Context, 2> BPredLuma(size_t r, size_t c, bool is_key_frame,
                                  const std::array<Context, 2> &context,
                                  const std::unique_ptr<BitstreamParser> &ps,
                                  Plane<4> &mb) {
-  uint16_t row_mode = is_key_frame ? context.at(1).ctx.as_intra : 0;
-  uint16_t col_mode = is_key_frame ? context.at(0).ctx.as_intra : 0;
+  Context row = context.at(1).ctx;
+  Context col = context.at(0).ctx;
 
   uint32_t zero = rv.zero;
-  std::array<Context, 2> ctx{Context(false), Context(false)};
+  std::array<Context, 2> ctx{};
 
   for (size_t i = 0; i < 4; ++i) {
     for (size_t j = 0; j < 4; ++j) {
@@ -174,16 +174,13 @@ std::array<Context, 2> BPredLuma(size_t r, size_t c, bool is_key_frame,
                                : mb.at(r - 1).at(c - 1).at(3).at(3).at(3).at(3);
 
       SubBlockMode mode =
-          is_key_frame ? ps->ReadSubBlockBModeKF((col_mode >> (j * 4) & 15),
-                                                 (row_mode >> (i * 4) & 15))
+          is_key_frame ? ps->ReadSubBlockBModeKF(col.mode(j), row.mode(i))
                        : ps->ReadSubBlockBModeNonKF();
 
-      if (i == 3) ctx.at(0).ctx.as_intra |= mode << (4 * j);
-      if (j == 3) ctx.at(1).ctx.as_intra |= mode << (4 * i);
-      col_mode &= ~(15 << (4 * j));
-      col_mode |= mode << (4 * j);
-      row_mode &= ~(15 << (4 * i));
-      row_mode |= mode << (4 * i);
+      if (i == 3) ctx.at(0).append(j, mode);
+      if (j == 3) ctx.at(1).append(i, mode);
+      col.append(j, mode);
+      row.append(i, mode);
       BPredSubBlock(above, left, p, mode, mb.at(r).at(c).at(i).at(j));
       ApplySBResidual(rv.y.at(i << 2 | j), zero & 1,
                       mb.at(r).at(c).at(i).at(j));
