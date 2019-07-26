@@ -163,38 +163,18 @@ void ConfigureSubBlockMVs(const InterMBHeader &hd, size_t r, size_t c,
     return mb.at(r).at(c).GetSubBlockMV(idx - 4);
   };
 
+  static std::array<MotionVector, kNumSubBlockMVMode> mvs{};
   uint64_t mask = kHead.at(hd.mv_split_mode);
+
   for (size_t i = 0; i < kNumPartition.at(hd.mv_split_mode); ++i) {
     size_t head = mask & 15;
     mask >>= 4;
-    MotionVector left = LeftMotionVector(head);
-    MotionVector above = AboveMotionVector(head);
-    uint8_t context = SubBlockContext(left, above);
+    mvs.at(LEFT_4x4) = LeftMotionVector(head);
+    mvs.at(ABOVE_4x4) = AboveMotionVector(head);
+    uint8_t context = SubBlockContext(mvs.at(LEFT_4x4), mvs.at(ABOVE_4x4));
     SubBlockMVMode mode = ps->ReadSubBlockMVMode(context);
-    MotionVector mv;
-    switch (mode) {
-      case LEFT_4x4:
-        mv = left;
-        break;
-
-      case ABOVE_4x4:
-        mv = above;
-        break;
-
-      case ZERO_4x4:
-        mv = kZero;
-        break;
-
-      case NEW_4x4:
-        mv = ps->ReadSubBlockMV() + best;
-        break;
-
-      default:
-        ensure(false,
-               "[Error] ConfigureSubBlockMVs: Unknown subblock motion vector "
-               "mode.");
-        break;
-    }
+    MotionVector mv =
+        (mode == NEW_4x4 ? ps->ReadSubBlockMV() + best : mvs.at(mode));
     for (int8_t ptr = int8_t(head); ptr != -1;
          ptr = kNext.at(hd.mv_split_mode).at(size_t(ptr))) {
       size_t ir = size_t(ptr) >> 2, ic = size_t(ptr) & 3;
@@ -351,28 +331,6 @@ void InterpBlock(const Plane<C> &refer,
     }
   }
 }
-
-template std::array<std::array<int16_t, 4>, 9> HorizontalSixtap<4>(
-    const Plane<4> &, int32_t, int32_t, const std::array<int16_t, 6> &);
-
-template std::array<std::array<int16_t, 4>, 9> HorizontalSixtap<2>(
-    const Plane<2> &, int32_t, int32_t, const std::array<int16_t, 6> &);
-
-template void Sixtap<4>(const Plane<4> &, int32_t, int32_t, uint8_t, uint8_t,
-                        const std::array<std::array<int16_t, 6>, 8> &,
-                        SubBlock &);
-
-template void Sixtap<2>(const Plane<2> &, int32_t, int32_t, uint8_t, uint8_t,
-                        const std::array<std::array<int16_t, 6>, 8> &,
-                        SubBlock &);
-
-template void InterpBlock<4>(
-    const Plane<4> &refer, const std::array<std::array<int16_t, 6>, 8> &filter,
-    size_t r, size_t c, MacroBlock<4> &mb);
-
-template void InterpBlock<2>(
-    const Plane<2> &refer, const std::array<std::array<int16_t, 6>, 8> &filter,
-    size_t r, size_t c, MacroBlock<2> &mb);
 
 }  // namespace internal
 

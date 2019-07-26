@@ -17,15 +17,15 @@
 namespace vp8 {
 namespace internal {
 
-static std::array<QuantFactor, 128> y2dqf;
-static std::array<QuantFactor, 128> ydqf;
-static std::array<QuantFactor, 128> uvdqf;
+static std::array<QuantFactor, kMaxQuantIndex> y2dqf;
+static std::array<QuantFactor, kMaxQuantIndex> ydqf;
+static std::array<QuantFactor, kMaxQuantIndex> uvdqf;
 
 void UpdateNonzero(const ResidualValue &rv, bool has_y2, size_t r, size_t c,
                    std::vector<uint8_t> &y2_row, std::vector<uint8_t> &y2_col,
                    std::vector<std::vector<uint8_t>> &y1_nonzero,
                    std::vector<std::vector<uint8_t>> &u_nonzero,
-                   std::vector<std::vector<uint8_t>> &v_nonzero);
+                   std::vector<std::vector<uint8_t>> &v_nonzero) noexcept;
 
 void UpdateDequantFactor(const QuantIndices &quant);
 

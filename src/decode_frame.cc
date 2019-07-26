@@ -7,36 +7,40 @@ void UpdateNonzero(const ResidualValue &rv, bool has_y2, size_t r, size_t c,
                    std::vector<uint8_t> &y2_row, std::vector<uint8_t> &y2_col,
                    std::vector<std::vector<uint8_t>> &y1_nonzero,
                    std::vector<std::vector<uint8_t>> &u_nonzero,
-                   std::vector<std::vector<uint8_t>> &v_nonzero) {
+                   std::vector<std::vector<uint8_t>> &v_nonzero) noexcept {
   if (has_y2) {
     // If the current coefficients contain Y2 block, then update the most recent
     // Y2 status.
     uint8_t nonzero = 0;
-    for (size_t i = 0; i < 4; ++i) {
-      for (size_t j = 0; j < 4; ++j) nonzero += rv.y2.at(i).at(j) != 0;
+    for (size_t i = 0; i < kSubBlockSize; ++i) {
+      for (size_t j = 0; j < kSubBlockSize; ++j)
+        nonzero += rv.y2.at(i).at(j) != 0;
     }
     y2_row.at(r) = uint8_t(nonzero > 0);
     y2_col.at(c) = uint8_t(nonzero > 0);
   }
   for (size_t p = 0; p < kNumYPerBlock; ++p) {
     uint8_t nonzero = 0;
-    for (size_t i = 0; i < 4; ++i) {
-      for (size_t j = 0; j < 4; ++j) nonzero += rv.y.at(p).at(i).at(j) != 0;
+    for (size_t i = 0; i < kSubBlockSize; ++i) {
+      for (size_t j = 0; j < kSubBlockSize; ++j)
+        nonzero += rv.y.at(p).at(i).at(j) != 0;
     }
     y1_nonzero.at(r << 2 | (p >> 2)).at(c << 2 | (p & 3)) =
         uint8_t(nonzero > 0);
   }
   for (size_t p = 0; p < kNumUVPerBlock; ++p) {
     uint8_t nonzero = 0;
-    for (size_t i = 0; i < 4; ++i) {
-      for (size_t j = 0; j < 4; ++j) nonzero += rv.u.at(p).at(i).at(j) != 0;
+    for (size_t i = 0; i < kSubBlockSize; ++i) {
+      for (size_t j = 0; j < kSubBlockSize; ++j)
+        nonzero += rv.u.at(p).at(i).at(j) != 0;
     }
     u_nonzero.at(r << 1 | (p >> 1)).at(c << 1 | (p & 1)) = uint8_t(nonzero > 0);
   }
   for (size_t p = 0; p < kNumUVPerBlock; ++p) {
     uint8_t nonzero = 0;
-    for (size_t i = 0; i < 4; ++i) {
-      for (size_t j = 0; j < 4; ++j) nonzero += rv.v.at(p).at(i).at(j) != 0;
+    for (size_t i = 0; i < kSubBlockSize; ++i) {
+      for (size_t j = 0; j < kSubBlockSize; ++j)
+        nonzero += rv.v.at(p).at(i).at(j) != 0;
     }
     v_nonzero.at(r << 1 | (p >> 1)).at(c << 1 | (p & 1)) = uint8_t(nonzero > 0);
   }
@@ -102,7 +106,6 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
                  : header.quantizer_segment.at(pre.segment_id) + qp;
       }
 
-
       size_t dq = size_t(std::clamp(qp, int16_t(0), int16_t(127)));
 
       uint8_t y2_nonzero = y2_row.at(r) + y2_col.at(c);
@@ -129,10 +132,10 @@ void Predict(const FrameHeader &header, const FrameTag &tag,
       IntraMBHeader mh;
 
       if (pre.is_inter_mb) {
-        const std::array<Context, 3> param = {ctx.at(c), ctx_left, ctx_upper_left};
-        Context res =
-            InterPredict(tag, r, c, refs, ref_frame_bias, pre.ref_frame, param,
-                         skip_lf, ps, frame);
+        const std::array<Context, 3> param = {ctx.at(c), ctx_left,
+                                              ctx_upper_left};
+        Context res = InterPredict(tag, r, c, refs, ref_frame_bias,
+                                   pre.ref_frame, param, skip_lf, ps, frame);
         ctx_upper_left = ctx.at(c);
         ctx.at(c) = ctx_left = res;
       } else {

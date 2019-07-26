@@ -13,7 +13,7 @@ namespace vp8 {
 
 enum IOMode { READ, WRITE };
 
-static const size_t kBufSize = 1048576;
+constexpr size_t kBufSize = 1048576;
 
 template <IOMode Mode>
 class YUV {

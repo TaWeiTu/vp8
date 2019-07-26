@@ -15,12 +15,12 @@ inline void ensure(bool cond, const std::string &message) {
 namespace vp8 {
 
 template <typename T>
-inline T Clamp255(T x) {
+inline T Clamp255(T x) noexcept {
   return std::clamp(x, T(0), T(255));
 }
 
 template <typename T>
-inline T Clamp128(T x) {
+inline T Clamp128(T x) noexcept {
   return std::clamp(x, T(-128), T(127));
 }
 

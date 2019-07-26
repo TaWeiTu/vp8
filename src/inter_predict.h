@@ -15,21 +15,6 @@
 
 namespace vp8 {
 
-/* struct InterContext {
-  bool is_inter_mb;
-  MacroBlockMV mv_mode;
-  uint8_t ref_frame;
-
-  InterContext() : is_inter_mb(false), mv_mode(MV_ZERO), ref_frame(0) {}
-
-  explicit InterContext(MacroBlockMV mv_mode_, uint8_t ref_frame_)
-      : is_inter_mb(true), mv_mode(mv_mode_), ref_frame(ref_frame_) {}
-
-  explicit InterContext(bool is_inter_mb_, MacroBlockMV mv_mode_,
-                        uint8_t ref_frame_)
-      : is_inter_mb(is_inter_mb_), mv_mode(mv_mode_), ref_frame(ref_frame_) {}
-}; */
-
 constexpr std::array<std::array<int16_t, 6>, 8> kBicubicFilter = {
     {{0, 0, 128, 0, 0, 0},
      {0, -6, 123, 12, -1, 0},

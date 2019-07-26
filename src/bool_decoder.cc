@@ -1,7 +1,5 @@
 #include "bool_decoder.h"
 
-#include <utility>
-
 namespace vp8 {
 
 void BoolDecoder::Init() {

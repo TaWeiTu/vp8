@@ -12,9 +12,10 @@ void Dequantize(std::array<int16_t, 16>& coefficients, const QuantFactor& dqf) {
   for (size_t i = 1; i < 16; i++) coefficients.at(i) *= dqf.second;
 }
 
-void BuildQuantFactorsY2(const QuantIndices& quant,
-                         std::array<QuantFactor, 128>& y2dqf) {
-  for (int16_t i = 0; i < 128; ++i) {
+void BuildQuantFactorsY2(
+    const QuantIndices& quant,
+    std::array<QuantFactor, kMaxQuantIndex>& y2dqf) noexcept {
+  for (int16_t i = 0; i < kMaxQuantIndex; ++i) {
     size_t idx_dc = size_t(std::clamp(quant.y2_dc_delta_q + i, 0, 127));
     size_t idx_ac = size_t(std::clamp(quant.y2_ac_delta_q + i, 0, 127));
     int16_t DCfact = int16_t(kDClookup.at(idx_dc) * 2);
@@ -25,9 +26,10 @@ void BuildQuantFactorsY2(const QuantIndices& quant,
   }
 }
 
-void BuildQuantFactorsY(const QuantIndices& quant,
-                        std::array<QuantFactor, 128>& ydqf) {
-  for (int16_t i = 0; i < 128; ++i) {
+void BuildQuantFactorsY(
+    const QuantIndices& quant,
+    std::array<QuantFactor, kMaxQuantIndex>& ydqf) noexcept {
+  for (int16_t i = 0; i < kMaxQuantIndex; ++i) {
     size_t idx = size_t(std::clamp(quant.y_dc_delta_q + i, 0, 127));
     int16_t DCfact = int16_t(kDClookup.at(idx));
     int16_t ACfact = int16_t(kAClookup.at(size_t(i)));
@@ -36,9 +38,10 @@ void BuildQuantFactorsY(const QuantIndices& quant,
   }
 }
 
-void BuildQuantFactorsUV(const QuantIndices& quant,
-                         std::array<QuantFactor, 128>& uvdqf) {
-  for (int16_t i = 0; i < 128; ++i) {
+void BuildQuantFactorsUV(
+    const QuantIndices& quant,
+    std::array<QuantFactor, kMaxQuantIndex>& uvdqf) noexcept {
+  for (int16_t i = 0; i < kMaxQuantIndex; ++i) {
     size_t idx_dc = size_t(std::clamp(quant.uv_dc_delta_q + i, 0, 127));
     size_t idx_ac = size_t(std::clamp(quant.uv_ac_delta_q + i, 0, 127));
     int16_t DCfact = int16_t(kDClookup.at(idx_dc));

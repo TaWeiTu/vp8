@@ -9,17 +9,22 @@ namespace vp8 {
 using TreeIndex = int8_t;
 using Prob = uint8_t;
 
-const int kMaxMacroBlockSegments = 4;
-const int kNumMacroBlockSegmentProb = 3;
-const int kNumLfPredictionDelta = 4;
-const int kNumBlockType = 4;
-const int kNumCoeffBand = 8;
-const int kNumDctContextType = 3;
-const int kNumCoeffProb = 11;
-const int kNumYModeProb = 4;
-const int kNumUVModeProb = 3;
-const int kNumMVDimen = 2;
-const int kNumResidualBlock = 24;
+constexpr uint8_t kMaxMacroBlockSegments = 4;
+constexpr uint8_t kNumMacroBlockSegmentProb = 3;
+constexpr uint8_t kNumLfPredictionDelta = 4;
+constexpr uint8_t kNumBlockType = 4;
+constexpr uint8_t kNumCoeffBand = 8;
+constexpr uint8_t kNumDctContextType = 3;
+constexpr uint8_t kNumCoeffProb = 11;
+constexpr uint8_t kNumYModeProb = 4;
+constexpr uint8_t kNumUVModeProb = 3;
+constexpr uint8_t kNumMVDimen = 2;
+constexpr uint8_t kNumResidualBlock = 24;
+constexpr uint8_t kMaxQuantIndex = 128;
+constexpr uint8_t kNumYPerBlock = 16;
+constexpr uint8_t kNumUVPerBlock = 4;
+constexpr uint8_t kSubBlockSize = 4;
+
 
 enum SegmentMode { SEGMENT_MODE_DELTA = 0, SEGMENT_MODE_ABSOLUTE };
 

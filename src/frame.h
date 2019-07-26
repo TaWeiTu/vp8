@@ -7,12 +7,10 @@
 #include <string>
 #include <vector>
 
+#include "bitstream_const.h"
 #include "utils.h"
 
 namespace vp8 {
-
-constexpr uint8_t kNumYPerBlock = 16;
-constexpr uint8_t kNumUVPerBlock = 4;
 
 struct MotionVector {
   MotionVector() : dr(0), dc(0) {}

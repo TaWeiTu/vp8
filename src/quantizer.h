@@ -14,7 +14,7 @@ namespace vp8 {
 
 using QuantFactor = std::pair<int16_t, int16_t>;
 
-constexpr std::array<int, 128> kDClookup = {
+constexpr std::array<int, kMaxQuantIndex> kDClookup = {
     4,   5,   6,   7,   8,   9,   10,  10,  11,  12,  13,  14,  15,  16,  17,
     17,  18,  19,  20,  20,  21,  21,  22,  22,  23,  23,  24,  25,  25,  26,
     27,  28,  29,  30,  31,  32,  33,  34,  35,  36,  37,  37,  38,  39,  40,
@@ -25,7 +25,7 @@ constexpr std::array<int, 128> kDClookup = {
     106, 108, 110, 112, 114, 116, 118, 122, 124, 126, 128, 130, 132, 134, 136,
     138, 140, 143, 145, 148, 151, 154, 157};
 
-constexpr std::array<int, 128> kAClookup = {
+constexpr std::array<int, kMaxQuantIndex> kAClookup = {
     4,   5,   6,   7,   8,   9,   10,  11,  12,  13,  14,  15,  16,  17,  18,
     19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31,  32,  33,
     34,  35,  36,  37,  38,  39,  40,  41,  42,  43,  44,  45,  46,  47,  48,
@@ -40,14 +40,16 @@ void Quantize(std::array<int16_t, 16>& coefficients, const QuantFactor& qf);
 
 void Dequantize(std::array<int16_t, 16>& coefficients, const QuantFactor& dqf);
 
-void BuildQuantFactorsY2(const QuantIndices& quant,
-                         std::array<QuantFactor, 128>& y2dqf);
+void BuildQuantFactorsY2(
+    const QuantIndices& quant,
+    std::array<QuantFactor, kMaxQuantIndex>& y2dqf) noexcept;
 
 void BuildQuantFactorsY(const QuantIndices& quant,
-                        std::array<QuantFactor, 128>& ydqf);
+                        std::array<QuantFactor, kMaxQuantIndex>& ydqf) noexcept;
 
-void BuildQuantFactorsUV(const QuantIndices& quant,
-                         std::array<QuantFactor, 128>& uvdqf);
+void BuildQuantFactorsUV(
+    const QuantIndices& quant,
+    std::array<QuantFactor, kMaxQuantIndex>& uvdqf) noexcept;
 
 }  // namespace vp8
 
