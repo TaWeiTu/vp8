@@ -21,9 +21,6 @@ add_cxx_compiler_flag(-Wno-weak-vtables)
 add_cxx_compiler_flag(-march=native)
 add_cxx_compiler_flag(-flto=full)
 add_cxx_compiler_flag(-pthread)
-# add_cxx_compiler_flag(-lopencv_core)
-# add_cxx_compiler_flag(-lopencv_imgproc)
-# add_cxx_compiler_flag(-lopencv_highgui)
 
 if (DEBUG)
   add_cxx_compiler_flag(-fsanitize=undefined)
@@ -41,13 +38,16 @@ else ()
   add_cxx_compiler_flag(-O3)
 endif (DEBUG)
 
-file(GLOB SRC "src/*.cc")
+file(GLOB LIB_SRC "src/*.cc")
 
-list(REMOVE_ITEM SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/decode.cc")
-list(REMOVE_ITEM SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/display.cc")
-list(REMOVE_ITEM SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/encode.cc")
+list(REMOVE_ITEM LIB_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/decode.cc")
+list(REMOVE_ITEM LIB_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/display.cc")
+list(REMOVE_ITEM LIB_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/encode.cc")
 
-add_executable(decode src/decode.cc ${SRC})
-add_executable(display src/display.cc ${SRC})
+add_library(vp8 STATIC "${LIB_SRC}")
 
-target_link_libraries(display ${OpenCV_LIBS})
+add_executable(decode src/decode.cc)
+add_executable(display src/display.cc)
+
+target_link_libraries(decode vp8)
+target_link_libraries(display vp8 ${OpenCV_LIBS})

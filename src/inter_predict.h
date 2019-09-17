@@ -45,8 +45,8 @@ constexpr std::array<std::array<std::array<uint8_t, 2>, 2>, 2>
 // Pre-built table for fast partition of the macroblocks.
 constexpr std::array<uint8_t, 4> kNumPartition = {2, 2, 4, 16};
 
-constexpr std::array<uint64_t, 4> kHead = {128, 32, 43040,
-                                           18364758544493064720};
+constexpr std::array<uint64_t, 4> kHead = {128ULL, 32ULL, 43040ULL,
+                                           18364758544493064720ULL};
 
 constexpr std::array<std::array<int8_t, 16>, 4> kNext = {
     {{1, 2, 3, 4, 5, 6, 7, -1, 9, 10, 11, 12, 13, 14, 15, -1},

@@ -69,8 +69,8 @@ class BoolEncoder {
   uint8_t bit_count_;
 
   // TODO(waynetu):
-  void AddOne();
-  void WriteByte(uint8_t byte);
+  void AddOne() {}
+  void WriteByte(uint8_t byte) {}
 };
 
 }  // namespace vp8
