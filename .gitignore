@@ -18,3 +18,5 @@ example/output.avi
 display
 example/*.ivf
 example/*.mov
+
+build/

@@ -86,7 +86,7 @@ int main(int argc, const char **argv) {
             vp8::SpanReader(buffer.data(), buffer.data() + buffer.size()), ctx);
     vp8::FrameHeader header;
     vp8::FrameTag tag;
-    std::tie(tag, header) = ps.ReadFrameTagHeader();
+    std::tie(tag, header) = ps->ReadFrameTagHeader();
     if (tag.key_frame) {
       height = tag.height;
       width = tag.width;
