@@ -1,9 +1,4 @@
-# ITCT Final Project - VP8 Decoder #
-
-## Team members ##
-* B07902024 塗大為
-* B07902134 黃于軒
-* B07902141 林庭風
+# VP8 Decoder #
 
 ## Compilation and Execution ##
 The decoder supports two modes: decode and display. The only supported input format is ```ivf```.
